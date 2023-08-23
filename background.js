@@ -1,6 +1,6 @@
 
 
-var startDate;
+let startDate;
 var likesDate;
 var bgDate;
 let endexp = false;
@@ -22,7 +22,8 @@ chrome.storage.local.get(
     'endexp',
     'activetime',
     'activetime_start_date',
-    'survey'
+    'survey',
+    'startDate'
   ],
   function (result) {
     if (result.userpid === null || result.userpid === undefined) {
@@ -51,6 +52,11 @@ chrome.storage.local.get(
       console.log('endexp has not been stored yet');
     } else {
       endexp = result.endexp;
+    }
+    if (result.startDate === null || result.startDate === undefined) {
+      console.log('startDate has not been stored yet');
+    } else {
+      startDate = new Date(result.startDate);
     }
 
 
@@ -154,6 +160,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 function setExp() {
   //startDate = new Date(new Date().getTime()+(5*24*60*60*1000));
   startDate = new Date();
+  chrome.storage.local.set({ startDate: startDate.toString() }, function () {
+    console.log('startDate stored successfully.');
+});
   //add 5 seconds
   endDate = new Date(startDate.getTime() + 60000);
   ifstartexp = true;
@@ -285,7 +294,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     sendResponse({ message: "voteCommentSuccess" });
   } else if (request.message === "replyPost") {
     console.log("Received data from content script: ", request.data);
-    insertUserReplyPosts(userpid, request.data.content, request.data.post);
+    insertUserReplyPosts(userpid, request.data.content, request.data.post, request.data.like,request.data.time );
     sendResponse({ message: "replyPostSuccess" });
   } else if (request.message === "votePost") {
     console.log("Received data from content script: ", request.data);
@@ -378,8 +387,8 @@ function insertUserVoteComments(uid, action, comment, post) {
 
 /// insert fake comments into database 
 
-function insertFakeComments(uid, comment_id, user_name, comment_content, insert_index, post_url) {
-  const insert_date = new Date();
+function insertFakeComments(uid, comment_id, user_name, comment_content, insert_index, post_url, like, time) {
+  var insert_date = new Date();
   fetch("https://redditchrome.herokuapp.com/api/updateuserFakeComment_infakepost", {
     method: "POST",
     headers: {
@@ -393,7 +402,9 @@ function insertFakeComments(uid, comment_id, user_name, comment_content, insert_
         user_name: user_name,
         content: comment_content,
         where_to_insert: insert_index,
-        post_url: post_url
+        post_url: post_url, 
+        like:like,
+        time:insert_date
       }]
     })
   })
@@ -460,7 +471,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.message === "insert user reply in fake comments to db") {
 
     // Process the variables received from the content script
-    insertUserReplyFakeComments(userpid, request.commentId, request.userRedditName, request.commentContent);
+    insertUserReplyFakeComments(userpid, request.commentId, request.userRedditName, request.commentContent, request.like, request.time);
     // Send a response back to the content script if needed
     sendResponse({ success: true });
   }
@@ -471,8 +482,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 
 // user reply to fake comments 
-function insertUserReplyFakeComments(uid, comment_id, userRedditName, comment_content) {
-  //const insert_date = new Date();
+function insertUserReplyFakeComments(uid, comment_id, userRedditName, comment_content, like) {
+  var insert_date = new Date();
   fetch("https://redditchrome.herokuapp.com/api/updateUserReplyToFakeComment", {
     method: "POST",
     headers: {
@@ -484,6 +495,8 @@ function insertUserReplyFakeComments(uid, comment_id, userRedditName, comment_co
         fake_comment_id: comment_id,
         userRedditName: userRedditName,
         userReplyInFake: comment_content,
+        like: like,
+        time: insert_date,
 
       }]
     })
@@ -506,7 +519,7 @@ function insertUserReplyFakeComments(uid, comment_id, userRedditName, comment_co
 
 
 // update the user action, reply a post
-function insertUserReplyPosts(uid, content, post) {
+function insertUserReplyPosts(uid, content, post, like, time) {
   const insert_date = new Date();
   fetch("https://redditchrome.herokuapp.com/api/updateUserReply_Posts", {
     method: "POST",
@@ -518,7 +531,9 @@ function insertUserReplyPosts(uid, content, post) {
       user_reply_onPosts: [{
         action_date: insert_date,
         reply_content: content,
-        reply_post: post
+        reply_post: post, 
+        like: like, 
+        time: time
       }]
     })
   })
@@ -1071,10 +1086,12 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     var commentContent = message.commentContent;
     var insertIndex = message.insertindex;
     var posturl = message.posturl;
+    var like = message.like; 
 
+    var time = message.time; 
     // Your logic to handle the received data goes here
     // For example, you can call a function to insert the reply into the fake post
-    insertFakeComments(userpid, commentId, userRedditName, commentContent, insertIndex, posturl);
+    insertFakeComments(userpid, commentId, userRedditName, commentContent, insertIndex, posturl, like, time);
 
     // Your logic to handle the received data goes here
     // For example, you can insert the reply into the fake post in the desired format

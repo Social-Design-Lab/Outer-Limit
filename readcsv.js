@@ -12,7 +12,9 @@ function read_csv() {
             user_name: rowData['user_name'],
             content: rowData['content'],
             where_to_insert: rowData['where_to_insert'],
-            post_url: rowData['post_url']
+            post_url: rowData['post_url'],
+            like: rowData['likes'],
+            time: rowData['time']
           };
       
           console.log(mappedData);
@@ -38,7 +40,9 @@ function read_csv() {
             fakepost_index: rowData['fakepost_index'],
             fakepost_title: rowData['fakepost_title'],
             fakepost_content: rowData['fakepost_content'],
-            fakepost_image: rowData['fakepost_image']
+            fakepost_image: rowData['fakepost_image'],
+            like: rowData['likes'],
+            time: rowData['time']
           };
       
           console.log(mappedData);
