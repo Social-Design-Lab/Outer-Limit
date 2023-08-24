@@ -8,7 +8,7 @@
 // Create a loading overlay element
 // Create a loading overlay element
 
-
+const redditBaseUrl = "https://www.reddit.com";
 
 let new_active_triggered = false;
 const title = "A new proof of vaccine is bad for you";
@@ -35,11 +35,10 @@ let parentContainer = document.querySelector('div._1YCqQVO-9r-Up6QPB9H6_4');
 //alert("from main page to post age");
 
 // this is used for user is on post page and then back to main page
-const fakepost_fullUrl = "https://www.reddit.com/r/lehighvalley/comments/12s1gu9/ott_st_allentown/";
 
 let homePageObserved = false;
-const redditBaseUrl = "https://www.reddit.com";
-const urlObserver = new MutationObserver(function (mutations) {
+
+/* const urlObserver = new MutationObserver(function (mutations) {
   mutations.forEach(function (mutation) {
     if (!homePageObserved && (window.location.href === "https://www.reddit.com/" || window.location.href === "https://www.reddit.com/?feed=home")) {
       console.log("User has navigated to the Reddit home page");
@@ -49,15 +48,8 @@ const urlObserver = new MutationObserver(function (mutations) {
 
         if (response.ifstartexp) {
 
-
-          // Delay execution of fakepost() and monitor_viewed_post() by two seconds
-          setTimeout(() => {
-            fakepost();
-            monitor_viewed_post();
-            setTimeout(() => {
-              document.documentElement.style.visibility = 'visible';
-            }, 100);
-          }, 2000); // 2000 milliseconds = 2 seconds
+          alert("thesssss");
+         runMyCode();
 
 
         }
@@ -74,7 +66,6 @@ urlObserver.observe(document.body, {
   childList: true,
   subtree: true
 });
-
 // this is used when user is on home page and click the post and then back to home page
 var newobserver = new MutationObserver(function (mutationsList, observer) {
   for (var mutation of mutationsList) {
@@ -90,33 +81,12 @@ var newobserver = new MutationObserver(function (mutationsList, observer) {
             chrome.runtime.sendMessage({ message: "get_all_setup" }, function (response) {
               console.log("All button and Active time: " + response.ifstartexp);
             
-
+              alert("test for if it works");
   
               if (response.ifstartexp) {
-                console.log("ifstartexp ");
-                if (location.hostname === "www.reddit.com" && location.pathname === "/") {
-                  console.log("This is the Reddit main page.");
-                  fakepost();
-                  monitor_viewed_post();
-                  setTimeout(() => {
-                    document.documentElement.style.visibility = 'visible';
-                  }, 100);
+                runMyCode();
 
-                } else {
-                  console.log(`This is not the Reddit main page: ${window.location.href}`);
-                  // alert(fakepost_fullUrl);
-
-                  // changefakepost_dom();
-                  read_fakecomment_from_database();
-                  monitor_new_comment(replyPostButtonSelector, replyCommentSelector, filterText, commentSelector);
-                  
-
-                  //likebuttonSelector, dislikebuttonSelector=null,ButtonColorClass, commentTextClassName,commentLikeclassName,replyCommentSelector
-                  listentobuttons(likebuttonSelector, dislikebuttonSelector, commentTextClassName);
-
-
-                }
-
+                
 
               }
 
@@ -130,27 +100,32 @@ var newobserver = new MutationObserver(function (mutationsList, observer) {
   }
 });
 
-newobserver.observe(document.body, { childList: true, subtree: true });
+newobserver.observe(document.body, { childList: true, subtree: true }); */
 
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  if (request.message === "refreshContentScript") {
+    console.log("Received message to refresh content script.");
+    window.location.reload();
+    // Your logic to insert/refresh content in the page goes here.
+  }
+});
 
+window.onload = function() {
+  //alert(" insert good");
+  runMyCode()
+  // Your code here
+};
 
 //alert("run my code is called");
 //}
 // });
 // this is used to make sure the content js change reddit page when user open a new tab or refresh the page since tabupdate does not work for this
-window.onload = function () {
 
-  runMyCode();
-}
-
-
+// this function is used to start everything 
 function runMyCode() {
   chrome.runtime.sendMessage({ message: "get_all_setup" }, function (response) {
     console.log("All button and Active time: " + response.ifstartexp);
-    console.log("change likes to 100: " + response.likeschange1);
-    console.log("change likes to 56: " + response.likeschange);
-    console.log("change background color to red: " + response.change_bgcolor);
-    console.log("change background color to green 1: " + response.change_bgcolor_condition2);
+    
 
 
 
@@ -169,6 +144,8 @@ function runMyCode() {
 
       if (location.hostname === "www.reddit.com" && location.pathname === "/") {
         console.log("This is the Reddit main page.");
+        fakepost(); 
+        monitor_viewed_post();
       } else {
         console.log(`This is not the Reddit main page: ${window.location.href}`);
 
@@ -180,6 +157,10 @@ function runMyCode() {
         listentobuttons(likebuttonSelector, dislikebuttonSelector, commentTextClassName);
       }
     }
+
+    setTimeout(() => {
+      document.documentElement.style.visibility = 'visible';
+    }, 200);
   });
 }
 
@@ -273,26 +254,7 @@ function listentobuttons(likebuttonSelector, dislikebuttonSelector = null, comme
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.message === "start experiment") {
     user_active_time();
-    if (location.hostname === "www.reddit.com" && location.pathname === "/") {
-      console.log("This is the Reddit main page.");
-      fakepost();
-      monitor_viewed_post();
-      setTimeout(() => {
-        document.documentElement.style.visibility = 'visible';
-      }, 100);
-
-    } else {
-      console.log(`This is not the Reddit main page: ${window.location.href}`);
-      //alert(fakepost_fullUrl);
-
-
-      // changefakepost_dom();
-      read_fakecomment_from_database();
-      monitor_new_comment(replyPostButtonSelector, replyCommentSelector, filterText, commentSelector);
-      listentobuttons(likebuttonSelector, dislikebuttonSelector, commentTextClassName);
-
-    }
-
+    runMyCode();
     new_active_triggered = true;
     console.log("Received message from the background script for listen the button:", request.message);
 
@@ -421,6 +383,7 @@ function insert_comment(idofcomment, index, username, content,like, time, parent
             likebutton.addEventListener('click', function () {
               if(!likebutton.hasAttribute('button-clicked'))
               {
+                
                 if(!dislikebutton.hasAttribute('button-clicked'))
                 {
                   childElement.textContent = parseInt(childElement.textContent) + 1;
@@ -441,7 +404,7 @@ function insert_comment(idofcomment, index, username, content,like, time, parent
                 likebutton.removeAttribute('button-clicked');
                 likebutton.classList.toggle(ButtonColorClass);
               }
-              
+              //alert(" user reply to fake comment. ", "text :", text, "; URL: ", window.location.href);
               send_voteComment_to_background("upvote", text, window.location.href);
             });
 
@@ -468,6 +431,7 @@ function insert_comment(idofcomment, index, username, content,like, time, parent
                 dislikebutton.removeAttribute('button-clicked');;
                 dislikebutton.classList.toggle(ButtonColorClass);
               }
+              //alert(" user reply to fake comment. ", "text :", text, "; URL: ", window.location.href);
               send_voteComment_to_background("downvote", text, window.location.href);
             });
 
@@ -1001,15 +965,14 @@ function monitor_new_comment(replyPostButtonSelector, replyCommentSelector, filt
       if (!currentNode) {
         console.log('No ancestor with textbox found');
       }
-      console.log('My span: 2', currentNode.innerText);
+      //console.log('My span: 2', currentNode.innerText);
       //currentNode.innerText = '';
 
       var spanElement = currentNode.querySelector("span[data-text='true']");
-      spanElement.textContent = '';
-      //var uid =get_user_id_from_background();
-      const post_link = window.location.href;
+      console.log('My span: 2', spanElement.textContent);
       
-      send_replyPost_to_background(currentNode.innerText, post_link);
+      send_replyPost_to_background(spanElement.textContent, window.location.href);
+      spanElement.textContent = '';
     });
     // Set flag to indicate that event listener has been added
     firstSubmitButtons.hasEventListener = true;
@@ -1051,18 +1014,23 @@ function monitor_new_comment(replyPostButtonSelector, replyCommentSelector, filt
                     }
                     currentNode = currentNode.parentNode;
                   }
-                  console.log('My span: 1', currentNode.innerText);
+                  var spanElement = currentNode.querySelector("span[data-text='true']");
+                  console.log('My span: 1', spanElement.textContent);
+                  
 
                   let current = commentSubmitButtons;
                   while (current && !current.querySelector(commentSelector)) {
                     current = current.parentNode;
                   }
+                  
+                  if (current != undefined && current != null)
+                  {
                   current = current.querySelector(commentSelector);
-
                   const reply_to = current.innerText;
                   const post_link = window.location.href;
     
-                  send_replyComment_to_background(currentNode.innerText, reply_to, window.location.href);
+                  send_replyComment_to_background(spanElement.textContent, reply_to, window.location.href);
+                  }
                 });
                 // Set flag to indicate that event listener has been added
                 commentSubmitButtons.hasEventListener = true;
@@ -1317,9 +1285,8 @@ function sendUpdateViewedPostToBackground(post_url) {
   });
 }
 
-// Call the function with appropriate parameters
-// sendUpdateViewedPostToBackground(userid, viewed_date, post_url);
 
+// create fakepost in reddit home page 
 function fakepost() {
 
   chrome.runtime.sendMessage({ message: "need_uid_from_backgroun" }, function (response) {
@@ -2838,9 +2805,7 @@ console.log("startTime:", startTime);
 
 
  
-  setTimeout(() => {
-    document.documentElement.style.visibility = 'visible';
-  }, 100); // Delay of 2000 milliseconds (2 seconds)
+  // Delay of 2000 milliseconds (2 seconds)
 
 
 }

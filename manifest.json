@@ -18,7 +18,8 @@
     "activeTab",
     "identity",
     "storage",
-    "scripting"
+    "scripting",
+    "webNavigation"
   ],
   "host_permissions": [
     "https://redditchrome.herokuapp.com/"

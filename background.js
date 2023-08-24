@@ -102,7 +102,14 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     if (changeInfo.url.includes("reddit.com")) {
       if (changeInfo.url.includes("/r/") || changeInfo.url.includes("/comments/")) {
         console.log("The URL is a post and we want to call content js ");
-        chrome.tabs.sendMessage(tabId, { message: "run_my_code" });
+        chrome.tabs.sendMessage(tabId, { message: "run_my_code" }, function(response) {
+          if (chrome.runtime.lastError) {
+              console.error(chrome.runtime.lastError.message);
+              // Handle the error or perform other actions
+          } else {
+              // Process the response or perform other actions
+          }
+        });
       }
       else {
         console.log("The URL is the Reddit home page");
@@ -180,7 +187,14 @@ function setExp() {
     }
 
     // Send a message to the content script
-    chrome.tabs.sendMessage(tabs[0].id, { message: "start experiment" });
+    chrome.tabs.sendMessage(tabs[0].id, { message: "start experiment" }, function(response) {
+      if (chrome.runtime.lastError) {
+          console.error(chrome.runtime.lastError.message);
+          // Handle the error or perform other actions
+      } else {
+          // Process the response or perform other actions
+      }
+    });
   });
 
 
@@ -204,7 +218,14 @@ function setExp() {
         }
 
         // Send a message to the content script
-        chrome.tabs.sendMessage(tabs[0].id, { message: "exp_ended" });
+        chrome.tabs.sendMessage(tabs[0].id, { message: "exp_ended" }, function(response) {
+          if (chrome.runtime.lastError) {
+              console.error(chrome.runtime.lastError.message);
+              // Handle the error or perform other actions
+          } else {
+              // Process the response or perform other actions
+          }
+        });
 
       });
       const newUrl = `https://lehigh.co1.qualtrics.com/jfe/form/SV_8IIgAqvzRvc1D0i?uid=${userpid}`;
@@ -1110,3 +1131,19 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 
 
 
+chrome.webNavigation.onHistoryStateUpdated.addListener(function(details) {
+  //console.log('URL changed without a full page refresh:', details.url);
+  // Your logic for handling the URL change
+  const urlObj = new URL(details.url);
+  if (urlObj.hostname.endsWith('reddit.com')) 
+  {
+    chrome.tabs.sendMessage(details.tabId, { message: "refreshContentScript" }, function(response) {
+      if (chrome.runtime.lastError) {
+          console.error(chrome.runtime.lastError.message);
+          // Handle the error or perform other actions
+      } else {
+          // Process the response or perform other actions
+      }
+    });
+  }
+});
