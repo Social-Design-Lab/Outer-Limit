@@ -330,6 +330,16 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     updateUserViewedPost(userpid, request.data.post_url);
     sendResponse({ message: "updateViewedPostSuccess" });
   }
+  else if (request.message === "updateuserVotefakecontent") {
+    console.log("Received data from content script: ", request.data);
+    updateUserVoteFakeContent(userpid, request.data.useraction, request.data.fakecontent);
+    sendResponse({ message: "updateuserVotefakecontent" });
+  }
+  else if (request.message === "deleteuserVotefakecontent") {
+    console.log("Received data from content script: ", request.data);
+    deleteUserVoteFakeContent(userpid, request.data.fakecontent);
+    sendResponse({ message: "deleteuserVotefakecontent" });
+  }
 });
 
 
@@ -354,6 +364,7 @@ function insertdata(uid) {
       surveypopup_selections: [],
       user_comment_in_fake_post: [],
       user_reply_tofakecomment: [],
+      user_vote_fake:[],
     })
   })
     .then(response => {
@@ -600,6 +611,66 @@ function insertUserVotePosts(uid, action, post) {
     })
     .then(data => {
       console.log("User vote on posts inserted successfully:", data);
+    })
+    .catch(error => {
+      console.error(error);
+    });
+}
+
+// insert user like fake content
+function updateUserVoteFakeContent(userid, useraction, fakeContent) {
+  
+  fetch("https://redditchrome.herokuapp.com/api/updateUserVoteFakeContent", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      userid: userid,
+      user_vote_fake: [{
+        user_action: useraction,
+        fake_content: fakeContent,
+      }]
+    })
+  })
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error("Failed to update user vote fake content");
+      }
+    })
+    .then(data => {
+      console.log("User like fake content updated successfully:", data);
+    })
+    .catch(error => {
+      console.error(error);
+    });
+}
+
+
+// delete user like fake content 
+
+function deleteUserVoteFakeContent(userid, fakeContent) {
+  fetch("https://redditchrome.herokuapp.com/api/deleteUserVoteFakeContent", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      userid: userid,
+      fake_content: fakeContent
+    })
+  })
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error("Failed to delete user vote fake content");
+      }
+    })
+    .then(data => {
+      console.log("User like fake content deleted successfully:", data);
     })
     .catch(error => {
       console.error(error);
@@ -1147,3 +1218,4 @@ chrome.webNavigation.onHistoryStateUpdated.addListener(function(details) {
     });
   }
 });
+
