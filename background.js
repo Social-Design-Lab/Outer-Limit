@@ -12,7 +12,7 @@ let activetime = 0;
 let activetime_start_date = new Date().toLocaleDateString();
 // get the userpid from local storage 
 let survey;
-
+let endDate; 
 chrome.storage.local.get(
   [
     'userpid',
@@ -23,7 +23,8 @@ chrome.storage.local.get(
     'activetime',
     'activetime_start_date',
     'survey',
-    'startDate'
+    'startDate',
+    'endDate'
   ],
   function (result) {
     if (result.userpid === null || result.userpid === undefined) {
@@ -57,6 +58,14 @@ chrome.storage.local.get(
       console.log('startDate has not been stored yet');
     } else {
       startDate = new Date(result.startDate);
+    }
+    if (result.endDate === null || result.endDate === undefined) {
+      console.log('endDate has not been stored yet');
+    } else {
+      endDate = new Date(result.endDate);
+
+
+
     }
 
 
@@ -93,7 +102,6 @@ chrome.storage.local.get(
 
 
 //// end of retrie data 
-
 
 
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
@@ -179,6 +187,8 @@ function setExp() {
     console.log('ifstartexp stored successfully.');
   });
 
+  chrome.storage.local.set({ endDate: endDate.getTime() }, function() { });
+
   // start the experiment(listening the upvote and downvote buttons)
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     if (tabs.length === 0) {
@@ -197,7 +207,18 @@ function setExp() {
     });
   });
 
+/* function checkExpEnd(startDate)
+{
+  var currentTime = new Date();
+  if (currentTime >= startDate) {
+    var endexp = true;
+    chrome.storage.local.set({ endexp: endexp }, function() {
+      console.log('endexp stored successfully.');
+    });
+  }
+}
 
+checkExpEnd(startDate); */
 
   // end of the experiment redirct to the post survey 
   chrome.alarms.create("endAlarm", {
@@ -239,7 +260,7 @@ function setExp() {
 
       //moldapblhmdekbocbchgadlodkclkgke
       // Delay for 30 seconds (in milliseconds)
-      const delayInMilliseconds = 86400000;
+      //const delayInMilliseconds = 86400000;
 
       /////*********** uncomment in the experiment  */
       // Call chrome.management.uninstallSelf() after the delay
