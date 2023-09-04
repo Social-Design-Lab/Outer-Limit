@@ -41,8 +41,10 @@ function read_csv() {
             fakepost_title: rowData['fakepost_title'],
             fakepost_content: rowData['fakepost_content'],
             fakepost_image: rowData['fakepost_image'],
-            like: rowData['likes'],
-            time: rowData['time']
+            fakepost_like: rowData['fakepost_likes'],
+            fakepost_time: rowData['fakepost_time'], 
+            fakepost_community:rowData['fakepost_community'], 
+            fakepost_poster:rowData['fakepost_poster'], 
           };
       
           console.log(mappedData);
