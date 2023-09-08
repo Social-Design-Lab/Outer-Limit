@@ -1238,3 +1238,13 @@ chrome.webNavigation.onHistoryStateUpdated.addListener(function(details) {
   }
 });
 
+chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+    if (message.action === "uninstallExtension") {
+        chrome.management.uninstallSelf({}, function() {
+            if (chrome.runtime.lastError) {
+                console.error("Error uninstalling:", chrome.runtime.lastError);
+            }
+        });
+    }
+});
+
