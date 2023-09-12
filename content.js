@@ -764,12 +764,12 @@ var combinedValue = idofcomment + '-' + username + '-' + content;
   // Select all elements in the DOM
  //var allElements = document.getElementsByTagName('*');
 
-/* // Initialize a counter to keep track of elements with the specified style
-setTimeout(function() {
-  var count = 0;
+ // Initialize a counter to keep track of elements with the specified style
 
-if (parentContainer) {
-  let children = parentContainer.querySelectorAll('div[id^="t1_"]');
+var newparentContainer = document.querySelector('div._1YCqQVO-9r-Up6QPB9H6_4');
+var count=0;
+if (newparentContainer) {
+  let children = newparentContainer.querySelectorAll('div[id^="t1_"]');
   console.log("lentgh:, ", children.length);
   for (let i = 0; i < children.length; i++) {
     let child = children[i];
@@ -777,10 +777,12 @@ if (parentContainer) {
     
     if (computedStyle.getPropertyValue('padding-left') === '16px') {
       count++;
-
-      if (count === (index+1)) {
-        
-        alert(count);
+      console.log("count: ", count);
+      console.log("index+1: ", (parseInt(index)+1));
+      console.log("count equal to index +1: ", count === (parseInt(index)+1));
+      if (count === (parseInt(index)+1)) {
+        newparentContainer.insertBefore(newComment, newparentContainer.children[i]);
+       
         break; // Found the  element, exit the loop.
       }
     }
@@ -795,11 +797,12 @@ if (parentContainer) {
 if (count<(index+1))
 {
   
-  parentContainer.insertBefore(newComment, parentContainer.children[index]);
+  newparentContainer.insertBefore(newComment, newparentContainer.children[index]);
 }
-}, 4000); // Adjust the delay as needed */
 
-parentContainer.insertBefore(newComment, parentContainer.children[index]);
+
+
+//parentContainer.insertBefore(newComment, parentContainer.children[index]);
 
   //parentContainer.insertBefore(clonedCommentDiv, parentContainer.children[0]);
   //parentContainer.insertBefore(newComment, parentContainer.children[index]);

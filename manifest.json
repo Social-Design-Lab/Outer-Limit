@@ -35,14 +35,11 @@
       "run_at": "document_start"
     },
     {
-      "js": [
-        "content.js"
-      ],
       "matches": [
         "https://www.reddit.com/*"
       ],
-      "css": [
-        "popup.css"
+      "js": [
+        "content.js"
       ],
       "run_at": "document_end"
     }
