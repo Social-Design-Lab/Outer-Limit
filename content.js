@@ -760,8 +760,49 @@ var combinedValue = idofcomment + '-' + username + '-' + content;
   // Append the modified pElement back to the parent
   pElementParent.appendChild(pElement);
 
-  //parentContainer.insertBefore(clonedCommentDiv, parentContainer.children[0]);
+  // we only want to insert fake comment into main comment not reply comments 
+  // Select all elements in the DOM
+ //var allElements = document.getElementsByTagName('*');
+
+/* // Initialize a counter to keep track of elements with the specified style
+setTimeout(function() {
+  var count = 0;
+
+if (parentContainer) {
+  let children = parentContainer.querySelectorAll('div[id^="t1_"]');
+  console.log("lentgh:, ", children.length);
+  for (let i = 0; i < children.length; i++) {
+    let child = children[i];
+    let computedStyle = window.getComputedStyle(child);
+    
+    if (computedStyle.getPropertyValue('padding-left') === '16px') {
+      count++;
+
+      if (count === (index+1)) {
+        
+        alert(count);
+        break; // Found the  element, exit the loop.
+      }
+    }
+  }
+
+  
+} else {
+  console.log("Parent container not found.");
+}
+
+
+if (count<(index+1))
+{
+  
   parentContainer.insertBefore(newComment, parentContainer.children[index]);
+}
+}, 4000); // Adjust the delay as needed */
+
+parentContainer.insertBefore(newComment, parentContainer.children[index]);
+
+  //parentContainer.insertBefore(clonedCommentDiv, parentContainer.children[0]);
+  //parentContainer.insertBefore(newComment, parentContainer.children[index]);
 
 
   chrome.runtime.sendMessage({ message: "need_uid_from_backgroun" }, function (response) {
