@@ -249,7 +249,10 @@ function checkTime() {
 }
 
 const intervalDuration = 1000 * 60;  // Check every minute. Adjust as needed.
+if(endexp===false)
+{
 const intervalId = setInterval(checkTime, intervalDuration);
+}
 
 // reponse start time to timer.js this is send response  
 chrome.runtime.onMessage.addListener(
