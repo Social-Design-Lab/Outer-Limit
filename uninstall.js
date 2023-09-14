@@ -1,3 +1,9 @@
+/**
+ * adding an event listener to the 'Confirm Uninstall' button
+ *  - when the button is clicked, send a message to the background script
+ *  to uninstall the extension
+ */
+
 document.addEventListener('DOMContentLoaded', function() {
     let confirmUninstallButton = document.getElementById('confirmUninstallBtn');
 
