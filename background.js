@@ -207,72 +207,51 @@ function setExp() {
     });
   });
 
-/* function checkExpEnd(startDate)
-{
-  var currentTime = new Date();
-  if (currentTime >= startDate) {
-    var endexp = true;
-    chrome.storage.local.set({ endexp: endexp }, function() {
+
+
+}
+function checkTime() {
+  var now = new Date();
+
+  if (now > endDate) {
+    endexp = true;
+    chrome.storage.local.set({ endexp: endexp }, function () {
       console.log('endexp stored successfully.');
     });
+    console.log("exp ended from background");
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      if (tabs.length === 0) {
+        console.error("No active tabs found");
+        return;
+      }
+
+      // Send a message to the content script
+      chrome.tabs.sendMessage(tabs[0].id, { message: "exp_ended" }, function(response) {
+        if (chrome.runtime.lastError) {
+            console.error(chrome.runtime.lastError.message);
+            // Handle the error or perform other actions
+        } else {
+            // Process the response or perform other actions
+        }
+      });
+
+    });
+    const newUrl = `https://lehigh.co1.qualtrics.com/jfe/form/SV_8IIgAqvzRvc1D0i?uid=${userpid}`;
+    chrome.tabs.create({ url: newUrl });
+    // Set the badge text
+    chrome.action.setBadgeText({ text: 'Click' });
+
+    // Set the badge background color
+    chrome.action.setBadgeBackgroundColor({ color: '#FF0000' });
+
+      clearInterval(intervalId);  // Stop the interval after handling the event
   }
 }
 
-checkExpEnd(startDate); */
-
-  // end of the experiment redirct to the post survey 
-  chrome.alarms.create("endAlarm", {
-    when: endDate.getTime()
-  });
-
-  chrome.alarms.onAlarm.addListener(function (alarm) {
-    if (alarm.name === "endAlarm") {
-      endexp = true;
-      chrome.storage.local.set({ endexp: endexp }, function () {
-        console.log('endexp stored successfully.');
-      });
-      console.log("exp ended from background");
-      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        if (tabs.length === 0) {
-          console.error("No active tabs found");
-          return;
-        }
-
-        // Send a message to the content script
-        chrome.tabs.sendMessage(tabs[0].id, { message: "exp_ended" }, function(response) {
-          if (chrome.runtime.lastError) {
-              console.error(chrome.runtime.lastError.message);
-              // Handle the error or perform other actions
-          } else {
-              // Process the response or perform other actions
-          }
-        });
-
-      });
-      const newUrl = `https://lehigh.co1.qualtrics.com/jfe/form/SV_8IIgAqvzRvc1D0i?uid=${userpid}`;
-      chrome.tabs.create({ url: newUrl });
-      // Set the badge text
-      chrome.action.setBadgeText({ text: 'Click' });
-
-      // Set the badge background color
-      chrome.action.setBadgeBackgroundColor({ color: '#FF0000' });
-
-
-      //moldapblhmdekbocbchgadlodkclkgke
-      // Delay for 30 seconds (in milliseconds)
-      //const delayInMilliseconds = 86400000;
-
-      /////*********** uncomment in the experiment  */
-      // Call chrome.management.uninstallSelf() after the delay
-      /* setTimeout(() => {
-        chrome.management.uninstallSelf();
-      }, delayInMilliseconds);
-*/
-    }
-  });
-
-
-
+const intervalDuration = 1000 * 60;  // Check every minute. Adjust as needed.
+if(endexp===false)
+{
+const intervalId = setInterval(checkTime, intervalDuration);
 }
 
 // reponse start time to timer.js this is send response  
