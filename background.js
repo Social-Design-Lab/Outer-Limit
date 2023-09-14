@@ -181,7 +181,7 @@ function setExp() {
   //add 5 seconds
   endDate = new Date(startDate.getTime() + 60000);
   ifstartexp = true;
-
+  
  
   chrome.storage.local.set({ ifstartexp: ifstartexp }, function () {
     console.log('ifstartexp stored successfully.');
@@ -212,8 +212,8 @@ function setExp() {
 }
 function checkTime() {
   var now = new Date();
-
-  if (now > endDate) {
+  //console.log("endexp: ", endexp);
+  if (now > endDate && endexp === false) {
     endexp = true;
     chrome.storage.local.set({ endexp: endexp }, function () {
       console.log('endexp stored successfully.');
@@ -251,9 +251,28 @@ function checkTime() {
 const intervalDuration = 1000 * 60;  // Check every minute. Adjust as needed.
 if(endexp===false)
 {
+  
 const intervalId = setInterval(checkTime, intervalDuration);
 }
+else
+{
+  const intervalId = setInterval(uninstall, intervalDuration);
+}
 
+function uninstall()
+{
+  var now = new Date();
+
+  if (now > endDate +1) {
+    chrome.management.uninstallSelf({}, function() {
+      if (chrome.runtime.lastError) {
+          console.error("Error uninstalling:", chrome.runtime.lastError);
+      }
+  });
+
+  }
+
+}
 // reponse start time to timer.js this is send response  
 chrome.runtime.onMessage.addListener(
   function (request, sender, sendResponse) {
