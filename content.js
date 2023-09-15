@@ -1770,6 +1770,7 @@ console.log("startTime:", startTime);
           }
           else 
           {
+            send_uservotefake_to_background("downvote",fakepost_url);
             span.classList.remove('_3yQIOwaIuF6gn8db96Gu7y');
             span.classList.add('_3emIxnIscWEPB7o5LgU_rn');
             downvoteButton.setAttribute("buttonclicked", "true");
@@ -1826,7 +1827,7 @@ console.log("startTime:", startTime);
                 }
 
 
-                send_uservotefake_to_background("downvote",fakepost_url);
+                
               }
   
             
