@@ -1,5 +1,3 @@
-
-
 let startDate;
 var likesDate;
 var bgDate;
@@ -10,9 +8,13 @@ let change_bgcolor_condition2 = false;
 let ifstartexp = false;
 let activetime = 0;
 let activetime_start_date = new Date().toLocaleDateString();
-// get the userpid from local storage 
 let survey;
-let endDate; 
+let endDate;
+
+
+/**
+ * chrome.storage API to store, retrieve, and track changes to user data.
+ */ 
 chrome.storage.local.get(
   [
     'userpid',
@@ -63,9 +65,6 @@ chrome.storage.local.get(
       console.log('endDate has not been stored yet');
     } else {
       endDate = new Date(result.endDate);
-
-
-
     }
 
 
@@ -99,11 +98,10 @@ chrome.storage.local.get(
   }
 );
 
-
-
-//// end of retrie data 
-
-
+/**
+ * Listens for tab URL updates. If the new URL contains "reddit.com" and is a post,
+ * it sends a message to invoke content scripts on that tab.
+ */
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
   if (changeInfo.url) {
     console.log("The tab URL has changed");
