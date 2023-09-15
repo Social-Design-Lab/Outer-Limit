@@ -1673,6 +1673,7 @@ console.log("startTime:", startTime);
           }
           else 
           {
+            send_uservotefake_to_background("upvote",fakepost_url);
               upvoteButton.setAttribute("buttonclicked", "true");
               if(downvoteButton.hasAttribute("buttonclicked"))
               {
@@ -1723,7 +1724,7 @@ console.log("startTime:", startTime);
             // Update class name of the i element
             i.classList.remove('icon-upvote');
             i.classList.add('icon-upvote_fill');
-            send_uservotefake_to_background("upvote",fakepost_url);
+            //send_uservotefake_to_background("upvote",fakepost_url);
           
 
           }
