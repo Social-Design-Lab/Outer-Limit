@@ -124,8 +124,15 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
   }
 });
 
-// Listen for messages from the popup script// store uid from index js 
-// Listen for messages from the popup script
+/**
+ * Here, we are listening for incoming messages from the popup script
+ * 
+ * When a message is received with a specific key ("send_userid_from_timerjs") and contains a userId:
+ * 1. The userId is stored in a local variable for immediate use.
+ * 2. The userId is also stored persistently using chrome.storage.local to ensure its availability across sessions.
+ * 3. The current tab is forcibly refreshed.
+ * 4. Additional functions (`insertdata` and `read_csv`) are invoked with the received userId.
+ */
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (message.message === "send_userid_from_timerjs" && message.userId) {
     // Do something with the user ID
@@ -146,7 +153,6 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
       }
     });
 
-
     insertdata(userpid);
     read_csv(userpid);
     console.log(`Background Received user ID from timer js: ${message.userId}`);
@@ -157,57 +163,55 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.message === "get_all_setup") {
     sendResponse({
-
       ifstartexp: ifstartexp
-
-    });
-  }
+        });
+        }
 });
 
 
-// generate random number between a and b (include a and b) 
-// this will be used to assign participant into different condtion 
-
-
-// setup alarm
+/**
+ * Initializes an experiment by setting start and end times, storing them in chrome.storage.
+ * Sends a message to the content script of the active tab to kick off the experiment.
+ */
 function setExp() {
-  //startDate = new Date(new Date().getTime()+(5*24*60*60*1000));
-  startDate = new Date();
-  chrome.storage.local.set({ startDate: startDate.toString() }, function () {
-    console.log('startDate stored successfully.');
-});
-  //add 5 seconds
-  endDate = new Date(startDate.getTime() + 60000);
-  ifstartexp = true;
-  
- 
-  chrome.storage.local.set({ ifstartexp: ifstartexp }, function () {
-    console.log('ifstartexp stored successfully.');
-  });
-
-  chrome.storage.local.set({ endDate: endDate.getTime() }, function() { });
-
-  // start the experiment(listening the upvote and downvote buttons)
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    if (tabs.length === 0) {
-      console.error("No active tabs found");
-      return;
-    }
-
-    // Send a message to the content script
-    chrome.tabs.sendMessage(tabs[0].id, { message: "start experiment" }, function(response) {
-      if (chrome.runtime.lastError) {
-          console.error(chrome.runtime.lastError.message);
-          // Handle the error or perform other actions
-      } else {
-          // Process the response or perform other actions
-      }
+    startDate = new Date();
+    chrome.storage.local.set({ startDate: startDate.toString() }, function () {
+        console.log('startDate stored successfully.');
     });
-  });
+    //add 5 seconds
+    endDate = new Date(startDate.getTime() + 60000);
+    ifstartexp = true;
 
+    chrome.storage.local.set({ ifstartexp: ifstartexp }, function () {
+        console.log('ifstartexp stored successfully.');
+    });
 
+    chrome.storage.local.set({ endDate: endDate.getTime() }, function() { });
 
+    // start the experiment(listening the upvote and downvote buttons)
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+            if (tabs.length === 0) {
+                console.error("No active tabs found");
+                return;
+            }
+            // Send a message to the content script
+            chrome.tabs.sendMessage(tabs[0].id, { message: "start experiment" }, function(response) {
+            if (chrome.runtime.lastError) {
+                console.error(chrome.runtime.lastError.message);
+                // Handle the error or perform other actions
+            } else {
+                // Process the response or perform other actions
+            }
+        });
+    });
 }
+
+/**
+ * function used to check the time, and see if the experiment has ended
+ * if the time is passed the limit for when the experiment ends
+ * 1. Set a variable endexp to true and store it in chrome.storage
+ * 2. A user will fill out the qualtrics survey and the extension will be uninstalled
+ */
 function checkTime() {
   var now = new Date();
   //console.log("endexp: ", endexp);
@@ -257,21 +261,25 @@ else
   const intervalId = setInterval(uninstall, intervalDuration);
 }
 
-function uninstall()
-{
+/**
+ * function used to uninstall the extension after the experiment has ended
+ */
+function uninstall(){
   var now = new Date();
-
   if (now > endDate +1) {
     chrome.management.uninstallSelf({}, function() {
       if (chrome.runtime.lastError) {
           console.error("Error uninstalling:", chrome.runtime.lastError);
       }
   });
-
   }
-
 }
-// reponse start time to timer.js this is send response  
+
+
+/*
+* Listener for requests to retrieve the experiment's start time. 
+* Responds with the `startDate` when a "get_time" message is received.
+*/ 
 chrome.runtime.onMessage.addListener(
   function (request, sender, sendResponse) {
     if (request.message === "get_time") {
@@ -280,7 +288,10 @@ chrome.runtime.onMessage.addListener(
   }
 );
 
-// end of the experiment 
+/*
+* Listener for requests signaling the end of the experiment.
+// Responds with the `endexp` value when an "end_exp" message is received.
+*/ 
 chrome.runtime.onMessage.addListener(
   function (request, sender, sendResponse) {
     if (request.message === "end_exp") {
@@ -289,7 +300,10 @@ chrome.runtime.onMessage.addListener(
   }
 );
 
-// return the uid to timer.js
+/*
+* // Listener for requests to retrieve the user's ID (uid).
+// Responds with the `userpid` and logs the request when a "need_uid_from_backgroun" message is received.
+*/ 
 chrome.runtime.onMessage.addListener(
   function (request, sender, sendResponse) {
     if (request.message === "need_uid_from_backgroun") {
@@ -359,9 +373,12 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   }
 });
 
-
-///// let's try connect with mongodb database
-
+/**
+ * Sends a POST request to insert user-specific data into a remote database.
+ * The data includes actions like commenting on posts and even comments,
+ *
+ * @param {string} uid - The unique identifier of the user.
+ */
 function insertdata(uid) {
   //var insert_date=  new Date();
   fetch("https://redditchrome.herokuapp.com/api/insert", {
@@ -397,10 +414,17 @@ function insertdata(uid) {
     .catch(error => {
       console.error(error);
     });
-
 }
 
-// insert user vote on Comments 
+/**
+ * Send a POST request to log user's voting actions on Reddit comments into the database.
+ * The data includes the user's action, the comment they interacted with, and the  post.
+ *
+ * @param {string} uid - The unique identifier of the user.
+ * @param {string} action - The type of vote action the user performed (e.g., upvote or downvote).
+ * @param {string} comment - the contents of the comment the user voted on.
+ * @param {string} post - the post the user has just interacted with.
+ */ 
 function insertUserVoteComments(uid, action, comment, post) {
   const insert_date = new Date();
   fetch("https://redditchrome.herokuapp.com/api/updateUserVote_Comments", {
@@ -434,7 +458,20 @@ function insertUserVoteComments(uid, action, comment, post) {
 }
 
 
-/// insert fake comments into database 
+/**
+ * Sends a POST request to log details of user's interactions with fake comments on Reddit into a remote database.
+ * The data encompasses the fake comment details such as its ID, the user who made the comment, its content, 
+ * and its associated post URL, among other attributes.
+ *
+ * @param {string} uid - The unique identifier of the user.
+ * @param {string} comment_id - The unique ID of the fake comment.
+ * @param {string} user_name - The username who made the comment.
+ * @param {string} comment_content - Content of the fake comment.
+ * @param {number} insert_index - The position/index where the comment should be inserted.
+ * @param {string} post_url - The URL of the associated Reddit post.
+ * @param {number} like - Number of likes/upvotes for the comment.
+ * @param {Date} time - Time when the comment was made.
+ */ 
 
 function insertFakeComments(uid, comment_id, user_name, comment_content, insert_index, post_url, like, time) {
   var insert_date = new Date();
@@ -481,7 +518,19 @@ function insertFakeComments(uid, comment_id, user_name, comment_content, insert_
 }
 
 
-// insert fakepost
+/**
+ * Sends a POST request to record details of fake Reddit posts into a remote database.
+ * This function captures and logs various attributes of the fake post such as its URL, title, 
+ * content, associated image, and the position or index where it appears. This aids in tracking 
+ * user interactions with artificially injected content on Reddit.
+ *
+ * @param {string} uid - The unique identifier of the user.
+ * @param {string} fakepost_url - The URL of the fake Reddit post.
+ * @param {number} fakepost_index - The index on the HTML where the post should appear.
+ * @param {string} fakepost_title - The title of the fake post.
+ * @param {string} fakepost_content - Content or body of the fake post.
+ * @param {string} fakepost_image - The image associated with the fake post.
+ */
 function insertFakePosts(uid, fakepost_url, fakepost_index, fakepost_title, fakepost_content, fakepost_image) {
   const insert_date = new Date();
   fetch("https://redditchrome.herokuapp.com/api/updateFakePost", {
@@ -515,7 +564,9 @@ function insertFakePosts(uid, fakepost_url, fakepost_index, fakepost_title, fake
     });
 }
 
-
+/**
+ * Add a listener for messages from the content script to insert fake posts into the database.
+ */
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.message === "insert user reply in fake comments to db") {
 
@@ -526,11 +577,19 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   }
 });
 
-
-
-
-
-// user reply to fake comments 
+/**
+ * Sends a POST request to record user replies to fake comments on Reddit into a remote database.
+ * This function captures and logs details of the user's interaction with a fake comment, 
+ * tracking attributes such as the comment's ID, the Reddit username of the user, the content 
+ * of their reply, whether they liked the comment, and the time of the interaction. 
+ * It aids in analyzing user reactions to artificially injected comments on Reddit.
+ *
+ * @param {string} uid - The unique identifier of the user.
+ * @param {string} comment_id - The ID of the fake comment the user replied to.
+ * @param {string} userRedditName - The Reddit username of the user.
+ * @param {string} comment_content - The content of the user's reply.
+ * @param {boolean} like - Indicates if the user liked the fake comment or not.
+ */ 
 function insertUserReplyFakeComments(uid, comment_id, userRedditName, comment_content, like) {
   var insert_date = new Date();
   fetch("https://redditchrome.herokuapp.com/api/updateUserReplyToFakeComment", {
@@ -565,9 +624,17 @@ function insertUserReplyFakeComments(uid, comment_id, userRedditName, comment_co
     });
 }
 
-
-
-// update the user action, reply a post
+/**
+ * Sends a POST request to record users replies to posts 
+ * tracking attributes such as the comment's ID, the Reddit username of the user, the content 
+ * of their reply, whether they liked the comment, and the time of the interaction. 
+ *
+ * @param {string} uid - The unique identifier of the user.
+ * @param {string} comment_id - The ID of the fake comment the user replied to.
+ * @param {string} userRedditName - The Reddit username of the user.
+ * @param {string} comment_content - The content of the user's reply.
+ * @param {boolean} like - Indicates if the user liked the fake comment or not.
+ */ 
 function insertUserReplyPosts(uid, content, post, like, time) {
   const insert_date = new Date();
   fetch("https://redditchrome.herokuapp.com/api/updateUserReply_Posts", {
