@@ -251,22 +251,21 @@ function checkTime() {
 }
 
 const intervalDuration = 1000 * 60;  // Check every minute. Adjust as needed.
-if(endexp===false)
-{
+
   
 const intervalId = setInterval(checkTime, intervalDuration);
-}
-else
-{
-  const intervalId = setInterval(uninstall, intervalDuration);
-}
+
+const unintervalId = setInterval(uninstall, intervalDuration);
+
 
 /**
  * function used to uninstall the extension after the experiment has ended
  */
 function uninstall(){
   var now = new Date();
-  if (now > endDate +1) {
+  var newEndDate = new Date(endDate); // Clone the original date
+newEndDate.setDate(newEndDate.getDate() + 1);
+  if (now > newEndDate) {
     chrome.management.uninstallSelf({}, function() {
       if (chrome.runtime.lastError) {
           console.error("Error uninstalling:", chrome.runtime.lastError);
