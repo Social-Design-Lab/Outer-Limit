@@ -164,8 +164,6 @@ function runMyCode() {
   });
 }
 
-//});
-// Recursive function to find ancestor with given class name and return elements by class within it
 function findAncestorWithClass(node, targetClassName) {
   if (node == null) {
     return null;
@@ -305,12 +303,6 @@ var combinedValue = idofcomment + '-' + username + '-' + content;
   let replyContainer = document.createElement('div');
   replyContainer.innerHTML = `<div class="_1r4smTyOEZFO91uFIdWW6T JchsqHyN3thfSnN8dUM3 _2jhbZV6mVCM5Ma7Z376DW2 "><div class="" style="left: 33px;"><div class="_3YZ-jFfccqhepgq1dDuLEv"><div class="_3MknXZVbkWU8JL9XGlzASi _3wl1bRnSzxHkKJfvqakrNI _1UhKfcyzvaWRtDdXZmzg6D "><div><div class="tVQ1dB4n0mAWdcQNxFq-K "></div></div><div class="_2baJGEALPiEMZpWB2iWQs7 " data-test-id="comment-submission-form-richtext"><style>.public-DraftStyleDefault-block[data-offset-key="f424d9_initial-0-0"]::after {bottom: 0;color: var(--newCommunityTheme-actionIcon);content: 'What are your thoughts?';cursor: text;left: 0;position: absolute;top: 0;}</style><div class="_13Sj3UMDKkCCJTq88berCB "><div><div class="DraftEditor-root"><div class="DraftEditor-editorContainer"><div class="notranslate public-DraftEditor-content" contenteditable="true" role="textbox" spellcheck="true" style="outline: none; user-select: text; white-space: pre-wrap; overflow-wrap: break-word;"><div data-contents="true"><div data-offset-key="f424d9_initial-0-0" class="_3LuG0YVLLHE2azRNVaKz7O"><div class="" data-block="true" data-editor="f424d9" data-offset-key="f424d9_initial-0-0"><div data-offset-key="f424d9_initial-0-0" class="public-DraftStyleDefault-block public-DraftStyleDefault-ltr"><span data-offset-key="f424d9_initial-0-0"><br data-text="true"></span></div></div></div></div></div></div></div></div><div class="tVQ1dB4n0mAWdcQNxFq-K _1z9S1KmnM79xn-UA0FnbP6 "></div></div></div><div class="_17TqawK-44tH0psnHPIhzS RQTXfVRnnTF5ont3w58rx  "><div class="_3SNMf5ZJL_5F1qxcZkD0Cp"><button role="button" tabindex="0" type="submit" disabled="" class="_22S4OsoDdOqiM-hPTeOURa _2iuoyPiKHN3kfOoeIQalDT _10BQ7pjWbeYP63SAPNS8Ts _3uJP0daPEH2plzVEYyTdaH ">Reply</button><button role="button" tabindex="0" type="reset" class="cZz52cPDbNgzrR1Oo1k27 _2iuoyPiKHN3kfOoeIQalDT _2tU8R9NTqhvBrhoNAXWWcP _3uJP0daPEH2plzVEYyTdaH ">Cancel</button></div><div class="_2YcMhGs5-uIg9Fj4a9J2Xr"><div class="_1wi_3uF8fUynqe5reIop-G"><div class="_3oLr47tuKGv2mNpavCZ2X0"><span><div class="_6E4bLu7N3_WO5HyAtaJx8"><button role="button" tabindex="-1" aria-label="Add Emoji" class="_2lAJkFZXhr5kbH7YF-sYFf _1H0LLEwUP5ys6cgxr9KhMa _2iuoyPiKHN3kfOoeIQalDT _3zbhtNO0bdck0oYbYRhjMC HNozj_dKjQZ59ZsfEegz8 _1tPpYVD73ugqp4k-VMFRki _3ojSE1JW7jxNzUzZK8kt7m"><svg class="kZEfwKUF_b6N-MPjQuYFA" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill="inherit" fill-rule="evenodd" d="M13 9.0074c-.777 0-1.406-.63-1.406-1.406 0-.777.629-1.407 1.406-1.407.777 0 1.406.63 1.406 1.407 0 .776-.629 1.406-1.406 1.406m-3 5.581c-2.206 0-4-1.57-4-3.5 0-.276.224-.5.5-.5h7c.276 0 .5.224.5.5 0 1.93-1.794 3.5-4 3.5m-3-8.394c.777 0 1.406.63 1.406 1.407 0 .776-.629 1.406-1.406 1.406-.777 0-1.406-.63-1.406-1.406 0-.777.629-1.407 1.406-1.407m3-4.194c-4.411 0-8 3.588-8 8 0 4.411 3.589 8 8 8s8-3.589 8-8c0-4.412-3.589-8-8-8"></path></svg><div class="Nb7NCPTlQuxN_WDPUg5Q2"><div class="ki2VbfBhU-qxg1S6VyET6 _8fNGSBGvr1Ds8PbrsUGzN">Add Emoji</div></div><div class="_2nE7oF1_HdWt-s31zYmYB6 _26-n7Hn4ggLG2AJ7kmR8i6"><img class="_3D93rMnM8022kmI5JTG4fb" src="https://www.redditstatic.com/marketplace-assets/v1/core/emotes/snoomoji_emotes/free_emotes_pack/cry.gif"><img class="_3D93rMnM8022kmI5JTG4fb" src="https://www.redditstatic.com/marketplace-assets/v1/core/emotes/snoomoji_emotes/free_emotes_pack/disapproval.gif"><img class="_3D93rMnM8022kmI5JTG4fb" src="https://www.redditstatic.com/marketplace-assets/v1/core/emotes/snoomoji_emotes/free_emotes_pack/dizzy_face.gif"></div></button></div></span><span><div class="_1_GKN8UW8t3pCAZhMgZOoL"></div></span><span><button role="button" tabindex="-1" aria-label="Bold" aria-selected="false" class="_2lAJkFZXhr5kbH7YF-sYFf _1H0LLEwUP5ys6cgxr9KhMa _2iuoyPiKHN3kfOoeIQalDT _3zbhtNO0bdck0oYbYRhjMC HNozj_dKjQZ59ZsfEegz8 _1tPpYVD73ugqp4k-VMFRki _3ojSE1JW7jxNzUzZK8kt7m"><i class="_1mvTX6krm3Q2d1CSyUm28s  icon icon-bold"></i><div class="Nb7NCPTlQuxN_WDPUg5Q2"><div class="ki2VbfBhU-qxg1S6VyET6 dMXy0l6Saub8-fPDkQvGC _8fNGSBGvr1Ds8PbrsUGzN">Bold</div></div></button></span><span class="_2x_bJPl7Q970NCRxOS36QB"><button role="button" tabindex="-1" aria-label="Italics" aria-selected="false" class="_2lAJkFZXhr5kbH7YF-sYFf _1H0LLEwUP5ys6cgxr9KhMa _2iuoyPiKHN3kfOoeIQalDT _3zbhtNO0bdck0oYbYRhjMC HNozj_dKjQZ59ZsfEegz8 _1tPpYVD73ugqp4k-VMFRki _3ojSE1JW7jxNzUzZK8kt7m"><i class="_1mvTX6krm3Q2d1CSyUm28s  icon icon-italic"></i><div class="Nb7NCPTlQuxN_WDPUg5Q2"><div class="ki2VbfBhU-qxg1S6VyET6 dMXy0l6Saub8-fPDkQvGC _8fNGSBGvr1Ds8PbrsUGzN">Italics</div></div></button></span><span class="_2x_bJPl7Q970NCRxOS36QB"><button role="button" tabindex="-1" aria-label="Link" aria-selected="false" class="_2lAJkFZXhr5kbH7YF-sYFf _1H0LLEwUP5ys6cgxr9KhMa _2iuoyPiKHN3kfOoeIQalDT _3zbhtNO0bdck0oYbYRhjMC HNozj_dKjQZ59ZsfEegz8 _1tPpYVD73ugqp4k-VMFRki _3ojSE1JW7jxNzUzZK8kt7m"><i class="_1mvTX6krm3Q2d1CSyUm28s  icon icon-link_post"></i><div class="Nb7NCPTlQuxN_WDPUg5Q2"><div class="ki2VbfBhU-qxg1S6VyET6 dMXy0l6Saub8-fPDkQvGC _8fNGSBGvr1Ds8PbrsUGzN">Link</div></div></button></span><span class="_2x_bJPl7Q970NCRxOS36QB"><button role="button" tabindex="-1" aria-label="Strikethrough" aria-selected="false" class="_2lAJkFZXhr5kbH7YF-sYFf _1H0LLEwUP5ys6cgxr9KhMa _2iuoyPiKHN3kfOoeIQalDT _3zbhtNO0bdck0oYbYRhjMC HNozj_dKjQZ59ZsfEegz8 _1tPpYVD73ugqp4k-VMFRki _3ojSE1JW7jxNzUzZK8kt7m"><i class="_1mvTX6krm3Q2d1CSyUm28s  icon icon-strikethrough"></i><div class="Nb7NCPTlQuxN_WDPUg5Q2"><div class="ki2VbfBhU-qxg1S6VyET6 dMXy0l6Saub8-fPDkQvGC _8fNGSBGvr1Ds8PbrsUGzN">Strikethrough</div></div></button></span><span class="_2x_bJPl7Q970NCRxOS36QB"><button role="button" tabindex="-1" aria-label="Inline Code" aria-selected="false" class="_2lAJkFZXhr5kbH7YF-sYFf _1H0LLEwUP5ys6cgxr9KhMa _2iuoyPiKHN3kfOoeIQalDT _3zbhtNO0bdck0oYbYRhjMC HNozj_dKjQZ59ZsfEegz8 _1tPpYVD73ugqp4k-VMFRki _3ojSE1JW7jxNzUzZK8kt7m"><i class="_1mvTX6krm3Q2d1CSyUm28s  icon icon-code_inline"></i><div class="Nb7NCPTlQuxN_WDPUg5Q2"><div class="ki2VbfBhU-qxg1S6VyET6 dMXy0l6Saub8-fPDkQvGC _8fNGSBGvr1Ds8PbrsUGzN">Inline Code</div></div></button></span><span class="_2x_bJPl7Q970NCRxOS36QB"><button role="button" tabindex="-1" aria-label="Superscript" aria-selected="false" class="_2lAJkFZXhr5kbH7YF-sYFf _1H0LLEwUP5ys6cgxr9KhMa _2iuoyPiKHN3kfOoeIQalDT _3zbhtNO0bdck0oYbYRhjMC HNozj_dKjQZ59ZsfEegz8 _1tPpYVD73ugqp4k-VMFRki _3ojSE1JW7jxNzUzZK8kt7m"><i class="_1mvTX6krm3Q2d1CSyUm28s  icon icon-superscript"></i><div class="Nb7NCPTlQuxN_WDPUg5Q2"><div class="ki2VbfBhU-qxg1S6VyET6 dMXy0l6Saub8-fPDkQvGC _8fNGSBGvr1Ds8PbrsUGzN">Superscript</div></div></button></span><span class="_2x_bJPl7Q970NCRxOS36QB"><button role="button" tabindex="-1" aria-label="Spoiler" aria-selected="false" class="_2lAJkFZXhr5kbH7YF-sYFf _1H0LLEwUP5ys6cgxr9KhMa _2iuoyPiKHN3kfOoeIQalDT _3zbhtNO0bdck0oYbYRhjMC HNozj_dKjQZ59ZsfEegz8 _1tPpYVD73ugqp4k-VMFRki _3ojSE1JW7jxNzUzZK8kt7m"><i class="_1mvTX6krm3Q2d1CSyUm28s  icon icon-spoiler"></i><div class="Nb7NCPTlQuxN_WDPUg5Q2"><div class="ki2VbfBhU-qxg1S6VyET6 dMXy0l6Saub8-fPDkQvGC _8fNGSBGvr1Ds8PbrsUGzN">Spoiler</div></div></button></span><span class="_2x_bJPl7Q970NCRxOS36QB"><div class="_1_GKN8UW8t3pCAZhMgZOoL"></div></span><span class="_2x_bJPl7Q970NCRxOS36QB"><button role="button" tabindex="-1" aria-label="Heading" aria-selected="false" class="_2lAJkFZXhr5kbH7YF-sYFf _1H0LLEwUP5ys6cgxr9KhMa _2iuoyPiKHN3kfOoeIQalDT _3zbhtNO0bdck0oYbYRhjMC HNozj_dKjQZ59ZsfEegz8 _1tPpYVD73ugqp4k-VMFRki _3ojSE1JW7jxNzUzZK8kt7m"><i class="_1mvTX6krm3Q2d1CSyUm28s  icon icon-text_size"></i><div class="Nb7NCPTlQuxN_WDPUg5Q2"><div class="ki2VbfBhU-qxg1S6VyET6 dMXy0l6Saub8-fPDkQvGC _8fNGSBGvr1Ds8PbrsUGzN">Heading</div></div></button></span><span class="_2x_bJPl7Q970NCRxOS36QB"><button role="button" tabindex="-1" aria-label="Bulleted List" aria-selected="false" class="_2lAJkFZXhr5kbH7YF-sYFf _1H0LLEwUP5ys6cgxr9KhMa _2iuoyPiKHN3kfOoeIQalDT _3zbhtNO0bdck0oYbYRhjMC HNozj_dKjQZ59ZsfEegz8 _1tPpYVD73ugqp4k-VMFRki _3ojSE1JW7jxNzUzZK8kt7m"><i class="_1mvTX6krm3Q2d1CSyUm28s  icon icon-list_bulleted"></i><div class="Nb7NCPTlQuxN_WDPUg5Q2"><div class="ki2VbfBhU-qxg1S6VyET6 dMXy0l6Saub8-fPDkQvGC _8fNGSBGvr1Ds8PbrsUGzN">Bulleted List</div></div></button></span><span class="_2x_bJPl7Q970NCRxOS36QB"><button role="button" tabindex="-1" aria-label="Numbered List" aria-selected="false" class="_2lAJkFZXhr5kbH7YF-sYFf _1H0LLEwUP5ys6cgxr9KhMa _2iuoyPiKHN3kfOoeIQalDT _3zbhtNO0bdck0oYbYRhjMC HNozj_dKjQZ59ZsfEegz8 _1tPpYVD73ugqp4k-VMFRki _3ojSE1JW7jxNzUzZK8kt7m"><i class="_1mvTX6krm3Q2d1CSyUm28s  icon icon-list_numbered"></i><div class="Nb7NCPTlQuxN_WDPUg5Q2"><div class="ki2VbfBhU-qxg1S6VyET6 dMXy0l6Saub8-fPDkQvGC _8fNGSBGvr1Ds8PbrsUGzN">Numbered List</div></div></button></span><span class="_2x_bJPl7Q970NCRxOS36QB"><button role="button" tabindex="-1" aria-label="Quote Block" aria-selected="false" class="_2lAJkFZXhr5kbH7YF-sYFf _1H0LLEwUP5ys6cgxr9KhMa _2iuoyPiKHN3kfOoeIQalDT _3zbhtNO0bdck0oYbYRhjMC HNozj_dKjQZ59ZsfEegz8 _1tPpYVD73ugqp4k-VMFRki _3ojSE1JW7jxNzUzZK8kt7m"><i class="_1mvTX6krm3Q2d1CSyUm28s  icon icon-quote"></i><div class="Nb7NCPTlQuxN_WDPUg5Q2"><div class="ki2VbfBhU-qxg1S6VyET6 dMXy0l6Saub8-fPDkQvGC _8fNGSBGvr1Ds8PbrsUGzN">Quote Block</div></div></button></span><span class="_2x_bJPl7Q970NCRxOS36QB"><button role="button" tabindex="-1" aria-label="Code Block" aria-selected="false" class="_2lAJkFZXhr5kbH7YF-sYFf _1H0LLEwUP5ys6cgxr9KhMa _2iuoyPiKHN3kfOoeIQalDT _3zbhtNO0bdck0oYbYRhjMC HNozj_dKjQZ59ZsfEegz8 _1tPpYVD73ugqp4k-VMFRki _3ojSE1JW7jxNzUzZK8kt7m"><i class="_1mvTX6krm3Q2d1CSyUm28s  icon icon-code_block"></i><div class="Nb7NCPTlQuxN_WDPUg5Q2"><div class="ki2VbfBhU-qxg1S6VyET6 dMXy0l6Saub8-fPDkQvGC _8fNGSBGvr1Ds8PbrsUGzN">Code Block</div></div></button></span><span class="_2x_bJPl7Q970NCRxOS36QB"><div class="_1_GKN8UW8t3pCAZhMgZOoL"></div></span><span class="_2x_bJPl7Q970NCRxOS36QB"><button role="button" tabindex="-1" aria-label="Table" aria-selected="false" class="_2lAJkFZXhr5kbH7YF-sYFf _1H0LLEwUP5ys6cgxr9KhMa _2iuoyPiKHN3kfOoeIQalDT _3zbhtNO0bdck0oYbYRhjMC HNozj_dKjQZ59ZsfEegz8 _1tPpYVD73ugqp4k-VMFRki _3ojSE1JW7jxNzUzZK8kt7m"><i class="_1mvTX6krm3Q2d1CSyUm28s  icon icon-table"></i><div class="Nb7NCPTlQuxN_WDPUg5Q2"><div class="ki2VbfBhU-qxg1S6VyET6 dMXy0l6Saub8-fPDkQvGC _8fNGSBGvr1Ds8PbrsUGzN">Table</div></div></button></span><div class="_3nQ7w1VIzZvzFawddOYgBC"><button aria-expanded="false" aria-haspopup="true" aria-label="more options" id="Comment--Overflow-Dropdown__f424d9" data-adclicklocation="overflow_menu" class="_2pFdCpgBihIaYh9DSMWBIu _2aOuodBenLHlceR3j0AlIM uMPgOFYlCc5uvpa2Lbteu"><i class="_38GxRFSqSC-Z2VLi5Xzkjy icon icon-overflow_horizontal"></i></button></div></div></div><div class="_1_GKN8UW8t3pCAZhMgZOoL _3rYrfakWyDh7Y1L9ULn4ve"></div><div class="_3SWQgWX2fzvWmGCv463r_-"><button role="button" tabindex="-1" aria-label="Switch to markdown" class="_1Wn5lpE9yF7YQX-XVL6AUI _2iuoyPiKHN3kfOoeIQalDT _3zbhtNO0bdck0oYbYRhjMC _3uJP0daPEH2plzVEYyTdaH "><span>Markdown Mode</span></button></div></div></div><div class="tVQ1dB4n0mAWdcQNxFq-K " style="left: -23px; top: 182px;"></div><div class="tVQ1dB4n0mAWdcQNxFq-K _1l8806duAP4T6f7-NQkUTp "></div></div></div></div></div>`;
   const upvoteButtons = newComment.querySelector(likebuttonSelector);
-  
-
-
-  //const fakeCommentallButtons = newComment.querySelectorAll(`button.${className}`);
-  //console.log(fakeCommentallButtons);
-  //const fakeCommentreplyButton = Array.from(fakeCommentallButtons).find(button => button.innerText === innerText);
 
 
   const fakeCommentreplyButton = newComment.querySelector('.' + replyCommentSelector);
@@ -2365,185 +2357,6 @@ function changecomment_content(cd, username, content) {
 
 
 }
-
-const covidKeywords = [
-  'COVID-19',
-  'coronavirus',
-  'pandemic',
-  'SARS-CoV-2',
-  'lockdown',
-  'quarantine',
-  'social distancing',
-  'face mask',
-  'hand sanitizer',
-  'vaccine',
-  'vaccination',
-  'testing',
-  'symptoms',
-  'asymptomatic',
-  'incubation',
-  'transmission',
-  'ventilator',
-  'intensive care',
-  'epidemic',
-  'outbreak',
-  'contact tracing',
-  'immunity'
-];
-let highlightedNodes; // Keep track of highlighted nodes
-let replacedNodes; // Keep track of replaced nodes
-// Retrieve the highlightedNodes array from Chrome storage
-chrome.storage.local.get('highlightedNodes', function (result) {
-  highlightedNodes = result.highlightedNodes;
-  // Remove the highlighting from all the stored nodes
-
-});
-
-chrome.storage.local.get('', function (result) {
-  replacedNodes = result.replacedNodes;
-  // Remove the highlighting from all the stored nodes
-
-});
-
-
-
-
-
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-  if (request.message === "send_options") {
-    let options = request.optionalValue;
-    const nodes = document.querySelectorAll('*:not(:has(*))');
-    highlightedNodes = []; // Keep track of highlighted nodes
-    replacedNodes = []; // Keep track of replaced nodes
-    const commentDivs = document.querySelectorAll('div.Comment');
-    //alert(options);
-    switch (options) {
-      case 2:
-        nodes.forEach(function (node) {
-          let nodeHTML = node.innerHTML;
-
-          covidKeywords.forEach(function (keyword) {
-            if (node.textContent.includes(keyword)) {
-              const className = `highlighted-${highlightedNodes.length}`;
-              const highlightedKeyword = `<span class="${className}" style="background-color: yellow">${keyword}</span>`;
-              nodeHTML = nodeHTML.split(keyword).join(highlightedKeyword);
-              highlightedNodes.push(className);
-            }
-          });
-
-          node.innerHTML = nodeHTML;
-        });
-
-        chrome.storage.local.set({ 'highlightedNodes': highlightedNodes }, function () {
-          console.log('Highlighted nodes stored in Chrome storage');
-        });
-
-        break;
-      case 3:
-        nodes.forEach(function (node) {
-          let nodeHTML = node.innerHTML;
-
-          covidKeywords.forEach(function (keyword) {
-            if (node.textContent.includes(keyword)) {
-              const id = `replaced-${replacedNodes.length}`;
-              const replaceWords = `<span id="${id}">Chenchen</span>`;
-              const keywordRegex = new RegExp(keyword, 'g'); // create a RegExp object with the keyword to match all occurrences
-              const nodeData = {
-                id: id,
-                originalKeyword: keyword // store only the original keyword
-              };
-              nodeHTML = nodeHTML.replace(keywordRegex, replaceWords); // replace all occurrences of the keyword with the replacement HTML
-              replacedNodes.push(nodeData);
-            }
-          });
-
-          node.innerHTML = nodeHTML;
-        });
-
-        chrome.storage.local.set({ 'replacedNodes': replacedNodes }, function () {
-          console.log('Replaced nodes stored in Chrome storage');
-        });
-
-        break;
-      case 4:
-
-
-        // Hide all comments
-        commentDivs.forEach((commentDiv) => {
-          commentDiv.style.display = 'none';
-        });
-
-        break;
-      case 5:
-
-        // Hide comments containing keywords
-        commentDivs.forEach((commentDiv) => {
-          const commentText = commentDiv.textContent.toLowerCase();
-          const containsKeyword = covidKeywords.some((keyword) => commentText.includes(keyword));
-          if (containsKeyword) {
-            commentDiv.style.display = 'none';
-          }
-        });
-        break;
-
-      case -1:
-        undoHighlighting();
-        undoReplacement();
-        unhideComments();
-        break;
-      // Other cases...
-    }
-  }
-});
-
-function undoHighlighting() {
-  chrome.storage.local.get(['highlightedNodes'], function (result) {
-    if (result.highlightedNodes) {
-      result.highlightedNodes.forEach(function (className) {
-        const highlightedNodes = document.querySelectorAll(`.${className}`);
-        highlightedNodes.forEach(function (node) {
-          node.outerHTML = node.innerHTML; // replace the node with its inner HTML to remove the highlight span element
-          node.classList.remove(className); // remove the unique class name
-        });
-      });
-
-      chrome.storage.local.remove(['highlightedNodes'], function () {
-        console.log('Highlighted nodes removed from Chrome storage');
-      });
-    }
-  });
-}
-
-
-function undoReplacement() {
-  chrome.storage.local.get(['replacedNodes'], function (result) {
-    if (result.replacedNodes) {
-      result.replacedNodes.forEach(function (nodeData) {
-        const replacedNode = document.querySelector(`#${nodeData.id}`);
-        if (replacedNode) {
-          const keywordRegex = new RegExp('Chenchen', 'g'); // create a RegExp object with the replacement keyword to match all occurrences
-          replacedNode.innerHTML = replacedNode.innerHTML.replace(keywordRegex, nodeData.originalKeyword);
-          replacedNode.removeAttribute('id');
-        }
-      });
-
-      chrome.storage.local.remove(['replacedNodes'], function () {
-        console.log('Replaced nodes removed from Chrome storage');
-      });
-    }
-  });
-}
-
-function unhideComments() {
-  const commentDivs = document.querySelectorAll('div.Comment');
-
-  commentDivs.forEach((commentDiv) => {
-    commentDiv.style.display = 'block'; // or 'inline-block', depending on the original display value
-  });
-}
-
-
-
 
 ////  dan 
 var surveyQuestionsCoutner = 0,
