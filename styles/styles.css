@@ -1,0 +1,9 @@
+.btn-scale.active {
+    background-color: blue;
+    color: white;
+}
+
+#start {
+    margin-top: 10px;
+    background-color: #FF4500;
+}
