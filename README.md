@@ -7,7 +7,7 @@
 
 This Chrome extension is an experimental tool designed to explore the impact of 'framing' on users' understanding of COVID-19 content on Reddit. By changing the presentation of information ( fake comments, vote numbers, or like #'s), the extension allows users and researchers to observe potential changes in audience reaction.
 
-> **NOTE**: This extension is for experimental purposes only and should not be used to deceive or manipulate the genuine perceptions of users. Make sure you have proper permissions and inform users of your intentions when conducting such experiments.
+> **NOTE**: This extension is for experimental purposes only.
 
 ## Getting Started
 
