@@ -12,6 +12,7 @@ function read_csv() {
             user_name: rowData['user_name'],
             content: rowData['content'],
             where_to_insert: rowData['where_to_insert'],
+            ordinal_position:rowData['ordinal_position'],
             post_url: rowData['post_url'],
             like: rowData['likes'],
             time: rowData['time']
