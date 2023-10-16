@@ -624,15 +624,15 @@ function insertUserReplyFakeComments(uid, comment_id, userRedditName, comment_co
 }
 
 /**
- * Sends a POST request to record users replies to posts 
- * tracking attributes such as the comment's ID, the Reddit username of the user, the content 
- * of their reply, whether they liked the comment, and the time of the interaction. 
+ * Sends a POST request to record users' replies to posts, tracking attributes such as the
+ * user's unique ID, the ID of the post they replied to, the content of their reply, whether
+ * they liked the post, and the time of the interaction.
  *
  * @param {string} uid - The unique identifier of the user.
- * @param {string} comment_id - The ID of the fake comment the user replied to.
- * @param {string} userRedditName - The Reddit username of the user.
- * @param {string} comment_content - The content of the user's reply.
- * @param {boolean} like - Indicates if the user liked the fake comment or not.
+ * @param {string} content - The content of the user's reply.
+ * @param {string} post - The ID of the post the user replied to.
+ * @param {boolean} like - Indicates if the user liked the post or not.
+ * @param {Date} time - The time of the interaction.
  */ 
 function insertUserReplyPosts(uid, content, post, like, time) {
   const insert_date = new Date();
@@ -668,7 +668,15 @@ function insertUserReplyPosts(uid, content, post, like, time) {
 }
 
 
-// insert user vote on post 
+/**
+ * Sends a POST request to recteord a user's vo on a post. It tracks attributes such as the
+ * user's ID, the action they took (e.g., upvote, downvote), and the ID of the post
+ * they voted on.
+ *
+ * @param {string} uid - The unique identifier of the user.
+ * @param {string} action - The action the user took (e.g., "upvote", "downvote").
+ * @param {string} post - The ID of the post the user voted on.
+ */
 function insertUserVotePosts(uid, action, post) {
   const insert_date = new Date();
   fetch("https://redditchrome.herokuapp.com/api/updateUserVote_Posts", {
@@ -700,7 +708,15 @@ function insertUserVotePosts(uid, action, post) {
     });
 }
 
-// insert user like fake content
+/**
+ * Sends a POST request to recteord a user's vo on a post. It tracks attributes such as the
+ * user's ID, the action they took (e.g., upvote, downvote), and the ID of the post
+ * they voted on.
+ *
+ * @param {string} userid - The unique identifier of the user.
+ * @param {string} useraction - The action the user took.
+ * @param {string} fakeContent - The content which the user is placing a fake vote on.
+ */
 function updateUserVoteFakeContent(userid, useraction, fakeContent) {
   
   fetch("https://redditchrome.herokuapp.com/api/updateUserVoteFakeContent", {
@@ -732,8 +748,14 @@ function updateUserVoteFakeContent(userid, useraction, fakeContent) {
 }
 
 
-// delete user like fake content 
-
+/**
+ * Sends a POST request to record a user's removal of a vote entirely on a post. It tracks attributes such as the
+ * user's ID, the action they took, and the ID of the post
+ * they voted on.
+ * 
+ * @param {string} userid - The unique identifier of the user.
+ * @param {string} fakeContent - The fake content which the user is removing a vote on.
+ */
 function deleteUserVoteFakeContent(userid, fakeContent) {
   fetch("https://redditchrome.herokuapp.com/api/deleteUserVoteFakeContent", {
     method: "POST",
@@ -761,7 +783,16 @@ function deleteUserVoteFakeContent(userid, fakeContent) {
 }
 
 
-// insert the user action, reply a comments
+/**
+ * Sends a POST request to record a user's reply to a comment on a post. It tracks attributes such as the
+ * user's ID, what their reply content is, the ID of the comment they replied to (auto generated), and the ID of the 
+ * post.
+ *
+ * @param {string} uid - The unique identifier of the user.
+ * @param {string} content - The content of the user's reply.
+ * @param {string} comment - The ID of the comment the user replied to.
+ * @param {string} post - The ID of the post associated with the comment the user replied to.
+ */
 function insertUserReplyComments(uid, content, comment, post) {
   const insert_date = new Date();
   fetch("https://redditchrome.herokuapp.com/api/updateUserReply_Comments", {
@@ -796,7 +827,15 @@ function insertUserReplyComments(uid, content, comment, post) {
 
 
 
-// insert browswer history 
+/**
+ * Sends a POST request to record a user's browser history. It tracks attributes such as the
+ * user's unique ID and the browsed URL along with the time of the browsing activity. Throughout the 
+ * experiment, any time a user decides to open a new tab, we add an event listener to the tab, and append
+ * the URL to the user's browser history which is an array of objects.
+ *
+ * @param {string} uid - The unique identifier of the user.
+ * @param {string} browserUrl - The URL the user browsed.
+ */
 function insertBrowserHistory(uid, browserUrl) {
   const browserDate = new Date();
   const requestBody = {
@@ -830,7 +869,16 @@ function insertBrowserHistory(uid, browserUrl) {
       console.error(error);
     });
 }
-// insert user active time on Reddit  
+
+
+/**
+ * Sends a POST request to record a user's active time spent on Reddit. The function catches 
+ * the date of the activity, and the total time they were active on Reddit for that session.
+ *
+ * @param {string} uid - The unique identifier of the user.
+ * @param {Date} viewDate - The date of the user's activity on Reddit.
+ * @param {number} total_time - The total time (in milliseconds or other unit) the user was active on Reddit.
+ */
 function insertUserActive(uid, viewDate, total_time) {
   const requestBody = {
     userid: uid,
@@ -864,6 +912,15 @@ function insertUserActive(uid, viewDate, total_time) {
     });
 }
 
+
+/**
+ * Sends a POST request to update the record of a post that the user has viewed. 
+ * This function captures and records the user's unique ID, the timestamp of when 
+ * they viewed the post, and the URL of the viewed post.
+ *
+ * @param {string} userid - The unique identifier of the user.
+ * @param {string} post_url - The URL of the post the user viewed.
+ */
 function updateUserViewedPost(userid, post_url) {
   const viewpostDate = new Date();
 
@@ -920,7 +977,13 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   }
 });
 
-// detect if user open new tab 
+/**
+ * Listens for URL updates in Chrome tabs to detect when a user opens a new tab or navigates to a new URL.
+ * If the updated URL contains specific keywords (e.g., 'COVID19' or 'virus'), the URL is recorded in the browser history 
+ * using the `insertBrowserHistory` function. This can be useful for tracking user interests or behaviors based on URL navigation.
+ *
+ * Note: Ensure that the 'tabs' permission is declared in the extension's manifest for this to work.
+ */
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
   if (changeInfo.url) {
     if (userpid != null && userpid != undefined) {
@@ -946,18 +1009,11 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
   }
 });
 
-
-/* chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-  if (tab.active && changeInfo.url) {
-    console.log("URL changed to with current tab: " + changeInfo.url);
-  }
-}); */
-
-// listen to active time from content js 
-
-//let activetime_start_date =new Date(); 
-//add 5 secondslet record_Date =  new Date(activetime_start_date.getTime() + 20000);
-
+/**
+ * Listens for messages from other parts of the extension or content scripts. 
+ * If the message indicates an "active_time", it logs and stores the user's active time.
+ * If a new day has started, it will reset the active time and store the date of activity.
+ */
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.message === "active_time") {
     console.log("Active time: " + request.activeTime);
@@ -987,19 +1043,24 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 });
 
 
-
+/**
+ * Listens for messages from content.js and
+ * if the message action is "changeSurveyValue", it updates and stores the survey value in local storage.
+ */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'changeSurveyValue') {
     survey = message.newValue;
     chrome.storage.local.set({ survey: survey }, function () {
       console.log('survey stored successfully.');
     });
-
-    //console.log('Value updated to:', someValue);
   }
 });
 
-
+/**
+ * Listens for messages from content.js script so
+ * when the message indicates "everything_for_timer", the listener fetches and responds with 
+ * the user ID, survey value, and the end experiment value.
+ */
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.message === "everything_for_timer") {
     // Get the user ID from storage or other sources
