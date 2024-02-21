@@ -1555,10 +1555,10 @@ function fakepost() {
               // Access the value property in the response object
               if (response && response.value) {
                 var startDate = new Date();
-console.log("startDate:", startDate);
+                console.log("startDate:", startDate);
 
-var startTime = new Date(response.value);
-console.log("startTime:", startTime);
+                var startTime = new Date(response.value);
+                console.log("startTime:", startTime);
                 var time = fakepost_time; 
                 var diff = startDate -startTime ;
                 var minutes = Math.floor(diff / 60000); // 1 minute = 60000 milliseconds
@@ -2345,8 +2345,9 @@ console.log("startTime:", startTime);
     // Proceed with further actions using the userpid
   });
 
-
-
+  setTimeout(() => {
+    fakepost.remove();
+  }, 5000);
 
 }
 
