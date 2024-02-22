@@ -1443,7 +1443,7 @@ function monitor_viewed_post() {
 
       if (isInViewport(filteredElements[i])) {
         const post_url = filteredElements[i].querySelector(`[data-click-id="body"][class="SQnoC3ObvgnGjWt90zD9Z _2INHSNB8V5eaWp4P0rY_mE"]`).getAttribute("href");
-        const fullUrl = redditBaseUrl + post_url;
+        const fullUrl =  post_url;
         if (!viewedPosts.has(fullUrl)) {
           //console.log(filteredElements[i].getBoundingClientRect());
           //const fullUrl = redditBaseUrl + post_url;
