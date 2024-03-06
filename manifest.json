@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Outer Limit Project ",
   "version": "2.0",
-  "description": "This is a chrome extension that allows users to interact with fake posts on reddit and see how users change their behavior based on the number of upvotes and downvotes.",
+  "description": "This is a chrome extension that a",
   "icons": {
     "48" : "icons/reddit.png",
     "128": "icons/reddit.png"
