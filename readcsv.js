@@ -37,7 +37,7 @@ function read_csv() {
     .on('data', (rowData) => {
         
         const mappedData = {
-            fakepost_url: rowData['﻿fakepost_url'],
+            fakepost_url: rowData['fakepost_url'],
             fakepost_index: rowData['fakepost_index'],
             fakepost_title: rowData['fakepost_title'],
             fakepost_content: rowData['fakepost_content'],
