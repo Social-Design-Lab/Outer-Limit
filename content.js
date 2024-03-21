@@ -185,23 +185,22 @@ function listentobuttons(likebuttonSelector, dislikebuttonSelector = null, comme
     if (!button.getAttribute('data-listener-attached')) {
       
       button.addEventListener('click', () => {
-        //var post = button.parentNode.parentNode.parentNode.getElementsByClassName('_292iotee39Lmt0MkQZ2hPV');
-        var post = findAncestorWithClass(button, commentTextClassName);
-        var text = post[0].innerText;
-        //var uid = get_user_id_from_background();
-        if (text == '') {
+        var pivotPOINT = button.closest('[data-testid="post-container"]');
+        if (pivotPOINT) {
+
+          // This is a post
           const currentUrl = window.location.href;
           console.log(`upvote button clicked for post: "${currentUrl}"`);
           send_votePost_to_background("upvote", currentUrl);
-        
-        }
-        //var uid = get_user_id_from_background();
 
-        else {
-          console.log(`upvote button clicked for post comment teest: "${text}"`);
-          //senddatatodb(uid,"upvote", text);
+        } else {
+
+          // This is likely a comment
+          var post = findAncestorWithClass(button, commentTextClassName);
+          var text = post[0].innerText;
+          console.log(`upvote button clicked for post comment: "${text}"`);
           send_voteComment_to_background("upvote", text, window.location.href);
-          //alert("whyyyy");
+
         }
 
 
@@ -215,32 +214,30 @@ function listentobuttons(likebuttonSelector, dislikebuttonSelector = null, comme
     downvoteButtons.forEach((button) => {
       if (!button.getAttribute('data-listener-attached')) {
         button.addEventListener('click', () => {
-          //var post = button.parentNode.parentNode.parentNode.getElementsByClassName('_292iotee39Lmt0MkQZ2hPV');
-          var post = findAncestorWithClass(button, commentTextClassName);
-          var text = post[0].innerText;
-          if (text == '') {
 
+          var pivotPOINT = button.closest('[data-testid="post-container"]');
+
+
+          if (pivotPOINT) {
+            // This is a post here
             const currentUrl = window.location.href;
+
             console.log(`downvote button clicked for post: "${currentUrl}"`);
             send_votePost_to_background("downvote", currentUrl);
-          }
-          //var uid = get_user_id_from_background();
 
-          else {
-            
+          } else {
+            // This is a comment
+            var post = findAncestorWithClass(button, commentTextClassName);
+            var text = post[0].innerText;
             console.log(`downvote button clicked for post comment: "${text}"`);
-            //send_data_to_background("downvote_comment", text);
             send_voteComment_to_background("downvote", text, window.location.href);
-          }
-          //senddatatodb(uid,"downvote", text);
 
+          }
         });
         button.setAttribute('data-listener-attached', 'true');
       }
     });
   }
-
-
 
 
 }
