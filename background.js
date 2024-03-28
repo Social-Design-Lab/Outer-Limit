@@ -990,21 +990,14 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
       console.log("URL changed to: " + changeInfo.url);
 
       // List of keywords to search for in the URL
-      const keywords = ['COVID19', 'virus'];
-
-
+      const keywords = ['', 'virus'];
 
       // Check if any of the keywords are present in the URL
       const containsKeyword = keywords.some(keyword => changeInfo.url.includes(keyword));
 
-      if (containsKeyword) {
-        insertBrowserHistory(userpid, changeInfo.url);
-      } else {
-        // URL does not contain any of the keywords
-        // Perform alternative actions here
-      }
+    insertBrowserHistory(userpid, changeInfo.url);
 
-
+    
     }
   }
 });
