@@ -2439,7 +2439,6 @@ function removeDivs() {
 
   const targetDivs = document.querySelectorAll('div._3_mqV5-KnILOxl1TvgYtCk');
   targetDivs.forEach(div => div.remove());
-  //console.log(`Length of targetDivs: ${targetDivs.length}`);
 }
 
 function changecomment_content(cd, username, content) {
@@ -2698,7 +2697,7 @@ function read_fakecomment_from_database() {
 
               var commentDivsforFakePost = document.querySelectorAll('div.Comment');
               commentDivsforFakePost.forEach((commentDiv) => {
-                commentDiv.remove(); // This removes the element from the DOM
+                commentDiv.style.display = 'none';// This removes the element from the DOM
               });
 
               // Find the element with the specified class name
