@@ -107,6 +107,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   if (request.message === "refreshContentScript") {
     console.log("Received message to refresh content script.");
     window.location.reload();
+    
     // Your logic to insert/refresh content in the page goes here.
   }
 });
@@ -145,6 +146,7 @@ function runMyCode() {
 
       if (location.hostname === "new.reddit.com" && location.pathname === "/") {
         console.log("This is the Reddit main page.");
+        
         fakepost(); 
         monitor_viewed_post();
       } else {
@@ -1571,9 +1573,6 @@ function sendUpdateViewedPostToBackground(post_url) {
 }
 
 
-
-
-
 // create fakepost in reddit home page 
 function fakepost() {
 
@@ -1581,7 +1580,7 @@ function fakepost() {
     const userpid = response.value;
     console.log("Received userpid from background script 1:", userpid);
 
-
+    
     fetch(`https://redditchrome.herokuapp.com/api/fake_posts`)
       .then(response => response.json())
       .then(data => {
@@ -1589,7 +1588,7 @@ function fakepost() {
         if (Array.isArray(data) && data.length > 0 ) {
           var fakePosts = data;
           console.log("Fake post retrieved successfully 1:", fakePosts);
-
+  
           // Process each fake comment
           fakePosts.forEach(post => {
             // Access the properties of each comment
@@ -1604,10 +1603,17 @@ function fakepost() {
               .then(responseText => {
                 console.log('Raw response content:', responseText);
                 const data = JSON.parse(responseText); // Parse the response content as JSON
-                return data.viewed_posts; // Return the 'viewed_posts' array from the parsed object
+                if (data.viewed_posts && data.viewed_posts.length > 0) {
+                  return data.viewed_posts;
+                } else {
+                  // If 'viewed_posts' is not available or empty, proceed with an empty array
+                  console.log("No viewed posts available, proceeding with empty data.");
+                  return [];
+                }
               })
               .then(viewedp => { // 'viewedp' now directly references the array
-                if (Array.isArray(viewedp) && viewedp.length > 0) {
+                //console.log("Viewed posts array:", viewedp);
+                if (Array.isArray(viewedp)) {
                   console.log("Viewed post retrieved successfully 1:", viewedp);
 
                   if (viewedp.some(item => item.post_url === fakepost_url)) {
