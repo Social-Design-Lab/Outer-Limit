@@ -103,11 +103,27 @@ function load() {
       hide("display");
       show("endexp");
       hide("midpop");
-      const newUrl = `https://lehigh.co1.qualtrics.com/jfe/form/SV_6KxpdVcdt2zY9T0?uid=${uid}`;
+      const newUrl = `https://lehigh.co1.qualtrics.com/jfe/form/SV_50BCu68Dhap6vBk?uid=${uid}`;
       // Get a reference to the link element
       const myLink = document.getElementById("my-link");
+
+      
       // Change the href attribute of the link
       myLink.setAttribute("href", newUrl);
+
+
+     
+      if (myLink) {
+        // Change the href attribute of the link
+        myLink.setAttribute("href", newUrl);
+    
+        // Add click event listener to open the link in a new tab
+        myLink.addEventListener('click', function (e) {
+          e.preventDefault(); // Stop the default action of the link
+          chrome.tabs.create({url: this.href}); // Use Chrome's API to open a new tab
+        });
+      }
+      
     }
 
   });

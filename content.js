@@ -1620,6 +1620,7 @@ function fakepost() {
                     console.log("Array contains the specific URL.");
                   } else {
                     console.log("Array does not contain the specific URL.");
+                   // alert(" You made it! The Outer Limit is working on your reddit page now.");
                     chrome.runtime.sendMessage({ message: "get_time" }, function(response) {
                       // Process the response received from the background script
                       console.log("Received start time from background script:", response.value);
@@ -1627,10 +1628,10 @@ function fakepost() {
                       // Access the value property in the response object
                       if (response && response.value) {
                         var startDate = new Date();
-        console.log("startDate:", startDate);
-        
-        var startTime = new Date(response.value);
-        console.log("startTime:", startTime);
+                        console.log("startDate:", startDate);
+                        
+                        var startTime = new Date(response.value);
+                        console.log("startTime:", startTime);
                         var time = fakepost_time; 
                         var diff = startDate -startTime ;
                         var minutes = Math.floor(diff / 60000); // 1 minute = 60000 milliseconds
