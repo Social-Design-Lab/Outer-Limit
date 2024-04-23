@@ -351,7 +351,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     insertUserVotePosts(userpid, request.data.action, request.data.post);
     sendResponse({ message: "votePostSuccess" });
   } else if (request.message === "replyComment") {
-    console.log("Received data from content script: ", request.data);
     insertUserReplyComments(userpid, request.data.content, request.data.comment, request.data.post);
     sendResponse({ message: "replyCommentSuccess" });
   } else if (request.message === "updateViewedPost") {

@@ -364,7 +364,7 @@ var combinedValue = idofcomment + '-' + username + '-' + content;
           userSubmitButtonInFakeCommnet.addEventListener('click', function () {
             // Get the content of replyInput
             const userReplyInFake = replyInput.innerText;
-            send_replyComment_to_background(userReplyInFake, content, window.location.href);
+            //send_replyComment_to_background(userReplyInFake, content, window.location.href);
             // Perform actions with the reply content
             //alert(userReplyInFake);
             //let insertUsersCommentToFakeComment = newComment; 
@@ -925,7 +925,6 @@ if (count<(index+1))
 
                 // Get the content of replyInput
 
-                //send_replyComment_to_background(userReplyInFake,fakeCommnetContent,window.location.href);
                 // Perform actions with the reply content
                 //alert(userReplyInFake);
                 //let insertUsersCommentToFakeComment = newComment; 
