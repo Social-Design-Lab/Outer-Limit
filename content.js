@@ -1256,8 +1256,18 @@ function monitor_new_comment(replyPostButtonSelector, replyCommentSelector, filt
 
       var spanElement = currentNode.querySelector("span[data-text='true']");
       console.log('My span: 2', spanElement.textContent);
+
+      //if URL does not follow pattern https://new.reddit.com/r/aww/
+      var currentURL = window.location.href;
+
+      // Check if the URL contains the specific substring
+      if (currentURL.includes('https://preview.redd.it/')) {
+          console.log('URL indicates a fake post not triggering send_replyPost_to_background');
+      } else {
+        console.log('URL does not indicate a fake post trigger _replyPost_to_background');
+        send_replyPost_to_background(spanElement.textContent, window.location.href);
+      }
       
-      send_replyPost_to_background(spanElement.textContent, window.location.href);
       spanElement.textContent = '';
     });
     // Set flag to indicate that event listener has been added
