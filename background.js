@@ -344,6 +344,39 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     sendResponse({ message: "voteCommentSuccess" });
   } else if (request.message === "replyPost") {
     console.log("Received data from content script: ", request.data);
+   
+    /// check if the url is fake post or not 
+  /*   fetch(`https://redditchrome.herokuapp.com/api/fake_posts`)
+    .then(response => response.json())
+    .then(data => {
+        // Check if the data contains the expected structure
+        if (Array.isArray(data) && data.length > 0) {
+            const fakePosts = data;
+            console.log("Fake post retrieved successfully:", fakePosts);
+            let matchFound = false;  // Initialize the flag as false
+            // Process each fake post
+            fakePosts.forEach(post => {
+                // Access the properties of each post
+                var { id, fakepost_url, fakepost_index, fakepost_title, fakepost_content, fakepost_image, fakepost_like, fakepost_time, fakepost_community, fakepost_poster } = post;
+
+                if (window.location.href === fakepost_url) {
+                    // Handle the case where the current URL matches the fake post URL
+                    matchFound = true;
+                
+                } else {
+                    console.log("This URL does not match any fake post URL.");
+                }
+            });
+            if (!matchFound) {
+              console.log("No fake post matches the current URL. Perform some action here.");
+              // Add any additional actions you want to perform when no URL matches
+              insertUserReplyPosts(userpid, request.data.content, request.data.post, request.data.like,request.data.time );
+          }
+        }
+    })
+    .catch(error => console.error("Failed to fetch fake posts:", error));
+ */
+
     insertUserReplyPosts(userpid, request.data.content, request.data.post, request.data.like,request.data.time );
     sendResponse({ message: "replyPostSuccess" });
   } else if (request.message === "votePost") {
