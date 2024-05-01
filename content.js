@@ -153,7 +153,7 @@ function runMyCode() {
         console.log(`This is not the Reddit main page: ${window.location.href}`);
 
 
-        //changefakepost_dom();
+      
         read_fakecomment_from_database();
         monitor_new_comment(replyPostButtonSelector, replyCommentSelector, filterText, commentSelector);
         
