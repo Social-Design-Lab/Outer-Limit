@@ -144,11 +144,13 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     });
 
     function forceRefreshTab(tabId) {
+      
       chrome.tabs.reload(tabId);
     }
 
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       if (tabs && tabs[0]) {
+        //document.documentElement.style.visibility = 'hidden';
         forceRefreshTab(tabs[0].id);
       }
     });
@@ -1020,21 +1022,10 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     if (userpid != null && userpid != undefined) {
       console.log("URL changed to: " + changeInfo.url);
 
-      // List of keywords to search for in the URL
-      const keywords = ['COVID19', 'virus'];
-
-
-
-      // Check if any of the keywords are present in the URL
-      const containsKeyword = keywords.some(keyword => changeInfo.url.includes(keyword));
-
-      if (containsKeyword) {
-        insertBrowserHistory(userpid, changeInfo.url);
-      } else {
-        // URL does not contain any of the keywords
-        // Perform alternative actions here
-      }
-
+      if (changeInfo.url !== "https://new.reddit.com/") {
+      // Insert the URL into browser history only if it's not the homepage
+      insertBrowserHistory(userpid, changeInfo.url);
+    }
 
     }
   }

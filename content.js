@@ -118,6 +118,21 @@ window.onload = function() {
   // Your code here
 };
 
+
+
+document.addEventListener('DOMContentLoaded', function () {
+  const posts = document.querySelectorAll('a[href*="/r/"]'); // Example selector for Reddit posts
+
+  posts.forEach(post => {
+      post.addEventListener('click', function (e) {
+          e.preventDefault(); // Prevent the default pop-up behavior
+          window.location.href = this.href; // Force a full page reload to the post's link
+      });
+  });
+});
+
+
+
 //alert("run my code is called");
 //}
 // });
