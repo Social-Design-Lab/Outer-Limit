@@ -135,7 +135,7 @@ function load() {
         // Change the href attribute of the link
     
         // Add click event listener to open the link in a new tab
-        myLink.addEventListener('click', function (e) {
+        redditlink.addEventListener('click', function (e) {
           e.preventDefault(); // Stop the default action of the link
           chrome.tabs.create({url: this.href}); // Use Chrome's API to open a new tab
         });
