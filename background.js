@@ -431,6 +431,7 @@ function insertdata(uid) {
       user_comment_in_fake_post: [],
       user_reply_tofakecomment: [],
       user_vote_fake:[],
+      viewed_posts:[],
     })
   })
     .then(response => {
