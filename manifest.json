@@ -41,7 +41,8 @@
     },
     {
       "matches": [
-        "https://new.reddit.com/*"
+        "https://new.reddit.com/*",
+        "https://www.reddit.com/*"
       ],
       "js": [
         "content.js"

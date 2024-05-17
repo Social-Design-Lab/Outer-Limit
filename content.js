@@ -103,6 +103,17 @@ var newobserver = new MutationObserver(function (mutationsList, observer) {
 
 newobserver.observe(document.body, { childList: true, subtree: true }); */
 
+
+// if users are on new version of reddit , force them go to old version of reddit 
+const redditRegex = /^https:\/\/www\.reddit\.com/;
+if (redditRegex.test(window.location.href)) {
+    // Replace www.reddit.com with new.reddit.com
+    const newUrl = window.location.href.replace(redditRegex, 'https://new.reddit.com');
+    console.log("Redirecting to new URL: " + newUrl);
+    // Redirect to the new URL
+    window.location.replace(newUrl);
+}
+
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   if (request.message === "refreshContentScript") {
     console.log("Received message to refresh content script.");

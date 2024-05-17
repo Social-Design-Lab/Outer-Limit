@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
       alert("Participant ID is required");
     } else {
       // Your code to submit the form
-
+      chrome.tabs.create({ url: 'https://new.reddit.com/' });
       startExp();
     }
   });
@@ -119,23 +119,6 @@ function load() {
     
         // Add click event listener to open the link in a new tab
         myLink.addEventListener('click', function (e) {
-          e.preventDefault(); // Stop the default action of the link
-          chrome.tabs.create({url: this.href}); // Use Chrome's API to open a new tab
-        });
-      }
-
-
-      const redditlink = document.getElementById("_blank");
-
-      
-      // Change the href attribute of the link
-    
-     
-      if (redditlink) {
-        // Change the href attribute of the link
-    
-        // Add click event listener to open the link in a new tab
-        redditlink.addEventListener('click', function (e) {
           e.preventDefault(); // Stop the default action of the link
           chrome.tabs.create({url: this.href}); // Use Chrome's API to open a new tab
         });
