@@ -27,7 +27,7 @@
     "webNavigation"
   ],
   "host_permissions": [
-    "https://redditchrome.herokuapp.com/"
+    "http://34.204.49.72/"
   ],
   "content_scripts": [
     {

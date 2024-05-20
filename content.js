@@ -875,7 +875,7 @@ if (count<(index+1))
   chrome.runtime.sendMessage({ message: "need_uid_from_backgroun" }, function (response) {
     const userpid = response.value;
     console.log("Received userpid from background script:", userpid);
-    fetch(`https://redditchrome.herokuapp.com/api/user_reply_tofakecomment?userid=${userpid}`)
+    fetch(`http://34.204.49.72/api/user_reply_tofakecomment?userid=${userpid}`)
       .then(response => response.json())
       .then(data => {
         // Check if the data contains the expected structure
@@ -1616,7 +1616,7 @@ function fakepost() {
     console.log("Received userpid from background script 1:", userpid);
 
     
-    fetch(`https://redditchrome.herokuapp.com/api/fake_posts`)
+    fetch(`http://34.204.49.72/api/fake_posts`)
       .then(response => response.json())
       .then(data => {
         // Check if the data contains the expected structure
@@ -1628,7 +1628,7 @@ function fakepost() {
           fakePosts.forEach(post => {
             // Access the properties of each comment
             var { id, fakepost_url, fakepost_index, fakepost_title, fakepost_content, fakepost_image, fakepost_like , fakepost_time, fakepost_community, fakepost_poster } = post;
-            fetch(`https://redditchrome.herokuapp.com/api/getViewedPosts?userid=${userpid}`)
+            fetch(`http://34.204.49.72/api/getViewedPosts?userid=${userpid}`)
               .then(response => {
                 if (!response.ok) {
                   throw new Error('Network response was not ok');
@@ -2718,7 +2718,7 @@ var smq = {
 function read_fakecomment_from_database() {
 
 
-    fetch(`https://redditchrome.herokuapp.com/api/fake_posts`)
+    fetch(`http://34.204.49.72/api/fake_posts`)
       .then(response => response.json())
       .then(data => {
         // Check if the data contains the expected structure
@@ -3149,7 +3149,7 @@ console.log("startTime:", startTime);
                             console.log("do", childElement.innerText);
                             var  usersfakecommentID = 0; 
                             const userfakeCommnetContent = childElement.innerText;
-                            fetch(`https://redditchrome.herokuapp.com/api/fake_comments`)
+                            fetch(`http://34.204.49.72/api/fake_comments`)
                               .then(response => response.text())  // Get the response content as text
                               .then(responseText => {
                                 console.log('Raw response content:', responseText);  // Log the raw response content
@@ -3168,7 +3168,7 @@ console.log("startTime:", startTime);
                                   usersfakecommentID = usersfakecommentID + fakeComments.length +1;
                                   console.log("first time :" ,usersfakecommentID);
                                   //console.log(`Length of fetched data: ${usersfakecommentID}`);
-                                  fetch(`https://redditchrome.herokuapp.com/api/getuser_fake_comments_infakepost?userid=${userpid}`)
+                                  fetch(`http://34.204.49.72/api/getuser_fake_comments_infakepost?userid=${userpid}`)
                                   .then(response => response.text())  // Get the response content as text
                                   .then(responseText => {
                                     console.log('Raw response content:', responseText);  // Log the raw response content
@@ -3275,7 +3275,7 @@ console.log("startTime:", startTime);
             // Proceed with further actions using the decoded data
           });
 
-          fetch(`https://redditchrome.herokuapp.com/api/fake_comments`)
+          fetch(`http://34.204.49.72/api/fake_comments`)
             .then(response => response.text())  // Get the response content as text
             .then(responseText => {
               console.log('Raw response content:', responseText);  // Log the raw response content
@@ -3458,7 +3458,7 @@ console.log("startTime:", startTime);
         const userpid = response.value;
         console.log("Received userpid from background script:", userpid);
 
-      fetch(`https://redditchrome.herokuapp.com/api/getuser_fake_comments_infakepost?userid=${userpid}`)
+      fetch(`http://34.204.49.72/api/getuser_fake_comments_infakepost?userid=${userpid}`)
       .then(response => response.text())  // Get the response content as text
       .then(responseText => {
         console.log('Raw response content:', responseText);  // Log the raw response content
@@ -3633,7 +3633,7 @@ function getuservoteonFake(content) {
       const userpid = response.value;
       console.log("Received userpid from background script:", userpid);
 
-      fetch(`https://redditchrome.herokuapp.com/api/getuserVotefakecontent?userid=${userpid}`)
+      fetch(`http://34.204.49.72/api/getuserVotefakecontent?userid=${userpid}`)
         .then(response => response.json())
         .then(data => {
           // Check if the data contains the expected structure

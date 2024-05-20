@@ -348,7 +348,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     console.log("Received data from content script: ", request.data);
    
     /// check if the url is fake post or not 
-  /*   fetch(`https://redditchrome.herokuapp.com/api/fake_posts`)
+  /*   fetch(`http://34.204.49.72/api/fake_posts`)
     .then(response => response.json())
     .then(data => {
         // Check if the data contains the expected structure
@@ -413,7 +413,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
  */
 function insertdata(uid) {
   //var insert_date=  new Date();
-  fetch("https://redditchrome.herokuapp.com/api/insert", {
+  fetch("http://34.204.49.72/api/insert", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -460,7 +460,7 @@ function insertdata(uid) {
  */ 
 function insertUserVoteComments(uid, action, comment, post) {
   const insert_date = new Date();
-  fetch("https://redditchrome.herokuapp.com/api/updateUserVote_Comments", {
+  fetch("http://34.204.49.72/api/updateUserVote_Comments", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -508,7 +508,7 @@ function insertUserVoteComments(uid, action, comment, post) {
 
 function insertFakeComments(uid, comment_id, user_name, comment_content, insert_index, post_url, like, time) {
   var insert_date = new Date();
-  fetch("https://redditchrome.herokuapp.com/api/updateuserFakeComment_infakepost", {
+  fetch("http://34.204.49.72/api/updateuserFakeComment_infakepost", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -566,7 +566,7 @@ function insertFakeComments(uid, comment_id, user_name, comment_content, insert_
  */
 function insertFakePosts(uid, fakepost_url, fakepost_index, fakepost_title, fakepost_content, fakepost_image) {
   const insert_date = new Date();
-  fetch("https://redditchrome.herokuapp.com/api/updateFakePost", {
+  fetch("http://34.204.49.72/api/updateFakePost", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -625,7 +625,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
  */ 
 function insertUserReplyFakeComments(uid, comment_id, userRedditName, comment_content, like) {
   var insert_date = new Date();
-  fetch("https://redditchrome.herokuapp.com/api/updateUserReplyToFakeComment", {
+  fetch("http://34.204.49.72/api/updateUserReplyToFakeComment", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -670,7 +670,7 @@ function insertUserReplyFakeComments(uid, comment_id, userRedditName, comment_co
  */ 
 function insertUserReplyPosts(uid, content, post, like, time) {
   const insert_date = new Date();
-  fetch("https://redditchrome.herokuapp.com/api/updateUserReply_Posts", {
+  fetch("http://34.204.49.72/api/updateUserReply_Posts", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -713,7 +713,7 @@ function insertUserReplyPosts(uid, content, post, like, time) {
  */
 function insertUserVotePosts(uid, action, post) {
   const insert_date = new Date();
-  fetch("https://redditchrome.herokuapp.com/api/updateUserVote_Posts", {
+  fetch("http://34.204.49.72/api/updateUserVote_Posts", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -753,7 +753,7 @@ function insertUserVotePosts(uid, action, post) {
  */
 function updateUserVoteFakeContent(userid, useraction, fakeContent) {
   
-  fetch("https://redditchrome.herokuapp.com/api/updateUserVoteFakeContent", {
+  fetch("http://34.204.49.72/api/updateUserVoteFakeContent", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -791,7 +791,7 @@ function updateUserVoteFakeContent(userid, useraction, fakeContent) {
  * @param {string} fakeContent - The fake content which the user is removing a vote on.
  */
 function deleteUserVoteFakeContent(userid, fakeContent) {
-  fetch("https://redditchrome.herokuapp.com/api/deleteUserVoteFakeContent", {
+  fetch("http://34.204.49.72/api/deleteUserVoteFakeContent", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -829,7 +829,7 @@ function deleteUserVoteFakeContent(userid, fakeContent) {
  */
 function insertUserReplyComments(uid, content, comment, post) {
   const insert_date = new Date();
-  fetch("https://redditchrome.herokuapp.com/api/updateUserReply_Comments", {
+  fetch("http://34.204.49.72/api/updateUserReply_Comments", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -882,7 +882,7 @@ function insertBrowserHistory(uid, browserUrl) {
     ],
   };
 
-  fetch("https://redditchrome.herokuapp.com/api/updateBrowserHistory", {
+  fetch("http://34.204.49.72/api/updateBrowserHistory", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -924,7 +924,7 @@ function insertUserActive(uid, viewDate, total_time) {
     ],
   };
 
-  fetch("https://redditchrome.herokuapp.com/api/updateActiveOnReddit", {
+  fetch("http://34.204.49.72/api/updateActiveOnReddit", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -958,7 +958,7 @@ function insertUserActive(uid, viewDate, total_time) {
 function updateUserViewedPost(userid, post_url) {
   const viewpostDate = new Date();
 
-  fetch("https://redditchrome.herokuapp.com/api/updateViwedPost", {
+  fetch("http://34.204.49.72/api/updateViwedPost", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -1102,7 +1102,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 
 function insertQuestiondata(q1selected, q2selected, uid) {
-  fetch("https://redditchrome.herokuapp.com/api/midpopup_select", {
+  fetch("http://34.204.49.72/api/midpopup_select", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -1299,7 +1299,7 @@ chrome.runtime.onMessage.addListener(function (request, sender) {
 
 
 function insertQuestiondata(surveyObj, uid) {
-  fetch("https://redditchrome.herokuapp.com/api/midpopup_select", {
+  fetch("http://34.204.49.72/api/midpopup_select", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
