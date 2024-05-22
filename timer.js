@@ -16,8 +16,14 @@ document.addEventListener('DOMContentLoaded', function () {
       alert("Participant ID is required");
     } else {
       // Your code to submit the form
-      chrome.tabs.create({ url: 'https://new.reddit.com/' });
+      
       startExp();
+      var newTab = window.open('https://new.reddit.com', '_blank');
+          if (newTab) {
+            newTab.focus();
+          } else {
+            console.log("Popup blocked. Please allow popups for this site.");
+          }
     }
   });
   document.getElementById("midpop-submit").addEventListener("click", function () {
