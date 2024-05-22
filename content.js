@@ -2296,7 +2296,7 @@ function fakepost() {
                                 // Update class name of the i element
                                 i.classList.remove('icon-upvote');
                                 i.classList.add('icon-upvote_fill');
-                                alert("send upvote to background");
+                                //alert("send upvote to background");
                                 send_uservotefake_to_background("upvote",fakepost_url);
                               
                     
