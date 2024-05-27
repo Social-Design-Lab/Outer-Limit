@@ -27,7 +27,7 @@
     "webNavigation"
   ],
   "host_permissions": [
-    "https://redditchrome.herokuapp.com/"
+    "https://outer.socialsandbox.xyz/"
   ],
   "content_scripts": [
     {

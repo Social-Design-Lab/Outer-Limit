@@ -20,7 +20,7 @@ function read_csv() {
       
           console.log(mappedData);
 
-      fetch('https://redditchrome.herokuapp.com/api/createfakecomment', {
+      fetch('https://outer.socialsandbox.xyz/api/createfakecomment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(mappedData)
@@ -50,7 +50,7 @@ function read_csv() {
       
           console.log(mappedData);
 
-      fetch('https://redditchrome.herokuapp.com/api/createfakepost', {
+      fetch('https://outer.socialsandbox.xyz/api/createfakepost', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(mappedData)
