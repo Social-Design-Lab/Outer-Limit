@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
       alert("Participant ID is required");
     } else {
       // Your code to submit the form
-      
+      //alert("The experiment has started. Scroll down the Reddit home page to view the first 10 posts. In one minute, the post-survey will appear. Do not uninstall Outer Limit until you complete the post-survey, as you will need it for the survey.");
       startExp();
       var newTab = window.open('https://new.reddit.com', '_blank');
           if (newTab) {
