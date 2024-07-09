@@ -804,13 +804,13 @@ var combinedValue = idofcomment + '-' + username + '-' + content;
   //upvoteButtons.setAttribute('aria-pressed', 'true');
  
 
-  aElement.textContent = 'COVID19_user';
+  //aElement.textContent = 'COVID19_user';
 
   // Change the content of the <a> element
-  pElement.textContent = 'Vaccine is bad for you!!';
+  //pElement.textContent = 'Vaccine is bad for you!!';
 
   // Store the parent of the pElement
-  const pElementParent = pElement.parentElement;
+  //const pElementParent = pElement.parentElement;
 
   // Remove all other <p> elements
   const allPElements = clonedCommentDiv.querySelectorAll('p');
@@ -822,7 +822,7 @@ var combinedValue = idofcomment + '-' + username + '-' + content;
   });
 
   // Append the modified pElement back to the parent
-  pElementParent.appendChild(pElement);
+  //pElementParent.appendChild(pElement);
 
   // we only want to insert fake comment into main comment not reply comments 
   // Select all elements in the DOM
