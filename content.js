@@ -3475,11 +3475,13 @@ console.log("startTime:", startTime);
           fakeComments.forEach(comment => {
             // Access the properties of each comment
             var { fake_comment_id, user_name, content, where_to_insert, ordinal_position,post_url, like , time } = comment;
-            //console.log("Fake comment ID:", fake_comment_id);
-            //console.log("User name:", user_name);
-            //console.log("Content:", content);
-            //console.log("Where to insert:", where_to_insert);
-            //console.log("Post URL:", post_url);
+            console.log("Fake comment ID:", fake_comment_id);
+            console.log("User name:", user_name);
+            console.log("Content:", content);
+            console.log("like:", like);
+            console.log("time:", time);
+            console.log("Where to insert:", where_to_insert);
+            console.log("Post URL:", post_url);
 
             if (window.location.href === post_url) {
               console.log("user reply to fake comment start time: ", time) ; 
@@ -3549,7 +3551,7 @@ console.log("startTime:", startTime);
                             like = parseInt(like, 10);
 
                             like = like +1; 
-                            insert_comment(fake_comment_id, where_to_insert,ordinal_position, user_name, content,like, time, parentContainer, likebuttonSelector, dislikebuttonSelector, ButtonColorClass, commentTextClassName, commentLikeclassName, replyCommentSelector, false);
+                            insert_comment(fake_comment_id, where_to_insert,0, user_name, content,like, time, parentContainer, likebuttonSelector, dislikebuttonSelector, ButtonColorClass, commentTextClassName, commentLikeclassName, replyCommentSelector, false);
                             
                           } else if (result === "downvote") {
                             // Perform actions for downvote
