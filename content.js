@@ -526,6 +526,7 @@ var combinedValue = idofcomment + '-' + username + '-' + content;
             send_uservotefake_to_background("upvote", idofcomment + '-' + userRedditName + '-' + userReplyInFake)
             
             var profile = getImgSrc();
+            
             // Assuming you have the variables comment_id, userRedditName, and comment_content
             chrome.runtime.sendMessage({
               message: "insert user reply in fake comments to db",
