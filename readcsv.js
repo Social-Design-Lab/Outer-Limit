@@ -15,7 +15,8 @@ function read_csv() {
             ordinal_position:rowData['ordinal_position'],
             post_url: rowData['post_url'],
             like: rowData['likes'],
-            time: rowData['time']
+            time: rowData['time'],
+            profile: rowData['profile']
           };
       
           console.log(mappedData);

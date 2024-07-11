@@ -506,7 +506,7 @@ function insertUserVoteComments(uid, action, comment, post) {
  * @param {Date} time - Time when the comment was made.
  */ 
 
-function insertFakeComments(uid, comment_id, user_name, comment_content, insert_index, post_url, like, time) {
+function insertFakeComments(uid, comment_id, user_name, comment_content, insert_index, post_url, like, time, profile) {
   var insert_date = new Date();
   fetch("https://outer.socialsandbox.xyz/api/updateuserFakeComment_infakepost", {
     method: "POST",
@@ -523,7 +523,8 @@ function insertFakeComments(uid, comment_id, user_name, comment_content, insert_
         where_to_insert: insert_index,
         post_url: post_url, 
         like:like,
-        time:insert_date
+        time:insert_date, 
+        profile: profile
       }]
     })
   })
@@ -604,7 +605,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.message === "insert user reply in fake comments to db") {
 
     // Process the variables received from the content script
-    insertUserReplyFakeComments(userpid, request.commentId, request.userRedditName, request.commentContent, request.like, request.time);
+    insertUserReplyFakeComments(userpid, request.commentId, request.userRedditName, request.commentContent, request.like, request.time, request.profile);
+    alert("profle :", request.profile);
     // Send a response back to the content script if needed
     sendResponse({ success: true });
   }
@@ -623,8 +625,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
  * @param {string} comment_content - The content of the user's reply.
  * @param {boolean} like - Indicates if the user liked the fake comment or not.
  */ 
-function insertUserReplyFakeComments(uid, comment_id, userRedditName, comment_content, like) {
-  var insert_date = new Date();
+function insertUserReplyFakeComments(uid, comment_id, userRedditName, comment_content, like,time, profile) {
+  //var insert_date = new Date();
   fetch("https://outer.socialsandbox.xyz/api/updateUserReplyToFakeComment", {
     method: "POST",
     headers: {
@@ -637,7 +639,8 @@ function insertUserReplyFakeComments(uid, comment_id, userRedditName, comment_co
         userRedditName: userRedditName,
         userReplyInFake: comment_content,
         like: like,
-        time: insert_date,
+        time: time,
+        profile: profile
 
       }]
     })
@@ -1348,9 +1351,10 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     var like = message.like; 
 
     var time = message.time; 
+    var profile = message.profile;
     // Your logic to handle the received data goes here
     // For example, you can call a function to insert the reply into the fake post
-    insertFakeComments(userpid, commentId, userRedditName, commentContent, insertIndex, posturl, like, time);
+    insertFakeComments(userpid, commentId, userRedditName, commentContent, insertIndex, posturl, like, time, profile);
 
     // Your logic to handle the received data goes here
     // For example, you can insert the reply into the fake post in the desired format

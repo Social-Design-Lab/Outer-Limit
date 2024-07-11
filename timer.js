@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
     hide("midpop");
   });
 
-  $("#btnReset").onclick = e => {
+/*   $("#btnReset").onclick = e => {
     //console.log("btnHighlight is clicked")
     //alert("btnReset: "+ options)
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function () {
       );
     });
 
-  }
+  } */
 
 
 });
