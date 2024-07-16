@@ -3132,12 +3132,9 @@ console.log("startTime:", startTime);
     
     
     
-    
+                     
     
                       clonedButton.addEventListener('click', function () {
-                        //alert("check here");
-                        // Your event handler code here
-                        //console.log('Cloned button clicked!');
                         var targetClassName = '_13Sj3UMDKkCCJTq88berCB';
                         var parent = clonedButton.parentNode;
                         while (parent && !parent.querySelector(`.${targetClassName}`)) {
@@ -3226,10 +3223,18 @@ console.log("startTime:", startTime);
                              
     
                                   clonedButton.disabled = true;
-                                
-                                  // Now you can proceed with your code using the fetched data
-                                  // For example, you can loop through the fakeComments array
-                                  // and perform any necessary actions.
+                                  const commentBox = document.querySelector('.public-DraftEditor-content');
+                                        if (commentBox) {
+                                            commentBox.innerHTML = '<div data-contents="true"><div data-offset-key="cfaa77_initial-0-0" class="_3LuG0YVLLHE2azRNVaKz7O"><div data-block="true" data-editor="cfaa77" data-offset-key="cfaa77_initial-0-0"><div data-offset-key="cfaa77_initial-0-0" class="public-DraftStyleDefault-block public-DraftStyleDefault-ltr"><span data-offset-key="cfaa77_initial-0-0"><br data-text="true"></span></div></div></div></div>';
+                                        }
+                                       // content.js
+const script = document.createElement('script');
+script.src = chrome.runtime.getURL('injectedScript.js');
+script.onload = function() {
+    this.remove();
+};
+(document.head || document.documentElement).appendChild(script);
+                                      
                                 } else {
                                   console.log('Fetched data is not in the expected structure.');
                                 }
@@ -3702,3 +3707,6 @@ function getImgSrc() {
       return imgSrc;
   }
 }
+window.addEventListener('beforeunload', function (event) {
+  event.stopImmediatePropagation();
+});
