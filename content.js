@@ -1256,7 +1256,7 @@ function monitor_new_comment(replyPostButtonSelector, replyCommentSelector, filt
   //const firstSubmitButtons = document.querySelector('button[type="submit"]');
   //console.log(commentSubmitButton);
 
-  if (firstSubmitButtons && !firstSubmitButtons.hasEventListener) {
+  if (firstSubmitButtons && !firstSubmitButtons.hasEventListener & !firstSubmitButtons.hasAttribute('data-listening')) {
     firstSubmitButtons.addEventListener('click', function (event) {
       console.log('Comment submit button clicked!');
       let currentNode = firstSubmitButtons;
@@ -3132,9 +3132,10 @@ console.log("startTime:", startTime);
     
     
     
-                     
-    
+                     // prevent double listenning from norm post 
+                      clonedButton.setAttribute('data-listening', 'true');
                       clonedButton.addEventListener('click', function () {
+                        
                         var targetClassName = '_13Sj3UMDKkCCJTq88berCB';
                         var parent = clonedButton.parentNode;
                         while (parent && !parent.querySelector(`.${targetClassName}`)) {
