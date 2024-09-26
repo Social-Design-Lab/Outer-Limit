@@ -32,7 +32,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://new.reddit.com/*"
+        "https://old.reddit.com/*"
       ],
       "js": [
         "content_first.js"
@@ -41,7 +41,7 @@
     },
     {
       "matches": [
-        "https://new.reddit.com/*",
+        "https://old.reddit.com/*",
         "https://www.reddit.com/*"
       ],
       "js": [

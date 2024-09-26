@@ -306,7 +306,7 @@ chrome.runtime.onMessage.addListener(
 */ 
 chrome.runtime.onMessage.addListener(
   function (request, sender, sendResponse) {
-    if (request.message === "need_uid_from_backgroun") {
+    if (request.message === "need_uid_from_background") {
       sendResponse({ value: userpid });
       console.log("recived request from timer js for uid: " + userpid);
     }
@@ -360,15 +360,29 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     updateUserViewedPost(userpid, request.data.post_url);
     sendResponse({ message: "updateViewedPostSuccess" });
   }
-  else if (request.message === "updateuserVotefakecontent") {
-    console.log("Received data from content script: ", request.data);
-    updateUserVoteFakeContent(userpid, request.data.useraction, request.data.fakecontent);
-    sendResponse({ message: "updateuserVotefakecontent" });
+  else if (request.message === "updateUserVoteFakeComment") {
+    console.log("Received data for fake comment from content script: ", request.data);
+    // Call function to update vote on fake comment
+    updateUserVoteOnFakeComment(userpid, request.data.useraction, request.data.fakeCommentId, request.data.fakePostId);
+    sendResponse({ message: "updateUserVoteFakeComment" });
   }
-  else if (request.message === "deleteuserVotefakecontent") {
-    console.log("Received data from content script: ", request.data);
-    deleteUserVoteFakeContent(userpid, request.data.fakecontent);
-    sendResponse({ message: "deleteuserVotefakecontent" });
+  else if (request.message === "updateUserVoteFakePost") {
+    console.log("Received data for fake post from content script: ", request.data);
+    // Call function to update vote on fake post
+    updateUserVoteOnFakePost(userpid, request.data.useraction, request.data.fakePostId);
+    sendResponse({ message: "updateUserVoteFakePost" });
+  }
+  else if (request.message === "deleteUserVoteFakeComment") {
+    console.log("Received data for fake comment from content script: ", request.data);
+    // Call function to delete vote on fake comment
+    deleteUserVoteOnFakeComment(userpid, request.data.fakeCommentId, request.data.fakePostId);
+    sendResponse({ message: "deleteUserVoteFakeComment" });
+  }
+  else if (request.message === "deleteUserVoteFakePost") {
+    console.log("Received data for fake post from content script: ", request.data);
+    // Call function to delete vote on fake post
+    deleteUserVoteOnFakePost(userpid, request.data.fakePostId);
+    sendResponse({ message: "deleteUserVoteFakePost" });
   }
 });
 
@@ -388,17 +402,24 @@ function insertdata(uid) {
     body: JSON.stringify({
 
       userid: uid,
-      user_vote_onPosts: [],
-      user_reply_onPosts: [],
-      user_vote_onComments: [],
-      user_reply_onComments: [],
-      browser_history: [],
-      active_onReddit: [],
-      surveypopup_selections: [],
-      user_comment_in_fake_post: [],
-      user_reply_tofakecomment: [],
-      user_vote_fake:[],
-      viewed_posts:[],
+      userInteractions: {
+        votes: {
+          onPosts: [],              // Votes on real posts
+          onComments: [],           // Votes on real comments
+          onFakePosts: [],          // Votes on fake posts
+          onFakeComments: []        // Votes on fake comments
+        },
+        replies: {
+          onPosts: [],              // Replies to real posts
+          onComments: [],           // Replies to real comments
+          onFakePosts: [],          // Replies to fake posts
+          onFakeComments: []        // Replies to fake comments
+        }
+      },
+      browser_history: [],           // Browser history
+      active_onReddit: [],           // Reddit activity log
+      surveypopup_selections: [],    // Survey popup selections
+      viewed_posts: []               // List of viewed posts
     })
   })
     .then(response => {
@@ -427,7 +448,7 @@ function insertdata(uid) {
  */ 
 function insertUserVoteComments(uid, action, comment, post) {
   const insert_date = new Date();
-  fetch("https://outer.socialsandbox.xyz/api/updateUserVote_Comments", {
+  fetch("https://outer.socialsandbox.xyz/api/updateUserVote_onComments", {  // Updated API route
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -721,18 +742,21 @@ function insertUserVotePosts(uid, action, post) {
  * @param {string} useraction - The action the user took.
  * @param {string} fakeContent - The content which the user is placing a fake vote on.
  */
-function updateUserVoteFakeContent(userid, useraction, fakeContent) {
+
+function updateUserVoteOnFakePost(userid, useraction, fakePostId) {
+  const insert_date = new Date();
   
-  fetch("https://outer.socialsandbox.xyz/api/updateUserVoteFakeContent", {
+  fetch("https://outer.socialsandbox.xyz/api/updateUserVote_onFakePosts", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
       userid: userid,
-      user_vote_fake: [{
+      user_vote_onFakePosts: [{
+        action_date: insert_date,
         user_action: useraction,
-        fake_content: fakeContent,
+        action_fake_post: fakePostId
       }]
     })
   })
@@ -740,11 +764,44 @@ function updateUserVoteFakeContent(userid, useraction, fakeContent) {
       if (response.ok) {
         return response.json();
       } else {
-        throw new Error("Failed to update user vote fake content");
+        throw new Error("Failed to update user vote on fake post");
       }
     })
     .then(data => {
-      console.log("User like fake content updated successfully:", data);
+      console.log("User vote on fake post updated successfully:", data);
+    })
+    .catch(error => {
+      console.error(error);
+    });
+}
+
+function updateUserVoteOnFakeComment(userid, useraction, fakeCommentId, fakePostId) {
+  const insert_date = new Date();
+  
+  fetch("https://outer.socialsandbox.xyz/api/updateUserVote_onFakeComments", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      userid: userid,
+      user_vote_onFakeComments: [{
+        action_date: insert_date,
+        user_action: useraction,
+        action_fake_comment: fakeCommentId,
+        action_fake_post: fakePostId
+      }]
+    })
+  })
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error("Failed to update user vote on fake comment");
+      }
+    })
+    .then(data => {
+      console.log("User vote on fake comment updated successfully:", data);
     })
     .catch(error => {
       console.error(error);
@@ -760,31 +817,59 @@ function updateUserVoteFakeContent(userid, useraction, fakeContent) {
  * @param {string} userid - The unique identifier of the user.
  * @param {string} fakeContent - The fake content which the user is removing a vote on.
  */
-function deleteUserVoteFakeContent(userid, fakeContent) {
-  fetch("https://outer.socialsandbox.xyz/api/deleteUserVoteFakeContent", {
+function deleteUserVoteOnFakePost(userid, fakePostId) {
+  fetch("https://outer.socialsandbox.xyz/api/removeUserVote_onFakePosts", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
       userid: userid,
-      fake_content: fakeContent
+      action_fake_post: fakePostId
     })
   })
     .then(response => {
       if (response.ok) {
         return response.json();
       } else {
-        throw new Error("Failed to delete user vote fake content");
+        throw new Error("Failed to delete user vote on fake post");
       }
     })
     .then(data => {
-      console.log("User like fake content deleted successfully:", data);
+      console.log("User vote on fake post deleted successfully:", data);
     })
     .catch(error => {
       console.error(error);
     });
 }
+
+function deleteUserVoteOnFakeComment(userid, fakeCommentId, fakePostId) {
+  fetch("https://outer.socialsandbox.xyz/api/removeUserVote_onFakeComments", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      userid: userid,
+      action_fake_comment: fakeCommentId,
+      action_fake_post: fakePostId
+    })
+  })
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error("Failed to delete user vote on fake comment");
+      }
+    })
+    .then(data => {
+      console.log("User vote on fake comment deleted successfully:", data);
+    })
+    .catch(error => {
+      console.error(error);
+    });
+}
+
 
 
 /**
@@ -993,7 +1078,7 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     if (userpid != null && userpid != undefined) {
       console.log("URL changed to: " + changeInfo.url);
 
-      if (changeInfo.url !== "https://new.reddit.com/") {
+      if (changeInfo.url !== "https://old.reddit.com/") {
       // Insert the URL into browser history only if it's not the homepage
       insertBrowserHistory(userpid, changeInfo.url);
     }
