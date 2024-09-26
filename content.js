@@ -327,6 +327,13 @@ function insertFakeComments(postElement, fakeComments) {
 
     // Ensure that fake_comment_id is available and log it
     console.log("Fake Comment ID:", comment.fake_comment_id);
+    let authorElement = commentElement.querySelector('.author');
+    authorElement.addEventListener('mouseover', function () {
+      // Code to execute when the mouse hovers over the element
+      console.log('Mouse is hovering over the author element');
+      event.preventDefault();  // Prevent Reddit's action
+      event.stopPropagation();
+    });
     applyUserVoteOnElement(commentElement, getUserVoteOnFakeComment, comment.fake_comment_id);
     handleVoteButtons(commentElement, "fakecomment", comment.fake_comment_id);
     postElement.appendChild(commentElement);
@@ -2022,6 +2029,12 @@ function changeRealPostPage() {
 
             // Change the href attribute (author's URL) using the value of newUsername
             authorElement.href = `https://old.reddit.com/user/${fakepost_poster}`;
+            authorElement.addEventListener('mouseover', function () {
+              // Code to execute when the mouse hovers over the element
+              console.log('Mouse is hovering over the author element');
+              event.preventDefault();  // Prevent Reddit's action
+              event.stopPropagation();
+            });
 
             console.log('Author name and URL updated to:', authorElement.textContent, authorElement.href);
           } else {
