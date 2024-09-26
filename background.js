@@ -363,7 +363,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   else if (request.message === "updateUserVoteFakeComment") {
     console.log("Received data for fake comment from content script: ", request.data);
     // Call function to update vote on fake comment
-    updateUserVoteOnFakeComment(userpid, request.data.useraction, request.data.fakeCommentId, request.data.fakePostId);
+    updateUserVoteOnFakeComment(userpid, request.data.useraction, request.data.action_fake_comment, request.data.action_fake_post);
     sendResponse({ message: "updateUserVoteFakeComment" });
   }
   else if (request.message === "updateUserVoteFakePost") {
@@ -375,7 +375,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   else if (request.message === "deleteUserVoteFakeComment") {
     console.log("Received data for fake comment from content script: ", request.data);
     // Call function to delete vote on fake comment
-    deleteUserVoteOnFakeComment(userpid, request.data.fakeCommentId, request.data.fakePostId);
+    deleteUserVoteOnFakeComment(userpid, request.data.action_fake_comment, request.data.action_fake_post);
     sendResponse({ message: "deleteUserVoteFakeComment" });
   }
   else if (request.message === "deleteUserVoteFakePost") {
@@ -775,7 +775,7 @@ function updateUserVoteOnFakePost(userid, useraction, fakePostId) {
     });
 }
 
-function updateUserVoteOnFakeComment(userid, useraction, fakeCommentId, fakePostId) {
+function updateUserVoteOnFakeComment(userid, useraction, fakeCommentId, action_fake_post) {
   const insert_date = new Date();
   
   fetch("https://outer.socialsandbox.xyz/api/updateUserVote_onFakeComments", {
@@ -789,7 +789,7 @@ function updateUserVoteOnFakeComment(userid, useraction, fakeCommentId, fakePost
         action_date: insert_date,
         user_action: useraction,
         action_fake_comment: fakeCommentId,
-        action_fake_post: fakePostId
+        action_fake_post: action_fake_post
       }]
     })
   })
@@ -843,7 +843,7 @@ function deleteUserVoteOnFakePost(userid, fakePostId) {
     });
 }
 
-function deleteUserVoteOnFakeComment(userid, fakeCommentId, fakePostId) {
+function deleteUserVoteOnFakeComment(userid, fakeCommentId, action_fake_post) {
   fetch("https://outer.socialsandbox.xyz/api/removeUserVote_onFakeComments", {
     method: "POST",
     headers: {
@@ -852,7 +852,7 @@ function deleteUserVoteOnFakeComment(userid, fakeCommentId, fakePostId) {
     body: JSON.stringify({
       userid: userid,
       action_fake_comment: fakeCommentId,
-      action_fake_post: fakePostId
+      action_fake_post: action_fake_post
     })
   })
     .then(response => {
