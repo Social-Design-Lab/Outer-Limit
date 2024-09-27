@@ -384,6 +384,28 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     deleteUserVoteOnFakePost(userpid, request.data.fakePostId);
     sendResponse({ message: "deleteUserVoteFakePost" });
   }
+  else if (request.message === "insertUserReplyFakeComments") {
+    console.log("Received data to insert user reply into fake comments:", request);
+    
+    // Process the variables received from the content script
+    insertUserReplyFakeComments(userpid, request.commentId, request.commentContent, request.fakePostId);
+    
+    // Send a response back to the content script confirming success
+    sendResponse({ success: true });
+  }
+  else if (request.message === "deleteUserReplyFakeComment") {
+    console.log("Received data to delete user reply on fake comment:", request.data);
+    
+    // Call function to delete user reply on fake comment
+    deleteUserReplyOnFakeComment(
+      userpid,                             // User ID
+      request.data.replyTo,                // Fake comment ID being replied to
+      request.data.replyFakePost,          // The post that contains the fake comment
+      request.data.replyContent            // The reply content
+    );
+    
+    sendResponse({ message: "deleteUserReplyFakeComment" });
+  }
 });
 
 /**
@@ -447,7 +469,7 @@ function insertdata(uid) {
  * @param {string} post - the post the user has just interacted with.
  */ 
 function insertUserVoteComments(uid, action, comment, post) {
-  const insert_date = new Date();
+  var insert_date = new Date();
   fetch("https://outer.socialsandbox.xyz/api/updateUserVote_onComments", {  // Updated API route
     method: "POST",
     headers: {
@@ -554,7 +576,7 @@ function insertFakeComments(uid, comment_id, user_name, comment_content, insert_
  * @param {string} fakepost_image - The image associated with the fake post.
  */
 function insertFakePosts(uid, fakepost_url, fakepost_index, fakepost_title, fakepost_content, fakepost_image) {
-  const insert_date = new Date();
+  var insert_date = new Date();
   fetch("https://outer.socialsandbox.xyz/api/updateFakePost", {
     method: "POST",
     headers: {
@@ -593,7 +615,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.message === "insert user reply in fake comments to db") {
 
     // Process the variables received from the content script
-    insertUserReplyFakeComments(userpid, request.commentId, request.userRedditName, request.commentContent, request.like, request.time, request.profile);
+    insertUserReplyFakeComments(userpid, request.commentId,  request.commentContent);
     alert("profle :", request.profile);
     // Send a response back to the content script if needed
     sendResponse({ success: true });
@@ -613,41 +635,38 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
  * @param {string} comment_content - The content of the user's reply.
  * @param {boolean} like - Indicates if the user liked the fake comment or not.
  */ 
-function insertUserReplyFakeComments(uid, comment_id, userRedditName, comment_content, like,time, profile) {
-  //var insert_date = new Date();
-  fetch("https://outer.socialsandbox.xyz/api/updateUserReplyToFakeComment", {
+
+function insertUserReplyFakeComments(uid, comment_id, comment_content, fake_post_id) {
+  var insert_date = new Date();
+  fetch("https://outer.socialsandbox.xyz/api/updateUserReply_onFakeComments", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
       userid: uid,
-      user_reply_tofakecomment: [{
-        fake_comment_id: comment_id,
-        userRedditName: userRedditName,
-        userReplyInFake: comment_content,
-        like: like,
-        time: time,
-        profile: profile
-
+      user_reply_onFakeComments: [{
+        reply_to: comment_id,  // The fake comment being replied to
+        reply_content: comment_content,  // The user's reply content
+        reply_fake_post: fake_post_id,  // The fake post ID
+        action_date: insert_date  // Capture the current timestamp
       }]
     })
   })
-    .then(response => {
-      if (response.ok) {
-        return response.json();
-      } else {
-        throw new Error("Failed to insert user reply to fake comments ");
-      }
-    })
-    .then(data => {
-      console.log("user reply fake comments inserted successfully:", data);
-    })
-    .catch(error => {
-      console.error(error);
-    });
+  .then(response => {
+    if (response.ok) {
+      return response.json();
+    } else {
+      throw new Error("Failed to insert user reply to fake comments");
+    }
+  })
+  .then(data => {
+    console.log("User reply to fake comments inserted successfully:", data);
+  })
+  .catch(error => {
+    console.error(error);
+  });
 }
-
 /**
  * Sends a POST request to record users' replies to posts, tracking attributes such as the
  * user's unique ID, the ID of the post they replied to, the content of their reply, whether
@@ -660,7 +679,7 @@ function insertUserReplyFakeComments(uid, comment_id, userRedditName, comment_co
  * @param {Date} time - The time of the interaction.
  */ 
 function insertUserReplyPosts(uid, content, post, like, time) {
-  const insert_date = new Date();
+  var insert_date = new Date();
   fetch("https://outer.socialsandbox.xyz/api/updateUserReply_Posts", {
     method: "POST",
     headers: {
@@ -703,7 +722,7 @@ function insertUserReplyPosts(uid, content, post, like, time) {
  * @param {string} post - The ID of the post the user voted on.
  */
 function insertUserVotePosts(uid, action, post) {
-  const insert_date = new Date();
+  var insert_date = new Date();
   fetch("https://outer.socialsandbox.xyz/api/updateUserVote_Posts", {
     method: "POST",
     headers: {
@@ -744,7 +763,7 @@ function insertUserVotePosts(uid, action, post) {
  */
 
 function updateUserVoteOnFakePost(userid, useraction, fakePostId) {
-  const insert_date = new Date();
+  var insert_date = new Date();
   
   fetch("https://outer.socialsandbox.xyz/api/updateUserVote_onFakePosts", {
     method: "POST",
@@ -776,7 +795,7 @@ function updateUserVoteOnFakePost(userid, useraction, fakePostId) {
 }
 
 function updateUserVoteOnFakeComment(userid, useraction, fakeCommentId, action_fake_post) {
-  const insert_date = new Date();
+  var insert_date = new Date();
   
   fetch("https://outer.socialsandbox.xyz/api/updateUserVote_onFakeComments", {
     method: "POST",
@@ -817,6 +836,33 @@ function updateUserVoteOnFakeComment(userid, useraction, fakeCommentId, action_f
  * @param {string} userid - The unique identifier of the user.
  * @param {string} fakeContent - The fake content which the user is removing a vote on.
  */
+function deleteUserReplyOnFakeComment(userid, replyTo, replyFakePost, replyContent) {
+  fetch("https://outer.socialsandbox.xyz/api/removeUserReply_onFakeComments", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      userid: userid,
+      reply_to: replyTo,                // Fake comment the user replied to
+      reply_fake_post: replyFakePost,    // The fake post containing the comment
+      reply_content: replyContent        // The content of the reply
+    })
+  })
+  .then(response => {
+    if (response.ok) {
+      return response.json();
+    } else {
+      throw new Error("Failed to delete user reply on fake comment");
+    }
+  })
+  .then(data => {
+    console.log("User reply on fake comment deleted successfully:", data);
+  })
+  .catch(error => {
+    console.error("Error deleting user reply on fake comment:", error);
+  });
+}
 function deleteUserVoteOnFakePost(userid, fakePostId) {
   fetch("https://outer.socialsandbox.xyz/api/removeUserVote_onFakePosts", {
     method: "POST",
@@ -883,7 +929,7 @@ function deleteUserVoteOnFakeComment(userid, fakeCommentId, action_fake_post) {
  * @param {string} post - The ID of the post associated with the comment the user replied to.
  */
 function insertUserReplyComments(uid, content, comment, post) {
-  const insert_date = new Date();
+  var insert_date = new Date();
   fetch("https://outer.socialsandbox.xyz/api/updateUserReply_Comments", {
     method: "POST",
     headers: {
