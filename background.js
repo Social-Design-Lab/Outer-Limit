@@ -14,7 +14,7 @@ let endDate;
 
 /**
  * chrome.storage API to store, retrieve, and track changes to user data.
- */ 
+ */
 chrome.storage.local.get(
   [
     'userpid',
@@ -108,12 +108,12 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     if (changeInfo.url.includes("reddit.com")) {
       if (changeInfo.url.includes("/r/") || changeInfo.url.includes("/comments/")) {
         console.log("The URL is a post and we want to call content js ");
-        chrome.tabs.sendMessage(tabId, { message: "run_my_code" }, function(response) {
+        chrome.tabs.sendMessage(tabId, { message: "run_my_code" }, function (response) {
           if (chrome.runtime.lastError) {
-              console.error(chrome.runtime.lastError.message);
-              // Handle the error or perform other actions
+            console.error(chrome.runtime.lastError.message);
+            // Handle the error or perform other actions
           } else {
-              // Process the response or perform other actions
+            // Process the response or perform other actions
           }
         });
       }
@@ -144,7 +144,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     });
 
     function forceRefreshTab(tabId) {
-      
+
       chrome.tabs.reload(tabId);
     }
 
@@ -166,8 +166,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.message === "get_all_setup") {
     sendResponse({
       ifstartexp: ifstartexp
-        });
-        }
+    });
+  }
 });
 
 
@@ -176,36 +176,36 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
  * Sends a message to the content script of the active tab to kick off the experiment.
  */
 function setExp() {
-    startDate = new Date();
-    chrome.storage.local.set({ startDate: startDate.toString() }, function () {
-        console.log('startDate stored successfully.');
-    });
-    //add 5 seconds
-    endDate = new Date(startDate.getTime() + 60000);
-    ifstartexp = true;
+  startDate = new Date();
+  chrome.storage.local.set({ startDate: startDate.toString() }, function () {
+    console.log('startDate stored successfully.');
+  });
+  //add 5 seconds
+  endDate = new Date(startDate.getTime() + 60000);
+  ifstartexp = true;
 
-    chrome.storage.local.set({ ifstartexp: ifstartexp }, function () {
-        console.log('ifstartexp stored successfully.');
-    });
+  chrome.storage.local.set({ ifstartexp: ifstartexp }, function () {
+    console.log('ifstartexp stored successfully.');
+  });
 
-    chrome.storage.local.set({ endDate: endDate.getTime() }, function() { });
+  chrome.storage.local.set({ endDate: endDate.getTime() }, function () { });
 
-    // start the experiment(listening the upvote and downvote buttons)
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-            if (tabs.length === 0) {
-                console.error("No active tabs found");
-                return;
-            }
-            // Send a message to the content script
-            chrome.tabs.sendMessage(tabs[0].id, { message: "start experiment" }, function(response) {
-            if (chrome.runtime.lastError) {
-                console.error(chrome.runtime.lastError.message);
-                // Handle the error or perform other actions
-            } else {
-                // Process the response or perform other actions
-            }
-        });
+  // start the experiment(listening the upvote and downvote buttons)
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    if (tabs.length === 0) {
+      console.error("No active tabs found");
+      return;
+    }
+    // Send a message to the content script
+    chrome.tabs.sendMessage(tabs[0].id, { message: "start experiment" }, function (response) {
+      if (chrome.runtime.lastError) {
+        console.error(chrome.runtime.lastError.message);
+        // Handle the error or perform other actions
+      } else {
+        // Process the response or perform other actions
+      }
     });
+  });
 }
 
 /**
@@ -230,30 +230,30 @@ function checkTime() {
       }
 
       // Send a message to the content script
-      chrome.tabs.sendMessage(tabs[0].id, { message: "exp_ended" }, function(response) {
+      chrome.tabs.sendMessage(tabs[0].id, { message: "exp_ended" }, function (response) {
         if (chrome.runtime.lastError) {
-            console.error(chrome.runtime.lastError.message);
-            // Handle the error or perform other actions
+          console.error(chrome.runtime.lastError.message);
+          // Handle the error or perform other actions
         } else {
-            // Process the response or perform other actions
+          // Process the response or perform other actions
         }
       });
 
     });
-    
+
     // Set the badge text
     chrome.action.setBadgeText({ text: 'Click' });
 
     // Set the badge background color
     chrome.action.setBadgeBackgroundColor({ color: '#FF0000' });
 
-      clearInterval(intervalId);  // Stop the interval after handling the event
+    clearInterval(intervalId);  // Stop the interval after handling the event
   }
 }
 
 const intervalDuration = 1000 * 60;  // Check every minute. Adjust as needed.
 
-  
+
 const intervalId = setInterval(checkTime, intervalDuration);
 
 const unintervalId = setInterval(uninstall, intervalDuration);
@@ -262,16 +262,16 @@ const unintervalId = setInterval(uninstall, intervalDuration);
 /**
  * function used to uninstall the extension after the experiment has ended
  */
-function uninstall(){
+function uninstall() {
   var now = new Date();
   var newEndDate = new Date(endDate); // Clone the original date
   newEndDate.setMinutes(newEndDate.getMinutes() + 30);  // Adds 30 minutes
   if (now > newEndDate) {
-    chrome.management.uninstallSelf({}, function() {
+    chrome.management.uninstallSelf({}, function () {
       if (chrome.runtime.lastError) {
-          console.error("Error uninstalling:", chrome.runtime.lastError);
+        console.error("Error uninstalling:", chrome.runtime.lastError);
       }
-  });
+    });
   }
 }
 
@@ -279,7 +279,7 @@ function uninstall(){
 /*
 * Listener for requests to retrieve the experiment's start time. 
 * Responds with the `startDate` when a "get_time" message is received.
-*/ 
+*/
 chrome.runtime.onMessage.addListener(
   function (request, sender, sendResponse) {
     if (request.message === "get_time") {
@@ -291,7 +291,7 @@ chrome.runtime.onMessage.addListener(
 /*
 * Listener for requests signaling the end of the experiment.
 // Responds with the `endexp` value when an "end_exp" message is received.
-*/ 
+*/
 chrome.runtime.onMessage.addListener(
   function (request, sender, sendResponse) {
     if (request.message === "end_exp") {
@@ -303,7 +303,7 @@ chrome.runtime.onMessage.addListener(
 /*
 * // Listener for requests to retrieve the user's ID (uid).
 // Responds with the `userpid` and logs the request when a "need_uid_from_backgroun" message is received.
-*/ 
+*/
 chrome.runtime.onMessage.addListener(
   function (request, sender, sendResponse) {
     if (request.message === "need_uid_from_background") {
@@ -346,7 +346,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     sendResponse({ message: "voteCommentSuccess" });
   } else if (request.message === "replyPost") {
     console.log("Received data from content script: ", request.data);
-    insertUserReplyPosts(userpid, request.data.content, request.data.post, request.data.like,request.data.time );
+    insertUserReplyPosts(userpid, request.data.content, request.data.post, request.data.like, request.data.time);
     sendResponse({ message: "replyPostSuccess" });
   } else if (request.message === "votePost") {
     console.log("Received data from content script: ", request.data);
@@ -386,16 +386,16 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   }
   else if (request.message === "insertUserReplyFakeComments") {
     console.log("Received data to insert user reply into fake comments:", request);
-    
+
     // Process the variables received from the content script
     insertUserReplyFakeComments(userpid, request.commentId, request.commentContent, request.fakePostId);
-    
+
     // Send a response back to the content script confirming success
     sendResponse({ success: true });
   }
   else if (request.message === "deleteUserReplyFakeComment") {
     console.log("Received data to delete user reply on fake comment:", request.data);
-    
+
     // Call function to delete user reply on fake comment
     deleteUserReplyOnFakeComment(
       userpid,                             // User ID
@@ -403,8 +403,26 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       request.data.replyFakePost,          // The post that contains the fake comment
       request.data.replyContent            // The reply content
     );
-    
+
     sendResponse({ message: "deleteUserReplyFakeComment" });
+  }
+  else if (request.message === "insertUserReplyToFakePost") {
+    console.log("Received data to insert user reply into fake post:", request);
+
+    // Call the function to send the user's reply to the fake post
+    sendUserReplyToFakePost(userpid, request.fakePostId, request.replyContent);
+
+    // Send a response back to the content script confirming success
+    sendResponse({ success: true });
+  }
+  else if (request.message === "removeUserReplyFromFakePost") {
+    console.log("Received request to remove user reply from fake posts:", request);
+
+    // Process the variables received from the content script
+    removeUserReplyFromFakePost(userpid, request.fakePostId, request.replyContent);
+
+    // Send a response back to the content script confirming success
+    sendResponse({ success: true });
   }
 });
 
@@ -467,7 +485,7 @@ function insertdata(uid) {
  * @param {string} action - The type of vote action the user performed (e.g., upvote or downvote).
  * @param {string} comment - the contents of the comment the user voted on.
  * @param {string} post - the post the user has just interacted with.
- */ 
+ */
 function insertUserVoteComments(uid, action, comment, post) {
   var insert_date = new Date();
   fetch("https://outer.socialsandbox.xyz/api/updateUserVote_onComments", {  // Updated API route
@@ -514,7 +532,7 @@ function insertUserVoteComments(uid, action, comment, post) {
  * @param {string} post_url - The URL of the associated Reddit post.
  * @param {number} like - Number of likes/upvotes for the comment.
  * @param {Date} time - Time when the comment was made.
- */ 
+ */
 
 function insertFakeComments(uid, comment_id, user_name, comment_content, insert_index, post_url, like, time, profile) {
   var insert_date = new Date();
@@ -526,16 +544,16 @@ function insertFakeComments(uid, comment_id, user_name, comment_content, insert_
     body: JSON.stringify({
       userid: uid,
       user_comment_in_fake_post
-: [{
-        fake_comment_id: comment_id,
-        user_name: user_name,
-        content: comment_content,
-        where_to_insert: insert_index,
-        post_url: post_url, 
-        like:like,
-        time:insert_date, 
-        profile: profile
-      }]
+        : [{
+          fake_comment_id: comment_id,
+          user_name: user_name,
+          content: comment_content,
+          where_to_insert: insert_index,
+          post_url: post_url,
+          like: like,
+          time: insert_date,
+          profile: profile
+        }]
     })
   })
     .then(response => {
@@ -615,7 +633,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.message === "insert user reply in fake comments to db") {
 
     // Process the variables received from the content script
-    insertUserReplyFakeComments(userpid, request.commentId,  request.commentContent);
+    insertUserReplyFakeComments(userpid, request.commentId, request.commentContent);
     alert("profle :", request.profile);
     // Send a response back to the content script if needed
     sendResponse({ success: true });
@@ -634,7 +652,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
  * @param {string} userRedditName - The Reddit username of the user.
  * @param {string} comment_content - The content of the user's reply.
  * @param {boolean} like - Indicates if the user liked the fake comment or not.
- */ 
+ */
 
 function insertUserReplyFakeComments(uid, comment_id, comment_content, fake_post_id) {
   var insert_date = new Date();
@@ -653,19 +671,19 @@ function insertUserReplyFakeComments(uid, comment_id, comment_content, fake_post
       }]
     })
   })
-  .then(response => {
-    if (response.ok) {
-      return response.json();
-    } else {
-      throw new Error("Failed to insert user reply to fake comments");
-    }
-  })
-  .then(data => {
-    console.log("User reply to fake comments inserted successfully:", data);
-  })
-  .catch(error => {
-    console.error(error);
-  });
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error("Failed to insert user reply to fake comments");
+      }
+    })
+    .then(data => {
+      console.log("User reply to fake comments inserted successfully:", data);
+    })
+    .catch(error => {
+      console.error(error);
+    });
 }
 /**
  * Sends a POST request to record users' replies to posts, tracking attributes such as the
@@ -677,7 +695,7 @@ function insertUserReplyFakeComments(uid, comment_id, comment_content, fake_post
  * @param {string} post - The ID of the post the user replied to.
  * @param {boolean} like - Indicates if the user liked the post or not.
  * @param {Date} time - The time of the interaction.
- */ 
+ */
 function insertUserReplyPosts(uid, content, post, like, time) {
   var insert_date = new Date();
   fetch("https://outer.socialsandbox.xyz/api/updateUserReply_Posts", {
@@ -690,8 +708,8 @@ function insertUserReplyPosts(uid, content, post, like, time) {
       user_reply_onPosts: [{
         action_date: insert_date,
         reply_content: content,
-        reply_post: post, 
-        like: like, 
+        reply_post: post,
+        like: like,
         time: time
       }]
     })
@@ -764,7 +782,7 @@ function insertUserVotePosts(uid, action, post) {
 
 function updateUserVoteOnFakePost(userid, useraction, fakePostId) {
   var insert_date = new Date();
-  
+
   fetch("https://outer.socialsandbox.xyz/api/updateUserVote_onFakePosts", {
     method: "POST",
     headers: {
@@ -796,7 +814,7 @@ function updateUserVoteOnFakePost(userid, useraction, fakePostId) {
 
 function updateUserVoteOnFakeComment(userid, useraction, fakeCommentId, action_fake_post) {
   var insert_date = new Date();
-  
+
   fetch("https://outer.socialsandbox.xyz/api/updateUserVote_onFakeComments", {
     method: "POST",
     headers: {
@@ -849,19 +867,19 @@ function deleteUserReplyOnFakeComment(userid, replyTo, replyFakePost, replyConte
       reply_content: replyContent        // The content of the reply
     })
   })
-  .then(response => {
-    if (response.ok) {
-      return response.json();
-    } else {
-      throw new Error("Failed to delete user reply on fake comment");
-    }
-  })
-  .then(data => {
-    console.log("User reply on fake comment deleted successfully:", data);
-  })
-  .catch(error => {
-    console.error("Error deleting user reply on fake comment:", error);
-  });
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error("Failed to delete user reply on fake comment");
+      }
+    })
+    .then(data => {
+      console.log("User reply on fake comment deleted successfully:", data);
+    })
+    .catch(error => {
+      console.error("Error deleting user reply on fake comment:", error);
+    });
 }
 function deleteUserVoteOnFakePost(userid, fakePostId) {
   fetch("https://outer.socialsandbox.xyz/api/removeUserVote_onFakePosts", {
@@ -916,7 +934,37 @@ function deleteUserVoteOnFakeComment(userid, fakeCommentId, action_fake_post) {
     });
 }
 
-
+// Helper function to send the reply to the backend
+function sendUserReplyToFakePost(userId, fakePostId, replyContent) {
+  var insert_date = new Date();
+  fetch('https://outer.socialsandbox.xyz/api/updateUserReply_onFakePosts', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      userid: userId,  // Note the correct spelling of `userid` to match the API's expectation
+      user_reply_onFakePosts: [{
+        action_date: insert_date,  // Set the current date as the action date
+        reply_content: replyContent,            // The reply content
+        reply_fake_post: fakePostId             // The fake post ID
+      }],
+    }),
+  })
+  .then((response) => {
+    if (response.ok) {
+      return response.json();
+    } else {
+      throw new Error('Failed to submit reply to fake post');
+    }
+  })
+  .then((data) => {
+    console.log('Reply successfully submitted:', data);
+  })
+  .catch((error) => {
+    console.error('Error submitting reply:', error);
+  });
+}
 
 /**
  * Sends a POST request to record a user's reply to a comment on a post. It tracks attributes such as the
@@ -960,6 +1008,34 @@ function insertUserReplyComments(uid, content, comment, post) {
     });
 }
 
+
+function removeUserReplyFromFakePost(userId, fakePostId, replyContent) {
+  fetch('https://outer.socialsandbox.xyz/api/removeUserReply_onFakePosts', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      userid: userId,
+      reply_content: replyContent,
+      reply_fake_post: fakePostId,
+      
+    }),
+  })
+    .then((response) => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error('Failed to remove reply from fake post');
+      }
+    })
+    .then((data) => {
+      console.log('Reply successfully removed:', data);
+    })
+    .catch((error) => {
+      console.error('Error removing reply:', error);
+    });
+}
 
 
 /**
@@ -1125,9 +1201,9 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
       console.log("URL changed to: " + changeInfo.url);
 
       if (changeInfo.url !== "https://old.reddit.com/") {
-      // Insert the URL into browser history only if it's not the homepage
-      insertBrowserHistory(userpid, changeInfo.url);
-    }
+        // Insert the URL into browser history only if it's not the homepage
+        insertBrowserHistory(userpid, changeInfo.url);
+      }
 
     }
   }
@@ -1446,9 +1522,9 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     var commentContent = message.commentContent;
     var insertIndex = message.insertindex;
     var posturl = message.posturl;
-    var like = message.like; 
+    var like = message.like;
 
-    var time = message.time; 
+    var time = message.time;
     var profile = message.profile;
     // Your logic to handle the received data goes here
     // For example, you can call a function to insert the reply into the fake post
@@ -1471,31 +1547,30 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 
 
 
-chrome.webNavigation.onHistoryStateUpdated.addListener(function(details) {
+chrome.webNavigation.onHistoryStateUpdated.addListener(function (details) {
   //console.log('URL changed without a full page refresh:', details.url);
   // Your logic for handling the URL change
   const urlObj = new URL(details.url);
-  if (urlObj.hostname.endsWith('reddit.com')) 
-  {
-    chrome.tabs.sendMessage(details.tabId, { message: "refreshContentScript" }, function(response) {
+  if (urlObj.hostname.endsWith('reddit.com')) {
+    chrome.tabs.sendMessage(details.tabId, { message: "refreshContentScript" }, function (response) {
       if (chrome.runtime.lastError) {
-          console.error(chrome.runtime.lastError.message);
-          // Handle the error or perform other actions
+        console.error(chrome.runtime.lastError.message);
+        // Handle the error or perform other actions
       } else {
-          // Process the response or perform other actions
+        // Process the response or perform other actions
       }
     });
   }
 });
 
-chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
-    if (message.action === "uninstallExtension") {
-        chrome.management.uninstallSelf({}, function() {
-            if (chrome.runtime.lastError) {
-                console.error("Error uninstalling:", chrome.runtime.lastError);
-            }
-        });
-    }
+chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+  if (message.action === "uninstallExtension") {
+    chrome.management.uninstallSelf({}, function () {
+      if (chrome.runtime.lastError) {
+        console.error("Error uninstalling:", chrome.runtime.lastError);
+      }
+    });
+  }
 });
 
 

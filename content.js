@@ -310,14 +310,12 @@ function insertFakeComments(postElement, fakeComments, fakePostID) {
 
   fakeComments.forEach(comment => {
 
-    commentHTML = `<div class=" thing id-t1_lowvlb8 noncollapsed   comment " id="thing_t1_lowvlb8" " data-fullname="t1_lowvlb8" data-type="comment" data-gildings="0" data-subreddit="comicbooks" data-subreddit-prefixed="r/comicbooks" data-subreddit-fullname="t5_2qhon" data-subreddit-type="public" data-author="gooch_norris_" data-author-fullname="t2_vp5qd67n" data-replies="0" data-permalink="/r/comicbooks/comments/1fpawnh/who_is_a_lesser_known_hero_with_great_comics/lowvlb8/"><p class="parent"><a name="lowvlb8"></a></p><div class="midcol unvoted"><div class="arrow up login-required access-required" data-event-action="upvote" role="button" aria-label="upvote" tabindex="0"></div><div class="arrow down login-required access-required" data-event-action="downvote" role="button" aria-label="downvote" tabindex="0"></div></div><div class="entry unvoted"><p class="tagline"><a href="javascript:void(0)" class="expand" >[–]</a><a href="https://old.reddit.com/user/gooch_norris_" class="author may-blank id-t2_vp5qd67n">${comment.user_name}</a><span class="userattrs"></span> <span class="score dislikes" title="2">${parseInt(comment.likes) - 1} points</span><span class="score unvoted" title="3">${comment.likes} points</span><span class="score likes" title="4">${parseInt(comment.likes) + 1} points</span> <time title="Wed Sep 25 20:25:03 2024 UTC" datetime="2024-09-25T20:25:03+00:00" class="live-timestamp">${comment.time}</time>&nbsp;<a href="javascript:void(0)" class="numchildren" >(0 children)</a></p><form action="#" class="usertext warn-on-unload" onsubmit="return false" id="form-t1_lowvlb8aux"><input type="hidden" name="thing_id" value="t1_lowvlb8"><div class="usertext-body may-blank-within md-container "><div class="md"><p>${comment.content}</p>
-  </div>
-  </div></form><ul class="flat-list buttons"><li class="first"><a href="https://old.reddit.com/r/comicbooks/comments/1fpawnh/who_is_a_lesser_known_hero_with_great_comics/lowvlb8/" data-event-action="permalink" class="bylink" rel="nofollow">permalink</a></li><li><a href="javascript:void(0)" data-comment="/r/comicbooks/comments/1fpawnh/who_is_a_lesser_known_hero_with_great_comics/lowvlb8/" data-media="www.redditmedia.com" data-link="/r/comicbooks/comments/1fpawnh/who_is_a_lesser_known_hero_with_great_comics/" data-root="true" data-title="Who is a lesser known hero with great comics?" class="embed-comment">embed</a></li><li class="comment-save-button save-button login-required"><a href="javascript:void(0)">save</a></li><li class="report-button login-required"><a href="javascript:void(0)" class="reportbtn access-required" data-event-action="report">report</a></li><li class="reply-button login-required"><a class="access-required" href="javascript:void(0)" data-event-action="comment" >reply</a></li></ul><div class="reportform report-t1_lowvlb8"></div></div><div class="child"></div><div class="clearleft"></div></div><div class="clearleft"></div>` ;
-
-    let range = document.createRange();
-    let commentElement = range.createContextualFragment(commentHTML).firstChild;
+    var commentHTML = `<div class="thing   comment noncollapsed"  onclick="click_thing(this)"  data-type="comment" data-gildings="0" data-subreddit="aww" data-subreddit-prefixed="r/aww" data-subreddit-fullname="t5_2qh1o" data-subreddit-type="public" data-author="${comment.user_name}"  data-replies="0" data-permalink="/r/aww/comments/1c1eyde/full_aussie_wrasslin_with_mini_corgiaussie/kz2wn14/"><p class="parent"><a name="kz2wn14"></a></p><div class="midcol unvoted"><div class="arrow up login-required access-required" data-event-action="upvote" role="button" aria-label="upvote" tabindex="0"></div><div class="arrow down login-required access-required" data-event-action="downvote" role="button" aria-label="downvote" tabindex="0"></div></div><div class="entry unvoted"><p class="tagline"><a href="javascript:void(0)" class="expand" onclick="return togglecomment(this)">[–]</a><a href="https://old.reddit.com/user/${comment.user_name}" class="author may-blank ">${comment.user_name}</a><span class="userattrs"></span> <span class="score dislikes" title="0">${parseInt(comment.likes) + 1} points</span><span class="score unvoted" title="1">${comment.likes} point</span><span class="score likes" title="2">${parseInt(comment.likes) + 1} points</span> <time title="Thu Apr 11 14:24:23 2024 UTC" datetime="2024-04-11T14:24:23+00:00" class="">${comment.time}</time>&nbsp;<a href="javascript:void(0)" class="numchildren" onclick="return togglecomment(this)">(0 children)</a></p><form action="#" class="usertext warn-on-unload" onsubmit="return post_form(this, 'editusertext')" ><input type="hidden" name="thing_id" ><div class="usertext-body may-blank-within md-container "><div class="md"><p>${comment.content}</p></div></div></form><ul class="flat-list buttons"><li class="first"><a href="https://old.reddit.com/r/aww/comments/1c1eyde/full_aussie_wrasslin_with_mini_corgiaussie/" data-event-action="permalink" class="bylink" rel="nofollow">permalink</a></li><li><a href="javascript:void(0)" data-comment="/r/aww/comments/1c1eyde/full_aussie_wrasslin_with_mini_corgiaussie/kz2wn14/" data-media="www.redditmedia.com" data-link="/r/aww/comments/1c1eyde/full_aussie_wrasslin_with_mini_corgiaussie/" data-root="true" data-title="Full Aussie wrasslin with mini Corgi/Aussie" class="embed-comment">embed</a></li><li class="comment-save-button save-button login-required"><a href="javascript:void(0)">save</a></li><li class="report-button login-required"><a href="javascript:void(0)" class="reportbtn access-required" data-event-action="report">report</a></li><li class="reply-button login-required"><a>reply</a></li></ul><div class="reportform "></div></div><div class="child"></div><div class="clearleft"></div></div><div class="clearleft"></div>`
+    
+    var range = document.createRange();
+    var commentElement = range.createContextualFragment(commentHTML).firstChild;
     //postElement.insertAdjacentHTML('beforeend', commentHTML);
-    for (let key in comment) {
+    for (var key in comment) {
       // Check if the key has any hidden characters related to "fake_comment_id"
       if (key.includes("fake_comment_id")) {
         comment.fake_comment_id = comment[key]; // Assign to a new key with a clean name
@@ -327,7 +325,7 @@ function insertFakeComments(postElement, fakeComments, fakePostID) {
 
     // Ensure that fake_comment_id is available and log it
     console.log("Fake Comment ID:", comment.fake_comment_id);
-    let authorElement = commentElement.querySelector('.author');
+    var authorElement = commentElement.querySelector('.author');
     authorElement.addEventListener('mouseover', function () {
       // Code to execute when the mouse hovers over the element
       console.log('Mouse is hovering over the author element');
@@ -1940,7 +1938,7 @@ function changeRealPostPage() {
           console.log("No comments available.");
         }
 
-
+        monitorUserReplyToFakePost(fakepost_id);
         // Replace its inner HTML
         let parentDiv = document.querySelector('div.sitetable.linklisting');
 
@@ -2169,7 +2167,32 @@ function changeRealPostPage() {
 
           // Call the function, passing the element
           removeAllCommentsFromSpecificPost(postElement);
+
           insertFakeComments(postElement, fake_comments, fakepost_id);
+          getUserRepliesOnFakePost(fakepost_id)
+            .then(replies => {
+              if (replies) {
+
+                var userElement = document.querySelector('span.user a');
+                replies.forEach(reply => {
+                  console.log('Reply content:', reply.reply_content);  // Should print "another test 23232"
+                  // Check if the element exists and extract the username
+                  if (userElement) {
+                    var username = userElement.textContent.trim();
+
+                    insertUserReplyFakePost(postElement, username, reply.reply_content, fakepost_id);
+                  }
+
+                });
+
+              } else {
+                console.log('No replies for this post.');
+              }
+            })
+            .catch(error => {
+              console.error('Failed to retrieve replies:', error);
+            });
+
 
         } else {
           console.log('No parent div with class "sitetable linklisting" found');
@@ -2362,6 +2385,54 @@ function getUserRepliesOnFakeComment(commentId) {
         })
         .catch(error => {
           console.error("Error retrieving user replies on fake comments:", error);
+          reject(error);
+        });
+    });
+  });
+}
+
+function getUserRepliesOnFakePost(postId) {
+  console.log("Called for retrieving user replies on fake post");
+
+  return new Promise((resolve, reject) => {
+    // Send a message to the background script to get the user ID
+    chrome.runtime.sendMessage({ message: "need_uid_from_background" }, function (response) {
+      if (!response || !response.value) {
+        console.error("No valid response or userId received from background script.");
+        return reject("No valid response or userId received from background script.");
+      }
+
+      const userId = response.value;
+      console.log("Received userId from background script:", userId);
+
+      // Fetch the user's replies on fake posts from the server
+      fetch(`https://outer.socialsandbox.xyz/api/getUserComments_onFakePosts?userid=${userId}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Check if the user has replies on fake posts
+          if (data.userInteractions && data.userInteractions.replies && data.userInteractions.replies.onFakePosts) {
+            // Filter replies based on the specific fake postId
+            const replies = data.userInteractions.replies.onFakePosts.filter(reply => reply.reply_fake_post === postId);
+
+            if (replies.length > 0) {
+              console.log('User reply to fake post:', replies);
+              resolve(replies); // Return the array of replies
+            } else {
+              console.log('No replies found for this fake post.');
+              resolve(null); // No replies found for the specified postId
+            }
+          } else {
+            console.log('No replies found for this user.');
+            resolve(null); // No replies found
+          }
+        })
+        .catch(error => {
+          console.error('Error retrieving user reply:', error);
           reject(error);
         });
     });
@@ -2770,10 +2841,10 @@ function insertCommentFormORReplyFakeComment(parentDiv, fakeCommentID, fakePostI
             event.stopPropagation();
             console.log('reply button clicked');
 
-            var commentFormHTML = `<form action="#" class="usertext cloneable warn-on-unload" onsubmit="return post_form(this, 'comment')" id="commentreply_t1_lp30szd" style="display: block;"><input type="hidden" name="thing_id" value="t1_lp30szd"><div class="usertext-edit md-container" style="width: 500px;"><div class="md"><textarea rows="1" cols="1" name="text" class="" data-event-action="comment" data-type="link" style=""></textarea></div><div class="bottom-area"><span class="help-toggle toggle" style=""><a class="option active " href="#" tabindex="100" onclick="return toggle(this, helpon, helpoff)">formatting help</a><a class="option " href="#">hide help</a></span><a href="/help/contentpolicy" class="reddiquette" target="_blank" tabindex="100">content policy</a><span class="error CANT_REPLY field-parent" style="display:none"></span><span class="error TOO_LONG field-text" style="display:none"></span><span class="error RATELIMIT field-ratelimit" style="display:none"></span><span class="error NO_TEXT field-text" style="display:none"></span><span class="error SUBREDDIT_LINKING_DISALLOWED field-text" style="display:none"></span><span class="error SUBREDDIT_OUTBOUND_LINKING_DISALLOWED field-text" style="display:none"></span><span class="error USERNAME_LINKING_DISALLOWED field-text" style="display:none"></span><span class="error USERNAME_OUTBOUND_LINKING_DISALLOWED field-text" style="display:none"></span><span class="error TOO_OLD field-parent" style="display:none"></span><span class="error THREAD_LOCKED field-parent" style="display:none"></span><span class="error DELETED_COMMENT field-parent" style="display:none"></span><span class="error USER_BLOCKED field-parent" style="display:none"></span><span class="error USER_MUTED field-parent" style="display:none"></span><span class="error USER_BLOCKED_MESSAGE field-parent" style="display:none"></span><span class="error INVALID_USER field-parent" style="display:none"></span><span class="error MUTED_FROM_SUBREDDIT field-parent" style="display:none"></span><span class="error QUARANTINE_REQUIRES_VERIFICATION field-user" style="display:none"></span><span class="error TOO_MANY_COMMENTS field-text" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_REQUIRED field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_NOT_ALLOWED field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_BLACKLISTED_STRING field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_NOT_ALLOWED field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_REQUIRED field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_REQUIREMENT field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_REGEX_TIMEOUT field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_REGEX_REQUIREMENT field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_MAX_LENGTH field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_MIN_LENGTH field-body" style="display:none"></span><span class="error SOMETHING_IS_BROKEN field-parent" style="display:none"></span><span class="error COMMENT_GUIDANCE_VALIDATION_FAILED field-text" style="display:none"></span><span class="error placeholder field-body" style="display:none"></span><span class="error placeholder field-text" style="display:none"></span><div class="usertext-buttons"><button type="submit" onclick="" class="save">save</button><button type="button" onclick="return cancel_usertext(this);" class="cancel" style="">cancel</button><span class="status"></span></div></div><div class="markhelp" style="display:none"><p></p><p>reddit uses a slightly-customized version of <a href="http://daringfireball.net/projects/markdown/syntax">Markdown</a> for formatting. See below for some basics, or check <a href="/wiki/commenting">the commenting wiki page</a> for more detailed help and solutions to common issues.</p><p></p><table class="md"><tbody><tr style="background-color: #ffff99; text-align: center"><td><em>you type:</em></td><td><em>you see:</em></td></tr><tr><td>*italics*</td><td><em>italics</em></td></tr><tr><td>**bold**</td><td><b>bold</b></td></tr><tr><td>[reddit!](https://reddit.com)</td><td><a href="https://reddit.com">reddit!</a></td></tr><tr><td>* item 1<br>* item 2<br>* item 3</td><td><ul><li>item 1</li><li>item 2</li><li>item 3</li></ul></td></tr><tr><td>&gt; quoted text</td><td><blockquote>quoted text</blockquote></td></tr><tr><td>Lines starting with four spaces<br>are treated like code:<br><br><span class="spaces">&nbsp;&nbsp;&nbsp;&nbsp;</span>if 1 * 2 &lt; 3:<br><span class="spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>print "hello, world!"<br></td><td>Lines starting with four spaces<br>are treated like code:<br><pre>if 1 * 2 &lt; 3:<br>&nbsp;&nbsp;&nbsp;&nbsp;print "hello, world!"</pre></td></tr><tr><td>~~strikethrough~~</td><td><strike>strikethrough</strike></td></tr><tr><td>super^script</td><td>super<sup>script</sup></td></tr></tbody></table></div></div></form>`;
+            var commentFormHTML = `<form action="#" class="usertext cloneable warn-on-unload trackcommentform" onsubmit="return post_form(this, 'comment')" id="commentreply_t1_lp30szd" style="display: block;"><input type="hidden" name="thing_id" value="t1_lp30szd"><div class="usertext-edit md-container" style="width: 500px;"><div class="md"><textarea rows="1" cols="1" name="text" class="" data-event-action="comment" data-type="link" style=""></textarea></div><div class="bottom-area"><span class="help-toggle toggle" style=""><a class="option active " href="#" tabindex="100" onclick="return toggle(this, helpon, helpoff)">formatting help</a><a class="option " href="#">hide help</a></span><a href="/help/contentpolicy" class="reddiquette" target="_blank" tabindex="100">content policy</a><span class="error CANT_REPLY field-parent" style="display:none"></span><span class="error TOO_LONG field-text" style="display:none"></span><span class="error RATELIMIT field-ratelimit" style="display:none"></span><span class="error NO_TEXT field-text" style="display:none"></span><span class="error SUBREDDIT_LINKING_DISALLOWED field-text" style="display:none"></span><span class="error SUBREDDIT_OUTBOUND_LINKING_DISALLOWED field-text" style="display:none"></span><span class="error USERNAME_LINKING_DISALLOWED field-text" style="display:none"></span><span class="error USERNAME_OUTBOUND_LINKING_DISALLOWED field-text" style="display:none"></span><span class="error TOO_OLD field-parent" style="display:none"></span><span class="error THREAD_LOCKED field-parent" style="display:none"></span><span class="error DELETED_COMMENT field-parent" style="display:none"></span><span class="error USER_BLOCKED field-parent" style="display:none"></span><span class="error USER_MUTED field-parent" style="display:none"></span><span class="error USER_BLOCKED_MESSAGE field-parent" style="display:none"></span><span class="error INVALID_USER field-parent" style="display:none"></span><span class="error MUTED_FROM_SUBREDDIT field-parent" style="display:none"></span><span class="error QUARANTINE_REQUIRES_VERIFICATION field-user" style="display:none"></span><span class="error TOO_MANY_COMMENTS field-text" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_REQUIRED field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_NOT_ALLOWED field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_BLACKLISTED_STRING field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_NOT_ALLOWED field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_REQUIRED field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_REQUIREMENT field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_REGEX_TIMEOUT field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_REGEX_REQUIREMENT field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_MAX_LENGTH field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_MIN_LENGTH field-body" style="display:none"></span><span class="error SOMETHING_IS_BROKEN field-parent" style="display:none"></span><span class="error COMMENT_GUIDANCE_VALIDATION_FAILED field-text" style="display:none"></span><span class="error placeholder field-body" style="display:none"></span><span class="error placeholder field-text" style="display:none"></span><div class="usertext-buttons"><button type="submit" onclick="" class="save">save</button><button type="button" onclick="return cancel_usertext(this);" class="cancel" style="">cancel</button><span class="status"></span></div></div><div class="markhelp" style="display:none"><p></p><p>reddit uses a slightly-customized version of <a href="http://daringfireball.net/projects/markdown/syntax">Markdown</a> for formatting. See below for some basics, or check <a href="/wiki/commenting">the commenting wiki page</a> for more detailed help and solutions to common issues.</p><p></p><table class="md"><tbody><tr style="background-color: #ffff99; text-align: center"><td><em>you type:</em></td><td><em>you see:</em></td></tr><tr><td>*italics*</td><td><em>italics</em></td></tr><tr><td>**bold**</td><td><b>bold</b></td></tr><tr><td>[reddit!](https://reddit.com)</td><td><a href="https://reddit.com">reddit!</a></td></tr><tr><td>* item 1<br>* item 2<br>* item 3</td><td><ul><li>item 1</li><li>item 2</li><li>item 3</li></ul></td></tr><tr><td>&gt; quoted text</td><td><blockquote>quoted text</blockquote></td></tr><tr><td>Lines starting with four spaces<br>are treated like code:<br><br><span class="spaces">&nbsp;&nbsp;&nbsp;&nbsp;</span>if 1 * 2 &lt; 3:<br><span class="spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>print "hello, world!"<br></td><td>Lines starting with four spaces<br>are treated like code:<br><pre>if 1 * 2 &lt; 3:<br>&nbsp;&nbsp;&nbsp;&nbsp;print "hello, world!"</pre></td></tr><tr><td>~~strikethrough~~</td><td><strike>strikethrough</strike></td></tr><tr><td>super^script</td><td>super<sup>script</sup></td></tr></tbody></table></div></div></form>`;
 
             if (childDiv) {
-              var existingForm = childDiv.querySelector('#commentreply_t1_lp30szd');
+              var existingForm = childDiv.querySelector('.trackcommentform');
               if (!existingForm) {
                 // Insert the comment form inside the 'child' div
                 childDiv.insertAdjacentHTML('beforeend', commentFormHTML);
@@ -2849,7 +2920,6 @@ function insertCommentFormORReplyFakeComment(parentDiv, fakeCommentID, fakePostI
 
 
 }
-
 function sendUserReplyFakeComment(commentId, commentContent, fakePostId) {
   chrome.runtime.sendMessage({
     message: "insertUserReplyFakeComments",  // Message type
@@ -2880,6 +2950,41 @@ function addDeleteCommentListener(parentDiv, replyTo, replyFakePost, replyConten
       event.stopPropagation();
       console.log('Second Yes button clicked');
       sendDeleteUserReplyFakeCommentMessage(replyTo, replyFakePost, replyContent);
+      // Select the form element with the 'del-button' class
+      /// change it to deleted 
+      var delForm = parentDiv.querySelector('form.toggle.del-button');
+
+      // Check if the element exists
+      if (delForm) {
+        // Replace the form's inner HTML with 'deleted'
+        delForm.innerHTML = 'deleted';
+        console.log('Form successfully replaced.');
+      } else {
+        console.error('Form not found.');
+      }
+
+      // Your custom logic here
+    });
+  }
+  // Check if the element exists
+
+}
+
+function addDeleteUserReplyFakePostListener(parentDiv, replyFakePost, replyContent) {
+  // Select the element using the provided selector
+
+  var yesButtons = parentDiv.querySelectorAll('a.yes');
+
+  // Check if there are at least two 'yes' buttons
+  if (yesButtons.length >= 2) {
+    var yesButton = yesButtons[1]; // Select the second one (index starts from 0)
+
+    // Add an event listener to the second 'yes' button
+    yesButton.addEventListener('click', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      console.log('Second Yes button clicked');
+      sendRemoveUserReplyFromFakePostMessage(replyFakePost, replyContent);
       // Select the form element with the 'del-button' class
       /// change it to deleted 
       var delForm = parentDiv.querySelector('form.toggle.del-button');
@@ -2934,13 +3039,142 @@ function insertUserReplyFakeComments(childDiv, username, content, fakeCommentId,
       insertUserReplyFakeComments(childDiv, username, enteredText, fakeCommentId, fakePostId);
       // remove the old user reply to fake comment according to old conten
       //console.log(" test out the contet ere: ", content);
-      sendDeleteUserReplyFakeCommentMessage(fakeCommentId, fakePostId,content);
+      sendDeleteUserReplyFakeCommentMessage(fakeCommentId, fakePostId, content);
       // add new comments acoording to new text 
       sendUserReplyFakeComment(fakeCommentId, enteredText, fakePostId);
 
     }
 
   });
- 
+
 }
 
+
+
+
+function monitorUserReplyToFakePost(fakePostId) {
+  // Select all the usertext-buttons containers
+  var usertextButtons = document.querySelectorAll('.usertext-buttons');
+
+  // Loop through each usertext-buttons container
+  usertextButtons.forEach(buttonContainer => {
+    // Find the cancel button within the container
+    var cancelButton = buttonContainer.querySelector('.cancel');
+    var saveButton = buttonContainer.querySelector('.save');
+
+    // Check if both the cancel button has display: none and the save button exists
+    if (cancelButton && cancelButton.style.display === 'none' && saveButton) {
+
+      console.log('Correct save button selected:', saveButton);
+      // Add an event listener for the form submission
+      saveButton.addEventListener('click', function (event) {
+
+        event.preventDefault(); // Prevent the default form submission behavior
+        event.stopPropagation();
+
+        var userCommentForm = saveButton.closest('.usertext-edit');
+        var textarea = userCommentForm.querySelector('textarea[name="text"]');
+
+
+        // Make sure reply content exists
+        if (textarea && textarea.value !== null) {
+          var enteredText = textarea.value;
+          var postElement = document.querySelector('.sitetable.nestedlisting');
+          var userElement = document.querySelector('span.user a');
+          var username = userElement.textContent.trim();
+          insertUserReplyFakePost(postElement, username, enteredText, fakePostId);
+
+          // Send the user reply to the backend for further processing
+          sendInsertUserReplyToFakePostMessage(fakePostId, enteredText);
+          textarea.value = "";
+          return;
+        }
+
+
+      });
+      // Add your logic for the save button here
+    }
+  });
+
+
+}
+
+
+function insertUserReplyFakePost(childDiv, username, content, fakePostId, oldComment) {
+
+  var newSubCommentHTML = `<div class=" thing id-t1_lplovn1 noncollapsed odd  comment " id="thing_t1_lplovn1" onclick="click_thing(this)" data-fullname="t1_lplovn1" data-type="comment" data-gildings="0" data-subreddit="aww" data-subreddit-prefixed="r/aww" data-subreddit-fullname="t5_2qh1o" data-subreddit-type="public" data-author="${username}" data-author-fullname="t2_h9y9uxsgw" data-permalink="/r/aww/comments/1c1eyde/full_aussie_wrasslin_with_mini_corgiaussie/lplovn1/" style="display: flex;"><p class="parent"><a name="lplovn1"></a></p><div class="midcol likes"><div class="arrow upmod login-required access-required" data-event-action="upvote" role="button" aria-label="upvote" tabindex="0"></div><div class="arrow down login-required access-required" data-event-action="downvote" role="button" aria-label="downvote" tabindex="0"></div></div><div class="entry likes"><p class="tagline"><a href="javascript:void(0)" class="expand" onclick="return togglecomment(this)">[–]</a><a href="https://old.reddit.com/user/${username}" class="author may-blank id-t2_h9y9uxsgw">${username}</a><span class="userattrs"></span> <span class="score dislikes" title="-1">-1 points</span><span class="score unvoted" title="0">0 points</span><span class="score likes" title="1">1 point</span> <time title="Mon Sep 30 04:02:10 2024 UTC" datetime="2024-09-30T04:02:10+00:00" class="live-timestamp">just now</time>&nbsp;<a href="javascript:void(0)" class="numchildren" onclick="return togglecomment(this)">(0 children)</a></p><form action="#" class="usertext warn-on-unload" onsubmit="return post_form(this, 'editusertext')" id="form-t1_lplovn1w7h"><input type="hidden" name="thing_id" value="t1_lplovn1"><div class="usertext-body may-blank-within md-container "><div class="md"><p>${content}</p></div></div><div class="usertext-edit md-container" style="display: none"><div class="md"><textarea rows="1" cols="1" name="text" class="">${content}</textarea></div><div class="bottom-area"><span class="help-toggle toggle" style="display: none"><a class="option active " href="#" tabindex="100" onclick="return toggle(this, helpon, helpoff)">formatting help</a><a class="option " href="#">hide help</a></span><a href="/help/contentpolicy" class="reddiquette" target="_blank" tabindex="100">content policy</a><span class="error CANT_REPLY field-parent" style="display:none"></span><span class="error TOO_LONG field-text" style="display:none"></span><span class="error RATELIMIT field-ratelimit" style="display:none"></span><span class="error NO_TEXT field-text" style="display:none"></span><span class="error SUBREDDIT_LINKING_DISALLOWED field-text" style="display:none"></span><span class="error SUBREDDIT_OUTBOUND_LINKING_DISALLOWED field-text" style="display:none"></span><span class="error USERNAME_LINKING_DISALLOWED field-text" style="display:none"></span><span class="error USERNAME_OUTBOUND_LINKING_DISALLOWED field-text" style="display:none"></span><span class="error TOO_OLD field-parent" style="display:none"></span><span class="error THREAD_LOCKED field-parent" style="display:none"></span><span class="error DELETED_COMMENT field-parent" style="display:none"></span><span class="error USER_BLOCKED field-parent" style="display:none"></span><span class="error USER_MUTED field-parent" style="display:none"></span><span class="error USER_BLOCKED_MESSAGE field-parent" style="display:none"></span><span class="error INVALID_USER field-parent" style="display:none"></span><span class="error MUTED_FROM_SUBREDDIT field-parent" style="display:none"></span><span class="error QUARANTINE_REQUIRES_VERIFICATION field-user" style="display:none"></span><span class="error TOO_MANY_COMMENTS field-text" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_REQUIRED field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_NOT_ALLOWED field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_BLACKLISTED_STRING field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_NOT_ALLOWED field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_REQUIRED field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_REQUIREMENT field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_REGEX_TIMEOUT field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_REGEX_REQUIREMENT field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_MAX_LENGTH field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_MIN_LENGTH field-body" style="display:none"></span><span class="error SOMETHING_IS_BROKEN field-parent" style="display:none"></span><span class="error COMMENT_GUIDANCE_VALIDATION_FAILED field-text" style="display:none"></span><span class="error placeholder field-body" style="display:none"></span><span class="error placeholder field-text" style="display:none"></span><div class="usertext-buttons"><button type="submit" onclick="" class="save" style="display:none">save</button><button type="button" onclick="return cancel_usertext(this);" class="cancel" style="display:none">cancel</button><span class="status"></span></div></div><div class="markhelp" style="display:none"><p></p><p>reddit uses a slightly-customized version of <a href="http://daringfireball.net/projects/markdown/syntax">Markdown</a> for formatting. See below for some basics, or check <a href="/wiki/commenting">the commenting wiki page</a> for more detailed help and solutions to common issues.</p><p></p><table class="md"><tbody><tr style="background-color: #ffff99; text-align: center"><td><em>you type:</em></td><td><em>you see:</em></td></tr><tr><td>*italics*</td><td><em>italics</em></td></tr><tr><td>**bold**</td><td><b>bold</b></td></tr><tr><td>[reddit!](https://reddit.com)</td><td><a href="https://reddit.com">reddit!</a></td></tr><tr><td>* item 1<br>* item 2<br>* item 3</td><td><ul><li>item 1</li><li>item 2</li><li>item 3</li></ul></td></tr><tr><td>&gt; quoted text</td><td><blockquote>quoted text</blockquote></td></tr><tr><td>Lines starting with four spaces<br>are treated like code:<br><br><span class="spaces">&nbsp;&nbsp;&nbsp;&nbsp;</span>if 1 * 2 &lt; 3:<br><span class="spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>print "hello, world!"<br></td><td>Lines starting with four spaces<br>are treated like code:<br><pre>if 1 * 2 &lt; 3:<br>&nbsp;&nbsp;&nbsp;&nbsp;print "hello, world!"</pre></td></tr><tr><td>~~strikethrough~~</td><td><strike>strikethrough</strike></td></tr><tr><td>super^script</td><td>super<sup>script</sup></td></tr></tbody></table></div></div></form><ul class="flat-list buttons"><li class="first"><a href="https://old.reddit.com/r/aww/comments/1c1eyde/full_aussie_wrasslin_with_mini_corgiaussie/lplovn1/" data-event-action="permalink" class="bylink" rel="nofollow">permalink</a></li><li class="comment-save-button save-button login-required"><a href="javascript:void(0)">save</a></li><li><a class="edit-usertext" href="javascript:void(0)" onclick="return edit_usertext(this)">edit</a></li><li><form class="toggle sendreplies-button " action="#" method="get"><input type="hidden" name="executed" value="inbox replies disabled"><input type="hidden" name="state" value="False"><input type="hidden" name="id" value="t1_lplovn1"><span class="option main active"><a href="#" class="togglebutton " onclick="return toggle(this)" data-event-action="disable_inbox_replies">disable inbox replies</a></span><span class="option error">are you sure?  <a href="javascript:void(0)" class="yes" onclick="change_state(this, &quot;sendreplies&quot;, null, undefined, null)">yes</a> / <a href="javascript:void(0)" class="no" onclick="return toggle(this)">no</a></span></form></li><li><form class="toggle del-button " action="#" method="get"><input type="hidden" name="executed" value="deleted"><span class="option main active"><a href="#" class="togglebutton " onclick="return toggle(this)" data-event-action="delete">delete</a></span><span class="option error">are you sure?  <a href="javascript:void(0)" class="yes" onclick="change_state(this, &quot;del&quot;, hide_thing, undefined, null)">yes</a> / <a href="javascript:void(0)" class="no" onclick="return toggle(this)">no</a></span></form></li><li class="reply-button login-required"><a class="access-required" href="javascript:void(0)" data-event-action="comment" onclick="return reply(this)">reply</a></li></ul><div class="reportform report-t1_lplovn1"></div></div><div class="child"></div><div class="clearleft"></div></div> <div class="clearleft"></div>`
+  // Insert as the first child only if it is a new comment (isEdit is false)
+  var insertedElement;
+  if (oldComment) {
+    oldComment.insertAdjacentHTML('beforebegin', newSubCommentHTML); // Insert new comment right before old one
+    insertedElement = oldComment.previousElementSibling; // Select the newly inserted element
+    childDiv.removeChild(oldComment); // Remove the old comment
+  }
+
+  else {
+    childDiv.insertAdjacentHTML('afterbegin', newSubCommentHTML);
+    insertedElement = childDiv.firstElementChild;
+  }
+
+  addDeleteUserReplyFakePostListener(insertedElement, fakePostId, content);
+  // Select the button using document.querySelector
+  var saveButton = childDiv.firstElementChild.querySelector('.usertext-buttons .save');
+  console.log("saveButton from user reply to fake post: ", saveButton);
+
+  // this is for edit , if user edit the comment 
+  saveButton.addEventListener('click', function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+
+    var textarea = insertedElement.querySelector('textarea[name="text"]');
+
+    if (textarea && textarea.value !== null) {
+      var enteredText = textarea.value;
+
+
+
+      // remove the old user reply to fake post comment ; 
+
+      sendRemoveUserReplyFromFakePostMessage(fakePostId, content);
+      sendInsertUserReplyToFakePostMessage(fakePostId, enteredText);
+      insertUserReplyFakePost(childDiv, username, enteredText, fakePostId, insertedElement);
+
+
+
+    }
+
+  });
+
+}
+
+function sendInsertUserReplyToFakePostMessage(fakePostId, replyContent) {
+
+  // Get the user ID (assuming userpid is available in your context)
+  chrome.runtime.sendMessage({
+    message: "insertUserReplyToFakePost",  // Message type for inserting user reply
+    fakePostId: fakePostId,                // Fake post ID
+    replyContent: replyContent             // The user's reply content
+  }, function (response) {
+    if (response && response.success) {
+      console.log("User reply inserted successfully.");
+    } else {
+      console.error("Failed to insert user reply.");
+    }
+  });
+}
+
+function sendRemoveUserReplyFromFakePostMessage(fakePostId, replyContent) {
+  // Get the user ID (assuming userpid is available in your context)
+  chrome.runtime.sendMessage({
+    message: "removeUserReplyFromFakePost",  // Message type for removing user reply
+    fakePostId: fakePostId,                  // Fake post ID
+    replyContent: replyContent               // The reply content to remove
+  }, function (response) {
+    if (response && response.success) {
+      console.log("User reply removed successfully.");
+    } else {
+      console.error("Failed to remove user reply.");
+    }
+  });
+}
