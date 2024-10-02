@@ -9,7 +9,6 @@
 // Create a loading overlay element
 
 const redditBaseUrl = "https://old.reddit.com";
-
 let new_active_triggered = false;
 const title = "A new proof of vaccine is bad for you";
 const likebuttonSelector = '[aria-label="upvote"]';
@@ -173,8 +172,12 @@ function runMyCode() {
       if (location.hostname === "old.reddit.com" && location.pathname === "/") {
         console.log("This is the Reddit main page.");
 
+
         fakepost();
         monitor_viewed_post();
+
+
+
       } else {
         console.log(`This is not the Reddit main page: ${window.location.href}`);
 
@@ -635,106 +638,125 @@ function user_active_time() {
 }
 
 function monitor_viewed_post() {
-  console.log("monitor new post is called");
-  function isInViewport(el) {
-    var rect = el.getBoundingClientRect();
+  // Function to handle when elements intersect (come into or out of view)
+ 
+  function handleIntersect(entries, observer) {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        console.log(`Element has been viewed:`, entry.target);
+        var fetchUrl = `https://outer.socialsandbox.xyz/api/getfakepost`; // No URL provided here, this will fetch all posts
 
+        // Select the <a> element inside the <li> with class "first"
+        var commentLink = entry.target.querySelector('li.first a');
+        var dataRank = entry.target.getAttribute('data-rank');
+       
+        // Check if the element exists
+        var Isfakepost = false;
+        // Get the value of the href attribute (URL)
+        var commentUrl = commentLink.getAttribute('href');
 
-    if (rect.top === 0 && rect.left === 0 && rect.bottom === 0 && rect.right === 0) {
-      return false;
-    } else {
+        console.log("Comment URL:", commentUrl);
 
+        // Fetch the data
+        fetch(fetchUrl)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json(); // Parse the JSON from the response
+          })
+          .then(data => {
+            // Check if the result is an array (when no URL is provided)
+            if (Array.isArray(data)) {
+              if (data.length === 0) {
+                console.log("No fake posts found.");
+              } else {
+                // Loop through all fake posts in the array
+                data.forEach(fakePost => {
+                  console.log("Fake post data:", fakePost);
 
-      var elemTop = rect.top;
-      var elemBottom = rect.bottom;
+                  // Destructure fake post details
+                  var {
+                    fakepost_url,
+                    fakepost_index
+                  } = fakePost;
 
-      // Only completely visible elements return true:
-      var isVisible = (elemTop >= 0) && (elemBottom <= window.innerHeight);
-      // Partially visible elements return true:
-      //isVisible = elemTop < window.innerHeight && elemBottom >= 0;
-      return isVisible;
+                  if (commentUrl == fakepost_url) {
+                    sendUpdateViewedPostToBackground(fakepost_index);
+                    Isfakepost = true;
+                  }
+                  // comment out for non fake post case 
+                  if(fakepost_index ==dataRank)
+                  {
+                    Isfakepost = true;
+                  }
+                });
+                if (Isfakepost == false) {
+                  sendUpdateViewedPostToBackground(commentUrl);
+                }
+              }
+            }
+          })
+          .catch(error => {
+            console.error("Failed to fetch fake post:", error);
+          });
+       
+      } else {
+        console.log(`Element is not visible:`, entry.target);
+      }
+    });
+  }
+
+  // Set up observer options
+  const options = {
+    root: null, // Viewport as the root container
+    rootMargin: '0px', // No margin around the root
+    threshold: 1 // 100% of the element needs to be visible to trigger
+  };
+
+  // Create a new IntersectionObserver with the handleIntersect function as callback
+  const observer = new IntersectionObserver(handleIntersect, options);
+
+  const siteTable = document.querySelector('#siteTable');
+
+  // Function to observe new elements
+  function observeNewElements(newNode) {
+    if (newNode.classList && newNode.classList.contains('thing') && !newNode.classList.contains('clearleft')) {
+      observer.observe(newNode); // Start observing the new element
     }
   }
 
-  let elements = document.querySelectorAll('._1RYN-7H8gYctjOQeL8p2Q7');
-  let filteredElements = Array.from(elements).filter(element => !element.classList.contains("promotedlink"));
-
-  // Function to add event listeners to upvote and downvote buttons
-  function addVoteEventListeners(elements) {
-    elements.forEach((element) => {
-      const upvoteButton = element.querySelector('[aria-label="upvote"]');
-      if (upvoteButton && !upvoteButton.getAttribute("outer-limit-monitored")) {
-        upvoteButton.addEventListener("click", () => {
-
-          var text = element.querySelector(`[data-click-id="body"][class="SQnoC3ObvgnGjWt90zD9Z _2INHSNB8V5eaWp4P0rY_mE"]`).getAttribute("href");
-          const fullUrl = redditBaseUrl + text;
-          console.log(`upvote button clicked for post: "${fullUrl}"`);
-          //send_data_to_background("upvote_post", fullUrl);
-          send_votePost_to_background("upvote", fullUrl);
-        });
-        upvoteButton.setAttribute("outer-limit-monitored", "true");
-      }
-
-      const downvoteButton = element.querySelector('[aria-label="downvote"]');
-      if (downvoteButton && !downvoteButton.getAttribute("outer-limit-monitored")) {
-        downvoteButton.addEventListener("click", () => {
-          //var post = downvoteButton.parentNode.parentNode.parentNode.getElementsByClassName("_292iotee39Lmt0MkQZ2hPV");
-          var text = element.querySelector(`[data-click-id="body"][class="SQnoC3ObvgnGjWt90zD9Z _2INHSNB8V5eaWp4P0rY_mE"]`).getAttribute("href");
-          const fullUrl = redditBaseUrl + text;
-          console.log(`downvote button clicked for post: "${fullUrl}"`);
-          //send_data_to_background("downvote_post", fullUrl);
-          send_votePost_to_background("downvote", fullUrl)
-        });
-        downvoteButton.setAttribute("outer-limit-monitored", "true");
-      }
-    });
-  }
-
-  // Add event listeners to the initial filtered elements
-  addVoteEventListeners(filteredElements);
-
-  /// end of post vote section 
-
-  const post_observer = new MutationObserver(function (mutations) {
-    mutations.forEach(function (mutation) {
-      //listentobuttons();
-      elements = document.querySelectorAll('._1RYN-7H8gYctjOQeL8p2Q7');
-      filteredElements = Array.from(elements).filter(element => !element.classList.contains("promotedlink"));
-      addVoteEventListeners(filteredElements);
-    });
+  // Initial observation of existing elements
+  siteTable.querySelectorAll('.thing').forEach(child => {
+    if (!child.classList.contains('clearleft')) {
+      observer.observe(child); // Start observing the child element
+    }
   });
 
-  post_observer.observe(document.body, {
-    childList: true,
-    subtree: true
-  });
-  //const viewedPosts = new Set();
-  const viewedPosts = new Set();
-  for (let i = 0; i < filteredElements.length; i++) {
-    console.log("this is first time :", filteredElements[i]);
-  }
-  window.addEventListener("scroll", function () {
-
-    for (let i = 0; i < filteredElements.length; i++) {
-      //console.log("is the element in viewport:",  isInViewport(filteredElements[i]));
-      //console.log("index number: ", i+1);
-
-      if (isInViewport(filteredElements[i])) {
-        const post_url = filteredElements[i].querySelector(`[data-click-id="body"][class="SQnoC3ObvgnGjWt90zD9Z _2INHSNB8V5eaWp4P0rY_mE"]`).getAttribute("href");
-        const fullUrl = post_url;
-        if (!viewedPosts.has(fullUrl)) {
-          //console.log(filteredElements[i].getBoundingClientRect());
-          //const fullUrl = redditBaseUrl + post_url;
-
-          console.log("The href of the post", fullUrl, " has been viewed and sent to database.");
-          //send_data_to_background("viewed_post", fullUrl);
-          sendUpdateViewedPostToBackground(fullUrl);
-          viewedPosts.add(fullUrl);
-          //console.log(Array.from(viewedPosts));
+  // MutationObserver to monitor changes to the DOM and observe new elements
+  // need to comment out if there is not fake post , starts below 
+  const mutationObserver = new MutationObserver(mutations => {
+    // observe added new element 
+    mutations.forEach(mutation => {
+      mutation.addedNodes.forEach(node => {
+        observeNewElements(node); // Observe any newly added nodes
+      });
+      // Handle removed nodes
+      mutation.removedNodes.forEach(removedNode => {
+        if (removedNode.nodeType === Node.ELEMENT_NODE && removedNode.classList.contains('thing')) {
+          observer.unobserve(removedNode); // Stop observing removed elements
+          console.log("Stopped observing removed element:", removedNode);
         }
-      }
-    }
+      });
+    });
   });
+
+  // Start observing the #siteTable for childList changes
+  mutationObserver.observe(siteTable, {
+    childList: true,
+    subtree: true // Observe all children, not just immediate
+  });
+  // above the code needs to comment out if it is not fake post case
 }
 
 
@@ -846,7 +868,7 @@ function fakepost() {
               fakepost_poster,
               fake_comments
             } = fakePost;
-            
+
             // Handle comments
             var commentsCount = 0;
             if (Array.isArray(fake_comments)) {
@@ -861,7 +883,7 @@ function fakepost() {
             var expandoDiv;
             var fakepostHTML;
             var newElement
-            if (! fakepost_image ) { // Text-only fake post
+            if (!fakepost_image) { // Text-only fake post
               // no image fake post , it is only text based
               fakepostHTML = `<div class="thing odd link self" onclick="click_thing(this)" data-fullname="t3_1fsnypx" data-type="link" data-gildings="0" data-whitelist-status="all_ads" data-is-gallery="false" data-author="${fakepost_poster}" data-author-fullname="t2_a1ylwv6td" data-subreddit="books" data-subreddit-prefixed="${fakepost_community}" data-subreddit-fullname="t5_2qh4i" data-subreddit-type="public" data-timestamp="1727672815000" data-url="/r/books/comments/1fsnypx/books_that_make_you_feel_loved_as_if_getting_a/" data-permalink="/r/books/comments/1fsnypx/books_that_make_you_feel_loved_as_if_getting_a/" data-domain="self.books" data-rank="13" data-comments-count="${commentsCount}" data-score="${fakepost_likes}" data-promoted="false" data-nsfw="false" data-spoiler="false" data-oc="false" data-num-crossposts="0" data-context="listing"><p class="parent"></p><span class="rank">${fakepost_index}</span><div class="midcol unvoted"><div class="arrow up login-required access-required" data-event-action="upvote" role="button" aria-label="upvote" tabindex="0"></div><div class="score dislikes" title="604">${parseInt(fakepost_likes) - 1}</div><div class="score unvoted" title="605">${fakepost_likes}</div><div class="score likes" title="606">${parseInt(fakepost_likes) + 1}</div><div class="arrow down login-required access-required" data-event-action="downvote" role="button" aria-label="downvote" tabindex="0"></div></div><a class="thumbnail invisible-when-pinned self may-blank loggedin" data-event-action="thumbnail" href="/r/books/comments/1fsnypx/books_that_make_you_feel_loved_as_if_getting_a/"></a><div class="entry unvoted"><div class="top-matter"><p class="title"><a class="title may-blank loggedin" data-event-action="title" href="/r/books/comments/1fsnypx/books_that_make_you_feel_loved_as_if_getting_a/" tabindex="1">${fakepost_title}</a> </p><div class="expando-button hide-when-pinned selftext collapsed"></div><p class="tagline">submitted <time title="Mon Sep 30 05:06:55 2024 UTC" datetime="2024-09-30T05:06:55+00:00" class="live-timestamp">${fakepost_time}</time> <time class="edited-timestamp" title="last edited 21 hours ago" datetime="2024-09-30T05:12:44+00:00">*</time> by <a href="https://old.reddit.com/user/${fakepost_poster}" class="author may-blank">${fakepost_poster}</a><span class="userattrs"></span> to <a href="https://old.reddit.com/${fakepost_community}/" class="subreddit hover may-blank">${fakepost_community}</a></p><ul class="flat-list buttons"><li class="first"><a href="${fakepost_url}" data-event-action="comments" class="bylink comments may-blank" rel="nofollow">${commentsCount} comments</a></li><li class="share"><a class="post-sharing-button" href="javascript: void 0;">share</a></li><li class="link-save-button save-button login-required"><a href="#">save</a></li><li><form action="/post/hide" method="post" class="state-button hide-button"><span><a href="javascript:void(0)" class="" data-event-action="hide" onclick="change_state(this, \'hide\', hide_thing);">hide</a></span></form></li><li class="report-button login-required"><a href="javascript:void(0)" class="reportbtn access-required" data-event-action="report">report</a></li><li class="crosspost-button"><a class="post-crosspost-button" href="javascript: void 0;" data-crosspost-fullname="t3_1fsnypx">crosspost</a></li></ul><div class="reportform"></div></div><div class="expando" style="display: none;" data-pin-condition="function() {return this.style.display != \'none\';}"></div></div><div class="child"></div><div class="clearleft"></div></div><div class="clearleft"></div>`;
               // Create a temporary element to hold the HTML
@@ -901,7 +923,7 @@ function fakepost() {
               // Extract the new element
               newElement = tempDiv.firstElementChild;
               var expandoDiv = newElement.querySelector('.expando');
-        
+
               insertCachedHTMLandMonitorExpandoButton(newElement);
               // Only append text content if available
               if (fakepost_content) {
@@ -925,7 +947,7 @@ function fakepost() {
                 if (userTextBody) {
                   // Remove the element from the DOM
                   userTextBody.remove();
-                  console.log('Removed element with class "usertext usertext-body".' ,userTextBody );
+                  console.log('Removed element with class "usertext usertext-body".', userTextBody);
                 } else {
                   console.log('Element with class "usertext usertext-body" not found.');
                 }
@@ -942,7 +964,7 @@ function fakepost() {
               event.stopPropagation();
             });
             applyUserVoteOnElement(newElement, getUserVoteOnFakePost, fakepost_url);
-            handleVoteButtons(newElement, "fakepost","", fakepost_url);
+            handleVoteButtons(newElement, "fakepost", "", fakepost_url);
             for (let i = 0; i < postFeedDiv.children.length; i++) {
               var rankElement = postFeedDiv.children[i].querySelector('span.rank');
 
@@ -955,8 +977,11 @@ function fakepost() {
                   console.log("Match found at index", i, "with rank:", fakepost_index);
                   var oldChild = postFeedDiv.children[i];
 
+
                   // replace the child element
                   postFeedDiv.replaceChild(newElement, oldChild);
+
+
                   console.log("Replaced element with rank:", fakepost_index);
 
                   // Break the loop once a match is found
@@ -978,6 +1003,7 @@ function fakepost() {
       // Optionally, handle the error (e.g., show an error message to the user)
       document.querySelector("#post-status").textContent = "Failed to fetch the fake post.";
     });
+
 
 }
 
@@ -1396,7 +1422,7 @@ function changeRealPostPage() {
           // Select the upvote, downvote, and score elements then stop it from default action 
           applyUserVoteOnElement(parentDiv, getUserVoteOnFakePost, window.location.href);
           // Check if the elements are found
-          handleVoteButtons(parentDiv, "fakepost", "",window.location.href);
+          handleVoteButtons(parentDiv, "fakepost", "", window.location.href);
           // change number of comments 
           // Select the <a> element that contains the number of comments
           let commentsElement = parentDiv.querySelector('a.bylink.comments.may-blank');
@@ -1952,7 +1978,7 @@ function applyUserVoteOnElement(parentDiv, voteFunction, postOrCommentId) {
     });
 }
 
-function handleVoteButtons(parentDiv, voteType, fakeCommentId,url) {
+function handleVoteButtons(parentDiv, voteType, fakeCommentId, url) {
   let upvoteButton = parentDiv.querySelector('[aria-label="upvote"]');
   let downvoteButton = parentDiv.querySelector('[aria-label="downvote"]');
   let midcolDiv = parentDiv.querySelector('.midcol');
@@ -1979,7 +2005,7 @@ function handleVoteButtons(parentDiv, voteType, fakeCommentId,url) {
           entryDiv.classList.remove('likes');
           entryDiv.classList.add('unvoted');
         }
-        sendDeleteVoteMessage(voteType, fakeCommentId,url);
+        sendDeleteVoteMessage(voteType, fakeCommentId, url);
       } else {
         // If downvote was previously clicked, reset it
         if (downvoteButton.classList.contains('downmod')) {
@@ -2004,7 +2030,7 @@ function handleVoteButtons(parentDiv, voteType, fakeCommentId,url) {
           entryDiv.classList.add('likes');
         }
         console.log('Upvoted');
-        sendVoteMessage("upvote", voteType, fakeCommentId,url);
+        sendVoteMessage("upvote", voteType, fakeCommentId, url);
       }
     }, true);  // Using capture phase to prevent Reddit's listener
 
@@ -2050,7 +2076,7 @@ function handleVoteButtons(parentDiv, voteType, fakeCommentId,url) {
           entryDiv.classList.add('dislikes');
         }
         console.log('Downvoted');
-        sendVoteMessage("downvote", voteType, fakeCommentId,url);
+        sendVoteMessage("downvote", voteType, fakeCommentId, url);
       }
     }, true);  // Using capture phase to prevent Reddit's listener
   } else {
@@ -2451,8 +2477,7 @@ function sendRemoveUserReplyFromFakePostMessage(fakePostId, replyContent) {
   });
 }
 
-function insertCachedHTMLandMonitorExpandoButton(parentDiv)
-{
+function insertCachedHTMLandMonitorExpandoButton(parentDiv) {
   var expandoButtonDiv = parentDiv.querySelector('.expando-button');
   /// hide button 
   if (expandoButtonDiv) {
