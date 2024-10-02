@@ -311,7 +311,7 @@ function insertFakeComments(postElement, fakeComments, fakePostID) {
   fakeComments.forEach(comment => {
 
     var commentHTML = `<div class="thing   comment noncollapsed"  onclick="click_thing(this)"  data-type="comment" data-gildings="0" data-subreddit="aww" data-subreddit-prefixed="r/aww" data-subreddit-fullname="t5_2qh1o" data-subreddit-type="public" data-author="${comment.user_name}"  data-replies="0" data-permalink="/r/aww/comments/1c1eyde/full_aussie_wrasslin_with_mini_corgiaussie/kz2wn14/"><p class="parent"><a name="kz2wn14"></a></p><div class="midcol unvoted"><div class="arrow up login-required access-required" data-event-action="upvote" role="button" aria-label="upvote" tabindex="0"></div><div class="arrow down login-required access-required" data-event-action="downvote" role="button" aria-label="downvote" tabindex="0"></div></div><div class="entry unvoted"><p class="tagline"><a href="javascript:void(0)" class="expand" onclick="return togglecomment(this)">[–]</a><a href="https://old.reddit.com/user/${comment.user_name}" class="author may-blank ">${comment.user_name}</a><span class="userattrs"></span> <span class="score dislikes" title="0">${parseInt(comment.likes) + 1} points</span><span class="score unvoted" title="1">${comment.likes} point</span><span class="score likes" title="2">${parseInt(comment.likes) + 1} points</span> <time title="Thu Apr 11 14:24:23 2024 UTC" datetime="2024-04-11T14:24:23+00:00" class="">${comment.time}</time>&nbsp;<a href="javascript:void(0)" class="numchildren" onclick="return togglecomment(this)">(0 children)</a></p><form action="#" class="usertext warn-on-unload" onsubmit="return post_form(this, 'editusertext')" ><input type="hidden" name="thing_id" ><div class="usertext-body may-blank-within md-container "><div class="md"><p>${comment.content}</p></div></div></form><ul class="flat-list buttons"><li class="first"><a href="https://old.reddit.com/r/aww/comments/1c1eyde/full_aussie_wrasslin_with_mini_corgiaussie/" data-event-action="permalink" class="bylink" rel="nofollow">permalink</a></li><li><a href="javascript:void(0)" data-comment="/r/aww/comments/1c1eyde/full_aussie_wrasslin_with_mini_corgiaussie/kz2wn14/" data-media="www.redditmedia.com" data-link="/r/aww/comments/1c1eyde/full_aussie_wrasslin_with_mini_corgiaussie/" data-root="true" data-title="Full Aussie wrasslin with mini Corgi/Aussie" class="embed-comment">embed</a></li><li class="comment-save-button save-button login-required"><a href="javascript:void(0)">save</a></li><li class="report-button login-required"><a href="javascript:void(0)" class="reportbtn access-required" data-event-action="report">report</a></li><li class="reply-button login-required"><a>reply</a></li></ul><div class="reportform "></div></div><div class="child"></div><div class="clearleft"></div></div><div class="clearleft"></div>`
-    
+
     var range = document.createRange();
     var commentElement = range.createContextualFragment(commentHTML).firstChild;
     //postElement.insertAdjacentHTML('beforeend', commentHTML);
@@ -334,7 +334,7 @@ function insertFakeComments(postElement, fakeComments, fakePostID) {
     });
     insertCommentFormORReplyFakeComment(commentElement, comment.fake_comment_id, fakePostID);
     applyUserVoteOnElement(commentElement, getUserVoteOnFakeComment, comment.fake_comment_id);
-    handleVoteButtons(commentElement, "fakecomment", comment.fake_comment_id);
+    handleVoteButtons(commentElement, "fakecomment", comment.fake_comment_id, window.location.href);
     postElement.appendChild(commentElement);
   });
 
@@ -809,841 +809,175 @@ function sendUpdateViewedPostToBackground(post_url) {
 // create fakepost in reddit home page 
 function fakepost() {
 
-  chrome.runtime.sendMessage({ message: "need_uid_from_backgroun" }, function (response) {
-    const userpid = response.value;
-    console.log("Received userpid from background script 1:", userpid);
-
-
-    fetch(`https://outer.socialsandbox.xyz/api/fake_posts`)
-      .then(response => response.json())
-      .then(data => {
-        // Check if the data contains the expected structure
-        if (Array.isArray(data) && data.length > 0) {
-          var fakePosts = data;
-          console.log("Fake post retrieved successfully 1:", fakePosts);
-
-          // Process each fake comment
-          fakePosts.forEach(post => {
-            // Access the properties of each comment
-            var { id, fakepost_url, fakepost_index, fakepost_title, fakepost_content, fakepost_image, fakepost_like, fakepost_time, fakepost_community, fakepost_poster } = post;
-            fetch(`https://outer.socialsandbox.xyz/api/getViewedPosts?userid=${userpid}`)
-              .then(response => {
-                if (!response.ok) {
-                  throw new Error('Network response was not ok');
-                }
-                return response.text();
-              })
-              .then(responseText => {
-                console.log('Raw response content:', responseText);
-                const data = JSON.parse(responseText); // Parse the response content as JSON
-                if (data.viewed_posts && data.viewed_posts.length > 0) {
-                  return data.viewed_posts;
-                } else {
-                  // If 'viewed_posts' is not available or empty, proceed with an empty array
-                  console.log("No viewed posts available, proceeding with empty data.");
-                  return [];
-                }
-              })
-              .then(viewedp => { // 'viewedp' now directly references the array
-                //console.log("Viewed posts array:", viewedp);
-                if (Array.isArray(viewedp)) {
-                  console.log("Viewed post retrieved successfully 1:", viewedp);
-
-                  if (viewedp.some(item => item.post_url === fakepost_url)) {
-                    console.log("Array contains the specific URL.");
-                  } else {
-                    console.log("Array does not contain the specific URL.");
-                    // alert(" You made it! The Outer Limit is working on your reddit page now.");
-                    chrome.runtime.sendMessage({ message: "get_time" }, function (response) {
-                      // Process the response received from the background script
-                      console.log("Received start time from background script:", response.value);
-
-                      // Access the value property in the response object
-                      if (response && response.value) {
-                        var startDate = new Date();
-                        console.log("startDate:", startDate);
-
-                        var startTime = new Date(response.value);
-                        console.log("startTime:", startTime);
-                        var time = fakepost_time;
-                        var diff = startDate - startTime;
-                        var minutes = Math.floor(diff / 60000); // 1 minute = 60000 milliseconds
-                        var hours = Math.floor(minutes / 60);
-                        var days = Math.floor(hours / 24);
-                        var months = Math.floor(days / 30); // Assuming 30 days in a month
-                        var years = Math.floor(months / 12);
-
-                        console.log("old time: ", time);
-                        console.log("first diff: ", diff);
-
-                        if (years >= 1) {
-
-                          if (!time.includes("yr")) {
-                            time = years + " yr. ago";
-                          } else if (time.includes("yr")) {
-                            let numInTime = parseInt(time);
-                            let sum = years + numInTime;
-                            time = sum + " yr. ago";
-                          }
-                        } else if (months >= 1) {
-                          if (!time.includes("yr") && !time.includes("mo")) {
-                            time = months + " mo. ago";
-                          } else if (time.includes("mo")) {
-                            let numInTime = parseInt(time);
-                            let sum = months + numInTime;
-                            time = sum + " mo. ago";
-                          }
-                        } else if (days >= 1) {
-                          if (!time.includes("yr") && !time.includes("mo") && !time.includes("day")) {
-                            if (days > 1) {
-                              time = days + " days ago";
-                            }
-                            else {
-                              time = days + " day ago";
-                            }
-                          } else if (time.includes("day")) {
-                            let numInTime = parseInt(time);
-                            let sum = days + numInTime;
-                            if (sum > 1) {
-                              time = sum + " days ago";
-                            }
-                            else {
-                              time = sum + " day ago";
-                            }
-                          }
-                        } else if (hours >= 1) {
-                          if (!time.includes("yr") && !time.includes("mo") && !time.includes("day") && !time.includes("hr")) {
-                            time = hours + " hr ago";
-                          }
-                          else if (time.includes("hr")) {
-                            let numInTime = parseInt(time);
-                            let sum = hours + numInTime;
-                            time = sum + " hr. ago";
-                          }
-                        } else if (minutes >= 1) {
-
-                          if (!time.includes("yr") && !time.includes("mo") && !time.includes("day") && !time.includes("hr") && !time.includes("min")) {
-                            time = minutes + " min. ago";
-                          }
-                          else if (time.includes("min")) {
-                            let numInTime = parseInt(time);
-                            let sum = minutes + numInTime;
-                            time = sum + " min. ago";
-
-                          }
-                        }
-                        var combinedValue = fakepost_url;
-                        getuservoteonFake(combinedValue)
-                          .then(result => {
-                            console.log("Vote result:", result); // "upvote", "downvote", or "novote"
-
-                            // Conditionally perform actions based on the result
-                            if (result === "upvote") {
-                              //alert(" upvote");
-                              // Perform actions for upvote
-                              //console.log("User upvoted the content:");
-                              fakepost_like = parseInt(fakepost_like) + 1;
-                              var fakepost = document.createElement("div");
-                              fakepost.innerHTML = `<div class="_1oQyIsiPHYt6nx7VOmd1sz _1RYN-7H8gYctjOQeL8p2Q7 scrollerItem _3Qkp11fjcAw9I9wtLo8frE _1qftyZQ2bhqP62lbPjoGAh  Post t3_14x007q " data-testid="post-container" id="t3_14x007q" tabindex="-1" data-adclicklocation="background"><div></div><div class="_23h0-EcaBUorIHC-JZyh6J" style="width:40px;border-left:4px solid transparent"><div class="_1E9mcoVn4MYnuBQSVDt1gC" id="vote-arrows-t3_14x007q"><button aria-label="upvote" aria-pressed="false" class="voteButton " data-click-id="upvote" data-adclicklocation="upvote" id="upvote-button-t3_14x007q" outer-limit-monitored="true"><span class="_2q7IQ0BUOWeEZoeAxN555e _3SUsITjKNQ7Tp0Wi2jGxIM qW0l8Af61EP35WIG6vnGk Z3lT0VGlALek4Q9j0ZQCr"><i class="icon icon-upvote_fill _2Jxk822qXs4DaXwsN7yyHA"></i></span></button><div class="_1rZYMD_4xY3gRcSS3p8ODO _3a2ZHWaih05DgAOtvu6cIo " style="color: rgb(255, 69, 0); ">${fakepost_like}</div><button aria-label="downvote" aria-pressed="false" class="voteButton" data-click-id="downvote" data-adclicklocation="downvote" outer-limit-monitored="true"><span class="_1iKd82bq_nqObFvSH1iC_Q Q0BxYHtCOJ_rNSPJMU2Y7 _2fe-KdD2OM0ciaiux-G1EL _3yQIOwaIuF6gn8db96Gu7y"><i class="icon icon-downvote ZyxIIl4FP5gHGrJDzNpUC"></i></span></button></div></div><div class="_1poyrkZ7g36PawDueRza-J _11R7M_VOgKO1RJyRSRErT3 " style="background:#FFFFFF" data-adclicklocation="background" data-click-id="background"><div class="_292iotee39Lmt0MkQZ2hPV RichTextJSON-root nAL34ZVf4KfyEoZIzUgmN _3hWVRt6y8PqOoC2VuZETZI"><p class="_1qeIAgB0cPwnLhDF9XSiJM">Because you've shown interest in a similar community</p></div><div class="_14-YvdFiW5iVvfe5wdgmET"><div class="_2dr_3pZUCk8KfJ-x0txT_l"><a data-click-id="subreddit" class="_3ryJoIoycVkA88fy40qNJc" href=""><img style="background-color:#EA0027" alt="Subreddit Icon" role="presentation" src="https://styles.redditmedia.com/t5_2qh1o/styles/communityIcon_0uzb28pnky3d1.png?width=256&s=800ad355a90445c717e938142607ed18a59926a2" class="_34CfAAowTqdbNDYXz5tBTW _1WX5Y5qFVBTdr6hCPpARDB "></a></div><div class="cZPZhMe-UCZ8htPodMyJ5"><div class="_3AStxql1mQsrZuUIFP9xSg nU4Je7n-eSXStTBAPMYt8" data-adclicklocation="top_bar"><div class="_2mHuuvyV9doV3zwbZPtIPG"><a data-click-id="subreddit" class="_3ryJoIoycVkA88fy40qNJc" href="">${fakepost_community}</a><div id="SubredditInfoTooltip--t3_14x007q--USPS"></div></div><span class="_3LS4zudUBagjFS7HjWJYxo _37gsGHa8DMRAxBmQS-Ppg8 _3V4xlrklKBP2Hg51ejjjvz" role="presentation">•</span><span style="color:#787C7E" class="_2fCzxBE1dlMh4OFc7B3Dun">Posted by</span><div class="_2mHuuvyV9doV3zwbZPtIPG"><div id="UserInfoTooltip--t3_14x007q"><a class="_2tbHP6ZydRpjI44J3syuqC  _23wugcdiaj44hdfugIAlnX oQctV4n0yUb0uiHDdGnmE" data-click-id="user" data-testid="post_author_link" href="" style="color: rgb(120, 124, 126);">${fakepost_poster}</a></div></div><span class="_2VF2J19pUIMSLJFky-7PEI" data-testid="post_timestamp" data-click-id="timestamp" style="color:#787C7E">${time}</span></div><div class="_2wFk1qX4e1cxk8Pkw1rAHk"></div><div class="_3XoW0oYd5806XiOr24gGdb"></div></div><button role="button" tabindex="0" id="subscribe-button-t3_14x007q" class="_35dG7dsi4xKTT-_2MB74qq _2iuoyPiKHN3kfOoeIQalDT _10BQ7pjWbeYP63SAPNS8Ts UEPNkU0rd1-nvbkOcBatc "><span>Join</span></button></div><div class="_2FCtq-QzlfuN-SwVMUZMM3 _3wiKjmhpIpoTE2r5KCm2o6 t3_14x007q" data-adclicklocation="title"><div class="y8HYJ-y_lTUHkQIc1mdCq _2INHSNB8V5eaWp4P0rY_mE"><a data-click-id="body" class="SQnoC3ObvgnGjWt90zD9Z _2INHSNB8V5eaWp4P0rY_mE" href=${fakepost_url}><div class="_2SdHzo12ISmrC8H86TgSCp _3wqmjmv3tb_k-PROt7qFZe " style="--posttitletextcolor:#222222"><h3 class="_eYtD2XCVieq6emjKBH3m">${fakepost_title}</h3></div></a></div><div class="_2xu1HuBz1Yx6SP10AGVx_I" data-ignore-click="false"><div class="lrzZ8b0L6AzLkQj5Ww7H1"></div><div class="lrzZ8b0L6AzLkQj5Ww7H1"><a href=""></a></div></div><div class="_1hLrLjnE1G_RBCNcN9MVQf"><img alt="" src="https://www.redditstatic.com/desktop2x/img/renderTimingPixel.png" style="width: 1px; height: 1px;" onload="(__markFirstPostVisible || function(){})();"></div><style>.t3_14x007q._2FCtq-QzlfuN-SwVMUZMM3 {--postTitle-VisitedLinkColor: #9b9b9b;--postTitleLink-VisitedLinkColor: #9b9b9b;--postBodyLink-VisitedLinkColor: #989898;}</style></div><div class="STit0dLageRsa2yR4te_b"><div class="m3aNC6yp8RrNM_-a0rrfa " data-click-id="media"><div class="_3gBRFDB5C34UWyxEe_U6mD" style="padding-bottom:133.28125%"></div><div class="_3JgI-GOrkmyIeDeyzXdyUD _2CSlKHjH7lsjx0IpjORx14"><div class="_1NSbknF8ucHV2abfCZw2Z1 "><a href=${fakepost_url}><div class="_3Oa0THmZ3f5iZXAQ0hBJ0k " style="max-height:512px;margin:0 auto"><div><img alt="Post image" class="_2_tDEnGMLxpM6uOa2kaDB3 ImageBox-image media-element _1XWObl-3b9tPy64oaG6fax" src=${fakepost_image} style="max-height:512px"></div></div></a></div></div></div></div><div class="_1ixsU4oQRnNfZ91jhBU74y"><div class="_1E9mcoVn4MYnuBQSVDt1gC _2oM1YqCxIwkvwyeZamWwhW uFwpR-OdmueYZxdY_rEDX" id="vote-arrows-t3_14x007q"><button aria-label="upvote" aria-pressed="false" class="voteButton " data-click-id="upvote" data-adclicklocation="upvote"><span class="_2q7IQ0BUOWeEZoeAxN555e _3SUsITjKNQ7Tp0Wi2jGxIM qW0l8Af61EP35WIG6vnGk _3emIxnIscWEPB7o5LgU_rn"><i class="icon icon-upvote _2Jxk822qXs4DaXwsN7yyHA"></i></span></button><div class="_1rZYMD_4xY3gRcSS3p8ODO _25IkBM0rRUqWX5ZojEMAFQ" style="color: rgb(255, 69, 0);s">${fakepost_like}</div><button aria-label="downvote" aria-pressed="false" class="voteButton" data-click-id="downvote" data-adclicklocation="downvote"><span class="_1iKd82bq_nqObFvSH1iC_Q Q0BxYHtCOJ_rNSPJMU2Y7 _2fe-KdD2OM0ciaiux-G1EL _3yQIOwaIuF6gn8db96Gu7y"><i class="icon icon-downvote ZyxIIl4FP5gHGrJDzNpUC"></i></span></button></div><div class="_3-miAEojrCvx_4FQ8x3P-s"><a rel="nofollow" data-click-id="comments" data-adclicklocation="comments" data-test-id="comments-page-link-num-comments" class="_1UoeAeSRhOKSNdY_h3iS1O _1Hw7tY9pMr-T1F4P1C-xNU _3U_7i38RDPV5eBv7m4M-9J _2qww3J5KKzsD7e5DO0BvvU" href=${fakepost_url}><i class="icon icon-comment _3DVrpDrMM9NLT6TlsTUMxC" role="presentation"></i><span class="FHCV02u6Cp2zYL0fhQPsO">2 comments</span></a><div data-ignore-click="false" class="_3U_7i38RDPV5eBv7m4M-9J" data-adclicklocation="fl_unknown"><button class="_10K5i7NW6qcm-UoCtpB3aK YszYBnnIoNY8pZ6UwCivd _3yh2bniLq7bYr4BaiXowdO _1EWxiIupuIjiExPQeK4Kud _28vEaVlLWeas1CDiLuTCap"><span class="pthKOcceozMuXLYrLlbL1"><i class="_3yNNYT3e1avhAAWVHd0-92 icon icon-award" id="View--GiveAward--t3_14x007q"></i></span><span class="_2-cXnP74241WI7fpcpfPmg _70940WUuFmpHbhKlj8EjZ">Award</span></button></div><div class="_JRBNstMcGxbZUxrrIKXe _3U_7i38RDPV5eBv7m4M-9J _3yh2bniLq7bYr4BaiXowdO _1pShbCnOaF7EGWTq6IvZux _28vEaVlLWeas1CDiLuTCap" id="t3_14x007q-share-menu"><button data-click-id="share" data-adclicklocation="fl_share" class="kU8ebCMnbXfjCWfqn0WPb"><i class="icon icon-share _1GQDWqbF-wkYWbrpmOvjqJ"></i><span class="_6_44iTtZoeY6_XChKt5b0">share</span></button></div><div data-ignore-click="false" class="_3U_7i38RDPV5eBv7m4M-9J" data-adclicklocation="fl_unknown"><button class="_10K5i7NW6qcm-UoCtpB3aK YszYBnnIoNY8pZ6UwCivd _3yh2bniLq7bYr4BaiXowdO _2sAFaB0tx4Hd5KxVkdUcAx _28vEaVlLWeas1CDiLuTCap"><span class="pthKOcceozMuXLYrLlbL1"><i class="_1Xe01txJfRB9udUU85DNeR icon icon-save"></i></span><span class="_2-cXnP74241WI7fpcpfPmg _70940WUuFmpHbhKlj8EjZ">save</span></button></div><div class="OccjSdFd6HkHhShRg6DOl"></div><div class="_3MmwvEEt6fv5kQPFCVJizH"><div><button aria-expanded="false" aria-haspopup="true" aria-label="more options" id="t3_14x007q-overflow-menu" data-adclicklocation="overflow_menu" class="_2pFdCpgBihIaYh9DSMWBIu _1EbinKu2t3KjaT2gR156Qp uMPgOFYlCc5uvpa2Lbteu"><i class="_38GxRFSqSC-Z2VLi5Xzkjy icon icon-overflow_horizontal"></i></button></div></div><div class="_21pmAV9gWG6F_UKVe7YIE0"></div></div></div></div></div>`;
-                              let elements = document.querySelector('.rpBJOHq2PR60pnwJlUyP0');
-
-                              var upvoteButton = fakepost.querySelector('[aria-label="upvote"]');
-                              var downvoteButton = fakepost.querySelector('[aria-label="downvote"]');
-                              upvoteButton.setAttribute("buttonclicked", "true");
-                              if (upvoteButton) {
-                                // Do something with the upvote button, like adding an event listener
-                                upvoteButton.addEventListener('click', function () {
-                                  event.preventDefault(); // Prevent the default behavior (i.e., navigating to fakepost_url)
-                                  event.stopPropagation();
-                                  var span = upvoteButton.querySelector('span');
-                                  var i = span.querySelector('i');
-                                  if (upvoteButton.hasAttribute("buttonclicked")) {
-                                    // Update class names of the span element
-                                    span.classList.add('_3emIxnIscWEPB7o5LgU_rn');
-                                    span.classList.remove('Z3lT0VGlALek4Q9j0ZQCr');
-
-                                    // Select the i element within the span
-
-                                    // Update class name of the i element
-                                    i.classList.add('icon-upvote');
-                                    i.classList.remove('icon-upvote_fill');
-                                    // Select the element by its class name
-                                    var element = fakepost.querySelector('._1rZYMD_4xY3gRcSS3p8ODO');
-
-                                    // Check if the element was found
-                                    if (element) {
-                                      // Change the color style to orginal color
-
-                                      element.style.color = '#1A1A1B';
-                                      element.textContent = parseInt(element.textContent) - 1;
-                                      delete_uservotefake_to_background(fakepost_url);
-                                    } else {
-                                      console.log('Element not found');
-                                    }
-                                    upvoteButton.removeAttribute("buttonclicked");
-                                  }
-                                  else {
-
-                                    upvoteButton.setAttribute("buttonclicked", "true");
-                                    if (downvoteButton.hasAttribute("buttonclicked")) {
-
-                                      // Select the i element within the span
-                                      var downvotespan = downvoteButton.querySelector('span');
-                                      // remove downvote button color 
-                                      downvotespan.classList.remove('_3emIxnIscWEPB7o5LgU_rn');
-                                      downvotespan.classList.add('_3yQIOwaIuF6gn8db96Gu7y');
-                                      var downvotei = downvoteButton.querySelector('i');
-                                      downvotei.classList.add('icon-downvote');
-                                      downvotei.classList.remove('icon-downvote_fill');
-
-                                      // remove downvotebutton color 
-                                      var element = fakepost.querySelector('._1rZYMD_4xY3gRcSS3p8ODO');
-                                      // Select the element by its class name
-                                      if (element) {
-                                        // Change the color style to orginal color
-
-                                        element.style.color = 'rgb(255, 69, 0)';
-                                        element.textContent = parseInt(element.textContent) + 2;
-                                        delete_uservotefake_to_background(fakepost_url);
-                                      } else {
-                                        console.log('Element not found');
-                                      }
-
-                                      downvoteButton.removeAttribute("buttonclicked");
-
-                                    }
-                                    else {
-                                      var element = fakepost.querySelector('._1rZYMD_4xY3gRcSS3p8ODO');
-
-                                      // Check if the element was found
-                                      if (element) {
-                                        // Change the color style
-                                        element.style.color = 'rgb(255, 69, 0)';
-                                        element.textContent = parseInt(element.textContent) + 1;
-
-                                      } else {
-                                        console.log('Element not found');
-                                      }
-                                    }
-
-                                    // Update class names of the span element
-                                    downvotespan.classList.remove('_3emIxnIscWEPB7o5LgU_rn');
-                                    span.classList.add('Z3lT0VGlALek4Q9j0ZQCr');
-                                    // Update class name of the i element
-                                    i.classList.remove('icon-upvote');
-                                    i.classList.add('icon-upvote_fill');
-                                    send_uservotefake_to_background("upvote", fakepost_url);
-
-
-                                  }
-
-
-
-                                  //alert("Upvote button clicked");
-                                });
-
-                              } else {
-                                console.log('No element with aria-label="upvote" found.');
-                              }
-                              if (downvoteButton) {
-                                // Do something with the upvote button, like adding an event listener
-                                downvoteButton.addEventListener('click', function () {
-                                  event.preventDefault(); // Prevent the default behavior (i.e., navigating to fakepost_url)
-                                  event.stopPropagation();
-                                  var span = downvoteButton.querySelector('span');
-                                  var i = span.querySelector('i');
-                                  if (downvoteButton.hasAttribute("buttonclicked")) {
-                                    // Update class names of the span element
-                                    span.classList.remove('_3emIxnIscWEPB7o5LgU_rn');
-                                    span.classList.add('_3yQIOwaIuF6gn8db96Gu7y');
-                                    // Select the i element within the span
-
-                                    // Update class name of the i element
-                                    i.classList.add('icon-downvote');
-                                    i.classList.remove('icon-downvote_fill');
-                                    // Select the element by its class name
-                                    var element = fakepost.querySelector('._1rZYMD_4xY3gRcSS3p8ODO');
-
-                                    // Check if the element was found
-                                    if (element) {
-                                      // Change the color style to orginal color
-
-                                      element.style.color = '#1A1A1B';
-                                      element.textContent = parseInt(element.textContent) + 1;
-                                      delete_uservotefake_to_background(fakepost_url);
-                                    } else {
-                                      console.log('Element not found');
-                                    }
-                                    downvoteButton.removeAttribute("buttonclicked");
-                                  }
-                                  else {
-
-
-                                    span.classList.remove('_3yQIOwaIuF6gn8db96Gu7y');
-                                    span.classList.add('_3emIxnIscWEPB7o5LgU_rn');
-                                    downvoteButton.setAttribute("buttonclicked", "true");
-                                    if (upvoteButton.hasAttribute("buttonclicked")) {
-
-                                      // Select the i element within the span
-                                      var upvotespan = upvoteButton.querySelector('span');
-                                      var downvotespan = downvoteButton.querySelector('span');
-                                      // remove downvote button color 
-                                      downvotespan.classList.add('_3emIxnIscWEPB7o5LgU_rn');
-                                      upvotespan.classList.remove('Z3lT0VGlALek4Q9j0ZQCr');
-                                      var upvotei = upvoteButton.querySelector('i');
-                                      upvotei.classList.add('icon-upvote');
-                                      upvotei.classList.remove('icon-upvote_fill');
-                                      var element = fakepost.querySelector('._1rZYMD_4xY3gRcSS3p8ODO');
-                                      i.classList.remove('icon-downvote');
-                                      i.classList.add('icon-downvote_fill');
-                                      // Check if the element was found
-                                      if (element) {
-                                        // Change the color style to orginal color
-
-                                        element.style.color = 'rgb(113, 147, 255)';
-                                        element.textContent = parseInt(element.textContent) - 2;
-                                        delete_uservotefake_to_background(fakepost_url);
-                                        //send_uservotefake_to_background("downvote",fakepost_url);
-                                      } else {
-                                        console.log('Element not found');
-                                      }
-                                      // remove downvotebutton color 
-
-                                      // Select the element by its class name
-
-
-                                      upvoteButton.removeAttribute("buttonclicked");
-
-                                    }
-                                    else {
-
-
-
-                                      // Update class name of the i element
-                                      i.classList.remove('icon-downvote');
-                                      i.classList.add('icon-downvote_fill');
-
-                                      var element = fakepost.querySelector('._1rZYMD_4xY3gRcSS3p8ODO');
-
-                                      // Check if the element was found
-                                      if (element) {
-                                        // Change the color style
-                                        element.style.color = 'rgb(113, 147, 255)';
-                                        element.textContent = parseInt(element.textContent) - 1;
-
-                                      } else {
-                                        console.log('Element not found');
-                                      }
-
-                                      //send_uservotefake_to_background("downvote",fakepost_url);
-
-                                    }
-
-                                    send_uservotefake_to_background("downvote", fakepost_url);
-                                  }
-
-
-
-                                  //alert("Upvote button clicked");
-                                });
-
-
-                              } else {
-                                console.log('No element with aria-label="upvote" found.');
-                              }
-
-
-                              // alert(fakepost_url);
-
-                              fakepost.addEventListener('click', function () {
-                                // Replace 'https://example.com' with the desired URL
-                                window.location.href = fakepost_url;
-                              });
-
-                              // Insert the cloned post with the modified img src
-                              elements.insertBefore(fakepost, elements.children[fakepost_index])
-                            }
-                            else if (result === "downvote") {
-                              fakepost_like = parseInt(fakepost_like) - 1;
-                              var fakepost = document.createElement("div");
-                              fakepost.innerHTML = `<div class="_1oQyIsiPHYt6nx7VOmd1sz _1RYN-7H8gYctjOQeL8p2Q7 scrollerItem _3Qkp11fjcAw9I9wtLo8frE _1qftyZQ2bhqP62lbPjoGAh  Post t3_14x007q " data-testid="post-container" id="t3_14x007q" tabindex="-1" data-adclicklocation="background"><div></div><div class="_23h0-EcaBUorIHC-JZyh6J" style="width:40px;border-left:4px solid transparent"><div class="_1E9mcoVn4MYnuBQSVDt1gC" id="vote-arrows-t3_14x007q"><button aria-label="upvote" aria-pressed="false" class="voteButton " data-click-id="upvote" data-adclicklocation="upvote" id="upvote-button-t3_14x007q" outer-limit-monitored="true"><span class="_2q7IQ0BUOWeEZoeAxN555e _3SUsITjKNQ7Tp0Wi2jGxIM qW0l8Af61EP35WIG6vnGk _3emIxnIscWEPB7o5LgU_rn"><i class="icon icon-upvote _2Jxk822qXs4DaXwsN7yyHA"></i></span></button><div class="_1rZYMD_4xY3gRcSS3p8ODO _3a2ZHWaih05DgAOtvu6cIo " style="color: rgb(113, 147, 255);">${fakepost_like}</div><button aria-label="downvote" aria-pressed="false" class="voteButton" data-click-id="downvote" data-adclicklocation="downvote" outer-limit-monitored="true"><span class="_1iKd82bq_nqObFvSH1iC_Q Q0BxYHtCOJ_rNSPJMU2Y7 _2fe-KdD2OM0ciaiux-G1EL _3emIxnIscWEPB7o5LgU_rn"><i class="icon icon-downvote_fill ZyxIIl4FP5gHGrJDzNpUC"></i></span></button></div></div><div class="_1poyrkZ7g36PawDueRza-J _11R7M_VOgKO1RJyRSRErT3 " style="background:#FFFFFF" data-adclicklocation="background" data-click-id="background"><div class="_292iotee39Lmt0MkQZ2hPV RichTextJSON-root nAL34ZVf4KfyEoZIzUgmN _3hWVRt6y8PqOoC2VuZETZI"><p class="_1qeIAgB0cPwnLhDF9XSiJM">Because you've shown interest in a similar community</p></div><div class="_14-YvdFiW5iVvfe5wdgmET"><div class="_2dr_3pZUCk8KfJ-x0txT_l"><a data-click-id="subreddit" class="_3ryJoIoycVkA88fy40qNJc" href=""><img style="background-color:#EA0027" alt="Subreddit Icon" role="presentation" src="https://styles.redditmedia.com/t5_2qh1o/styles/communityIcon_0uzb28pnky3d1.png?width=256&s=800ad355a90445c717e938142607ed18a59926a2" class="_34CfAAowTqdbNDYXz5tBTW _1WX5Y5qFVBTdr6hCPpARDB "></a></div><div class="cZPZhMe-UCZ8htPodMyJ5"><div class="_3AStxql1mQsrZuUIFP9xSg nU4Je7n-eSXStTBAPMYt8" data-adclicklocation="top_bar"><div class="_2mHuuvyV9doV3zwbZPtIPG"><a data-click-id="subreddit" class="_3ryJoIoycVkA88fy40qNJc" href="">${fakepost_community}</a><div id="SubredditInfoTooltip--t3_14x007q--USPS"></div></div><span class="_3LS4zudUBagjFS7HjWJYxo _37gsGHa8DMRAxBmQS-Ppg8 _3V4xlrklKBP2Hg51ejjjvz" role="presentation">•</span><span style="color:#787C7E" class="_2fCzxBE1dlMh4OFc7B3Dun">Posted by</span><div class="_2mHuuvyV9doV3zwbZPtIPG"><div id="UserInfoTooltip--t3_14x007q"><a class="_2tbHP6ZydRpjI44J3syuqC  _23wugcdiaj44hdfugIAlnX oQctV4n0yUb0uiHDdGnmE" data-click-id="user" data-testid="post_author_link" href="" style="color: rgb(120, 124, 126);">${fakepost_poster}</a></div></div><span class="_2VF2J19pUIMSLJFky-7PEI" data-testid="post_timestamp" data-click-id="timestamp" style="color:#787C7E">${time}</span></div><div class="_2wFk1qX4e1cxk8Pkw1rAHk"></div><div class="_3XoW0oYd5806XiOr24gGdb"></div></div><button role="button" tabindex="0" id="subscribe-button-t3_14x007q" class="_35dG7dsi4xKTT-_2MB74qq _2iuoyPiKHN3kfOoeIQalDT _10BQ7pjWbeYP63SAPNS8Ts UEPNkU0rd1-nvbkOcBatc "><span>Join</span></button></div><div class="_2FCtq-QzlfuN-SwVMUZMM3 _3wiKjmhpIpoTE2r5KCm2o6 t3_14x007q" data-adclicklocation="title"><div class="y8HYJ-y_lTUHkQIc1mdCq _2INHSNB8V5eaWp4P0rY_mE"><a data-click-id="body" class="SQnoC3ObvgnGjWt90zD9Z _2INHSNB8V5eaWp4P0rY_mE" href=${fakepost_url}><div class="_2SdHzo12ISmrC8H86TgSCp _3wqmjmv3tb_k-PROt7qFZe " style="--posttitletextcolor:#222222"><h3 class="_eYtD2XCVieq6emjKBH3m">${fakepost_title}</h3></div></a></div><div class="_2xu1HuBz1Yx6SP10AGVx_I" data-ignore-click="false"><div class="lrzZ8b0L6AzLkQj5Ww7H1"></div><div class="lrzZ8b0L6AzLkQj5Ww7H1"><a href=""></div></div><div class="_1hLrLjnE1G_RBCNcN9MVQf"><img alt="" src="https://www.redditstatic.com/desktop2x/img/renderTimingPixel.png" style="width: 1px; height: 1px;" onload="(__markFirstPostVisible || function(){})();"></div><style>.t3_14x007q._2FCtq-QzlfuN-SwVMUZMM3 {--postTitle-VisitedLinkColor: #9b9b9b;--postTitleLink-VisitedLinkColor: #9b9b9b;--postBodyLink-VisitedLinkColor: #989898;}</style></div><div class="STit0dLageRsa2yR4te_b"><div class="m3aNC6yp8RrNM_-a0rrfa " data-click-id="media"><div class="_3gBRFDB5C34UWyxEe_U6mD" style="padding-bottom:133.28125%"></div><div class="_3JgI-GOrkmyIeDeyzXdyUD _2CSlKHjH7lsjx0IpjORx14"><div class="_1NSbknF8ucHV2abfCZw2Z1 "><a href=${fakepost_url}><div class="_3Oa0THmZ3f5iZXAQ0hBJ0k " style="max-height:512px;margin:0 auto"><div><img alt="Post image" class="_2_tDEnGMLxpM6uOa2kaDB3 ImageBox-image media-element _1XWObl-3b9tPy64oaG6fax" src=${fakepost_image} style="max-height:512px"></div></div></a></div></div></div></div><div class="_1ixsU4oQRnNfZ91jhBU74y"><div class="_1E9mcoVn4MYnuBQSVDt1gC _2oM1YqCxIwkvwyeZamWwhW uFwpR-OdmueYZxdY_rEDX" id="vote-arrows-t3_14x007q"><button aria-label="upvote" aria-pressed="false" class="voteButton " data-click-id="upvote" data-adclicklocation="upvote"><span class="_2q7IQ0BUOWeEZoeAxN555e _3SUsITjKNQ7Tp0Wi2jGxIM qW0l8Af61EP35WIG6vnGk _3emIxnIscWEPB7o5LgU_rn"><i class="icon icon-upvote _2Jxk822qXs4DaXwsN7yyHA"></i></span></button><div class="_1rZYMD_4xY3gRcSS3p8ODO _25IkBM0rRUqWX5ZojEMAFQ" style="color: rgb(113, 147, 255);">${fakepost_like}</div><button aria-label="downvote" aria-pressed="false" class="voteButton" data-click-id="downvote" data-adclicklocation="downvote"><span class="_1iKd82bq_nqObFvSH1iC_Q Q0BxYHtCOJ_rNSPJMU2Y7 _2fe-KdD2OM0ciaiux-G1EL _3emIxnIscWEPB7o5LgU_rn"><i class="icon icon-downvote_fill ZyxIIl4FP5gHGrJDzNpUC"></i></span></button></div><div class="_3-miAEojrCvx_4FQ8x3P-s"><a rel="nofollow" data-click-id="comments" data-adclicklocation="comments" data-test-id="comments-page-link-num-comments" class="_1UoeAeSRhOKSNdY_h3iS1O _1Hw7tY9pMr-T1F4P1C-xNU _3U_7i38RDPV5eBv7m4M-9J _2qww3J5KKzsD7e5DO0BvvU" href=${fakepost_url}><i class="icon icon-comment _3DVrpDrMM9NLT6TlsTUMxC" role="presentation"></i><span class="FHCV02u6Cp2zYL0fhQPsO">2 comments</span></a><div data-ignore-click="false" class="_3U_7i38RDPV5eBv7m4M-9J" data-adclicklocation="fl_unknown"><button class="_10K5i7NW6qcm-UoCtpB3aK YszYBnnIoNY8pZ6UwCivd _3yh2bniLq7bYr4BaiXowdO _1EWxiIupuIjiExPQeK4Kud _28vEaVlLWeas1CDiLuTCap"><span class="pthKOcceozMuXLYrLlbL1"><i class="_3yNNYT3e1avhAAWVHd0-92 icon icon-award" id="View--GiveAward--t3_14x007q"></i></span><span class="_2-cXnP74241WI7fpcpfPmg _70940WUuFmpHbhKlj8EjZ">Award</span></button></div><div class="_JRBNstMcGxbZUxrrIKXe _3U_7i38RDPV5eBv7m4M-9J _3yh2bniLq7bYr4BaiXowdO _1pShbCnOaF7EGWTq6IvZux _28vEaVlLWeas1CDiLuTCap" id="t3_14x007q-share-menu"><button data-click-id="share" data-adclicklocation="fl_share" class="kU8ebCMnbXfjCWfqn0WPb"><i class="icon icon-share _1GQDWqbF-wkYWbrpmOvjqJ"></i><span class="_6_44iTtZoeY6_XChKt5b0">share</span></button></div><div data-ignore-click="false" class="_3U_7i38RDPV5eBv7m4M-9J" data-adclicklocation="fl_unknown"><button class="_10K5i7NW6qcm-UoCtpB3aK YszYBnnIoNY8pZ6UwCivd _3yh2bniLq7bYr4BaiXowdO _2sAFaB0tx4Hd5KxVkdUcAx _28vEaVlLWeas1CDiLuTCap"><span class="pthKOcceozMuXLYrLlbL1"><i class="_1Xe01txJfRB9udUU85DNeR icon icon-save"></i></span><span class="_2-cXnP74241WI7fpcpfPmg _70940WUuFmpHbhKlj8EjZ">save</span></button></div><div class="OccjSdFd6HkHhShRg6DOl"></div><div class="_3MmwvEEt6fv5kQPFCVJizH"><div><button aria-expanded="false" aria-haspopup="true" aria-label="more options" id="t3_14x007q-overflow-menu" data-adclicklocation="overflow_menu" class="_2pFdCpgBihIaYh9DSMWBIu _1EbinKu2t3KjaT2gR156Qp uMPgOFYlCc5uvpa2Lbteu"><i class="_38GxRFSqSC-Z2VLi5Xzkjy icon icon-overflow_horizontal"></i></button></div></div><div class="_21pmAV9gWG6F_UKVe7YIE0"></div></div></div></div></div>`;
-
-
-                              let elements = document.querySelector('.rpBJOHq2PR60pnwJlUyP0');
-
-                              var upvoteButton = fakepost.querySelector('[aria-label="upvote"]');
-                              var downvoteButton = fakepost.querySelector('[aria-label="downvote"]');
-                              downvoteButton.setAttribute("buttonclicked", "true");
-                              if (upvoteButton) {
-                                // Do something with the upvote button, like adding an event listener
-                                upvoteButton.addEventListener('click', function () {
-                                  event.preventDefault(); // Prevent the default behavior (i.e., navigating to fakepost_url)
-                                  event.stopPropagation();
-                                  var span = upvoteButton.querySelector('span');
-                                  var i = span.querySelector('i');
-                                  if (upvoteButton.hasAttribute("buttonclicked")) {
-                                    // Update class names of the span element
-                                    span.classList.add('_3emIxnIscWEPB7o5LgU_rn');
-                                    span.classList.remove('Z3lT0VGlALek4Q9j0ZQCr');
-
-                                    // Select the i element within the span
-
-                                    // Update class name of the i element
-                                    i.classList.add('icon-upvote');
-                                    i.classList.remove('icon-upvote_fill');
-                                    // Select the element by its class name
-                                    var element = fakepost.querySelector('._1rZYMD_4xY3gRcSS3p8ODO');
-
-                                    // Check if the element was found
-                                    if (element) {
-                                      // Change the color style to orginal color
-
-                                      element.style.color = '#1A1A1B';
-                                      element.textContent = parseInt(element.textContent) - 1;
-                                      delete_uservotefake_to_background(fakepost_url);
-                                    } else {
-                                      console.log('Element not found');
-                                    }
-                                    upvoteButton.removeAttribute("buttonclicked");
-                                  }
-                                  else {
-                                    upvoteButton.setAttribute("buttonclicked", "true");
-                                    if (downvoteButton.hasAttribute("buttonclicked")) {
-
-                                      // Select the i element within the span
-                                      var downvotespan = downvoteButton.querySelector('span');
-                                      // remove downvote button color 
-                                      downvotespan.classList.remove('_3emIxnIscWEPB7o5LgU_rn');
-                                      downvotespan.classList.add('_3yQIOwaIuF6gn8db96Gu7y');
-                                      var downvotei = downvoteButton.querySelector('i');
-                                      downvotei.classList.add('icon-downvote');
-                                      downvotei.classList.remove('icon-downvote_fill');
-
-                                      // remove downvotebutton color 
-                                      var element = fakepost.querySelector('._1rZYMD_4xY3gRcSS3p8ODO');
-                                      // Select the element by its class name
-                                      if (element) {
-                                        // Change the color style to orginal color
-
-                                        element.style.color = 'rgb(255, 69, 0)';
-                                        element.textContent = parseInt(element.textContent) + 2;
-                                        delete_uservotefake_to_background(fakepost_url);
-                                      } else {
-                                        console.log('Element not found');
-                                      }
-
-                                      downvoteButton.removeAttribute("buttonclicked");
-
-                                    }
-                                    else {
-                                      var element = fakepost.querySelector('._1rZYMD_4xY3gRcSS3p8ODO');
-
-                                      // Check if the element was found
-                                      if (element) {
-                                        // Change the color style
-                                        element.style.color = 'rgb(255, 69, 0)';
-                                        element.textContent = parseInt(element.textContent) + 1;
-
-                                      } else {
-                                        console.log('Element not found');
-                                      }
-                                    }
-
-                                    // Update class names of the span element
-                                    span.classList.remove('_3emIxnIscWEPB7o5LgU_rn');
-                                    span.classList.add('Z3lT0VGlALek4Q9j0ZQCr');
-                                    // Update class name of the i element
-                                    i.classList.remove('icon-upvote');
-                                    i.classList.add('icon-upvote_fill');
-                                    send_uservotefake_to_background("upvote", fakepost_url);
-
-
-                                  }
-
-
-
-                                  //alert("Upvote button clicked");
-                                });
-
-                              } else {
-                                console.log('No element with aria-label="upvote" found.');
-                              }
-                              if (downvoteButton) {
-                                // Do something with the upvote button, like adding an event listener
-                                downvoteButton.addEventListener('click', function () {
-                                  event.preventDefault(); // Prevent the default behavior (i.e., navigating to fakepost_url)
-                                  event.stopPropagation();
-                                  var span = downvoteButton.querySelector('span');
-                                  var i = span.querySelector('i');
-                                  if (downvoteButton.hasAttribute("buttonclicked")) {
-                                    // Update class names of the span element
-                                    span.classList.remove('_3emIxnIscWEPB7o5LgU_rn');
-                                    span.classList.add('_3yQIOwaIuF6gn8db96Gu7y');
-                                    // Select the i element within the span
-
-                                    // Update class name of the i element
-                                    i.classList.add('icon-downvote');
-                                    i.classList.remove('icon-downvote_fill');
-                                    // Select the element by its class name
-                                    var element = fakepost.querySelector('._1rZYMD_4xY3gRcSS3p8ODO');
-
-                                    // Check if the element was found
-                                    if (element) {
-                                      // Change the color style to orginal color
-
-                                      element.style.color = '#1A1A1B';
-                                      element.textContent = parseInt(element.textContent) + 1;
-                                      delete_uservotefake_to_background(fakepost_url);
-                                    } else {
-                                      console.log('Element not found');
-                                    }
-                                    downvoteButton.removeAttribute("buttonclicked");
-                                  }
-                                  else {
-                                    span.classList.remove('_3yQIOwaIuF6gn8db96Gu7y');
-                                    span.classList.add('_3emIxnIscWEPB7o5LgU_rn');
-                                    downvoteButton.setAttribute("buttonclicked", "true");
-                                    if (upvoteButton.hasAttribute("buttonclicked")) {
-
-                                      // Select the i element within the span
-                                      var upvotespan = upvoteButton.querySelector('span');
-                                      // remove downvote button color 
-                                      upvotespan.classList.add('_3emIxnIscWEPB7o5LgU_rn');
-                                      upvotespan.classList.remove('Z3lT0VGlALek4Q9j0ZQCr');
-                                      var upvotei = upvoteButton.querySelector('i');
-                                      upvotei.classList.add('icon-upvote');
-                                      upvotei.classList.remove('icon-upvote_fill');
-                                      var element = fakepost.querySelector('._1rZYMD_4xY3gRcSS3p8ODO');
-                                      i.classList.remove('icon-downvote');
-                                      i.classList.add('icon-downvote_fill');
-                                      // Check if the element was found
-                                      if (element) {
-                                        // Change the color style to orginal color
-
-                                        element.style.color = 'rgb(113, 147, 255)';
-                                        element.textContent = parseInt(element.textContent) - 2;
-                                        delete_uservotefake_to_background(fakepost_url);
-                                      } else {
-                                        console.log('Element not found');
-                                      }
-                                      // remove downvotebutton color 
-
-                                      // Select the element by its class name
-
-
-                                      upvoteButton.removeAttribute("buttonclicked");
-
-                                    }
-                                    else {
-
-
-
-                                      // Update class name of the i element
-                                      i.classList.remove('icon-downvote');
-                                      i.classList.add('icon-downvote_fill');
-
-                                      var element = fakepost.querySelector('._1rZYMD_4xY3gRcSS3p8ODO');
-
-                                      // Check if the element was found
-                                      if (element) {
-                                        // Change the color style
-                                        element.style.color = 'rgb(113, 147, 255)';
-                                        element.textContent = parseInt(element.textContent) - 1;
-
-                                      } else {
-                                        console.log('Element not found');
-                                      }
-
-
-                                      send_uservotefake_to_background("downvote", fakepost_url);
-                                    }
-
-
-                                  }
-
-
-
-                                  //alert("Upvote button clicked");
-                                });
-
-
-                              } else {
-                                console.log('No element with aria-label="upvote" found.');
-                              }
-
-                              fakepost.addEventListener('click', function () {
-                                // Replace 'https://example.com' with the desired URL
-                                window.location.href = fakepost_url;
-                              });
-
-                              // Insert the cloned post with the modified img src
-                              elements.insertBefore(fakepost, elements.children[fakepost_index])
-                            }
-                            else {
-                              var fakepost = document.createElement("div");
-                              fakepost.innerHTML = `<div class="_1oQyIsiPHYt6nx7VOmd1sz _1RYN-7H8gYctjOQeL8p2Q7 scrollerItem _3Qkp11fjcAw9I9wtLo8frE _1qftyZQ2bhqP62lbPjoGAh  Post t3_14x007q " data-testid="post-container" id="t3_14x007q" tabindex="-1" data-adclicklocation="background"><div></div><div class="_23h0-EcaBUorIHC-JZyh6J" style="width:40px;border-left:4px solid transparent"><div class="_1E9mcoVn4MYnuBQSVDt1gC" id="vote-arrows-t3_14x007q"><button aria-label="upvote" aria-pressed="false" class="voteButton " data-click-id="upvote" data-adclicklocation="upvote" id="upvote-button-t3_14x007q" outer-limit-monitored="true"><span class="_2q7IQ0BUOWeEZoeAxN555e _3SUsITjKNQ7Tp0Wi2jGxIM qW0l8Af61EP35WIG6vnGk _3emIxnIscWEPB7o5LgU_rn"><i class="icon icon-upvote _2Jxk822qXs4DaXwsN7yyHA"></i></span></button><div class="_1rZYMD_4xY3gRcSS3p8ODO _3a2ZHWaih05DgAOtvu6cIo " style="color:#1A1A1B">${fakepost_like}</div><button aria-label="downvote" aria-pressed="false" class="voteButton" data-click-id="downvote" data-adclicklocation="downvote" outer-limit-monitored="true"><span class="_1iKd82bq_nqObFvSH1iC_Q Q0BxYHtCOJ_rNSPJMU2Y7 _2fe-KdD2OM0ciaiux-G1EL _3yQIOwaIuF6gn8db96Gu7y"><i class="icon icon-downvote ZyxIIl4FP5gHGrJDzNpUC"></i></span></button></div></div><div class="_1poyrkZ7g36PawDueRza-J _11R7M_VOgKO1RJyRSRErT3 " style="background:#FFFFFF" data-adclicklocation="background" data-click-id="background"><div class="_292iotee39Lmt0MkQZ2hPV RichTextJSON-root nAL34ZVf4KfyEoZIzUgmN _3hWVRt6y8PqOoC2VuZETZI"><p class="_1qeIAgB0cPwnLhDF9XSiJM">Because you've shown interest in a similar community</p></div><div class="_14-YvdFiW5iVvfe5wdgmET"><div class="_2dr_3pZUCk8KfJ-x0txT_l"><a data-click-id="subreddit" class="_3ryJoIoycVkA88fy40qNJc" href=""><img style="background-color:#EA0027" alt="Subreddit Icon" role="presentation" src="https://styles.redditmedia.com/t5_2qh1o/styles/communityIcon_0uzb28pnky3d1.png?width=256&s=800ad355a90445c717e938142607ed18a59926a2" class="_34CfAAowTqdbNDYXz5tBTW _1WX5Y5qFVBTdr6hCPpARDB "></a></div><div class="cZPZhMe-UCZ8htPodMyJ5"><div class="_3AStxql1mQsrZuUIFP9xSg nU4Je7n-eSXStTBAPMYt8" data-adclicklocation="top_bar"><div class="_2mHuuvyV9doV3zwbZPtIPG"><a data-click-id="subreddit" class="_3ryJoIoycVkA88fy40qNJc" href="">${fakepost_community}</a><div id="SubredditInfoTooltip--t3_14x007q--USPS"></div></div><span class="_3LS4zudUBagjFS7HjWJYxo _37gsGHa8DMRAxBmQS-Ppg8 _3V4xlrklKBP2Hg51ejjjvz" role="presentation">•</span><span style="color:#787C7E" class="_2fCzxBE1dlMh4OFc7B3Dun">Posted by</span><div class="_2mHuuvyV9doV3zwbZPtIPG"><div id="UserInfoTooltip--t3_14x007q"><a class="_2tbHP6ZydRpjI44J3syuqC  _23wugcdiaj44hdfugIAlnX oQctV4n0yUb0uiHDdGnmE" data-click-id="user" data-testid="post_author_link" href="" style="color: rgb(120, 124, 126);">${fakepost_poster}</a></div></div><span class="_2VF2J19pUIMSLJFky-7PEI" data-testid="post_timestamp" data-click-id="timestamp" style="color:#787C7E">${time}</span></div><div class="_2wFk1qX4e1cxk8Pkw1rAHk"></div><div class="_3XoW0oYd5806XiOr24gGdb"></div></div><button role="button" tabindex="0" id="subscribe-button-t3_14x007q" class="_35dG7dsi4xKTT-_2MB74qq _2iuoyPiKHN3kfOoeIQalDT _10BQ7pjWbeYP63SAPNS8Ts UEPNkU0rd1-nvbkOcBatc "><span>Join</span></button></div><div class="_2FCtq-QzlfuN-SwVMUZMM3 _3wiKjmhpIpoTE2r5KCm2o6 t3_14x007q" data-adclicklocation="title"><div class="y8HYJ-y_lTUHkQIc1mdCq _2INHSNB8V5eaWp4P0rY_mE"><a data-click-id="body" class="SQnoC3ObvgnGjWt90zD9Z _2INHSNB8V5eaWp4P0rY_mE" href=${fakepost_url}><div class="_2SdHzo12ISmrC8H86TgSCp _3wqmjmv3tb_k-PROt7qFZe " style="--posttitletextcolor:#222222"><h3 class="_eYtD2XCVieq6emjKBH3m">${fakepost_title}</h3></div></a></div><div class="_2xu1HuBz1Yx6SP10AGVx_I" data-ignore-click="false"><div class="lrzZ8b0L6AzLkQj5Ww7H1"></div><div class="lrzZ8b0L6AzLkQj5Ww7H1"><a href=""></a></div></div><div class="_1hLrLjnE1G_RBCNcN9MVQf"><img alt="" src="https://www.redditstatic.com/desktop2x/img/renderTimingPixel.png" style="width: 1px; height: 1px;" onload="(__markFirstPostVisible || function(){})();"></div><style>.t3_14x007q._2FCtq-QzlfuN-SwVMUZMM3 {--postTitle-VisitedLinkColor: #9b9b9b;--postTitleLink-VisitedLinkColor: #9b9b9b;--postBodyLink-VisitedLinkColor: #989898;}</style></div><div class="STit0dLageRsa2yR4te_b"><div class="m3aNC6yp8RrNM_-a0rrfa " data-click-id="media"><div class="_3gBRFDB5C34UWyxEe_U6mD" style="padding-bottom:133.28125%"></div><div class="_3JgI-GOrkmyIeDeyzXdyUD _2CSlKHjH7lsjx0IpjORx14"><div class="_1NSbknF8ucHV2abfCZw2Z1 "><a href=${fakepost_url}><div class="_3Oa0THmZ3f5iZXAQ0hBJ0k " style="max-height:512px;margin:0 auto"><div><img alt="Post image" class="_2_tDEnGMLxpM6uOa2kaDB3 ImageBox-image media-element _1XWObl-3b9tPy64oaG6fax" src=${fakepost_image} style="max-height:512px"></div></div></a></div></div></div></div><div class="_1ixsU4oQRnNfZ91jhBU74y"><div class="_1E9mcoVn4MYnuBQSVDt1gC _2oM1YqCxIwkvwyeZamWwhW uFwpR-OdmueYZxdY_rEDX" id="vote-arrows-t3_14x007q"><button aria-label="upvote" aria-pressed="false" class="voteButton " data-click-id="upvote" data-adclicklocation="upvote"><span class="_2q7IQ0BUOWeEZoeAxN555e _3SUsITjKNQ7Tp0Wi2jGxIM qW0l8Af61EP35WIG6vnGk _3emIxnIscWEPB7o5LgU_rn"><i class="icon icon-upvote _2Jxk822qXs4DaXwsN7yyHA"></i></span></button><div class="_1rZYMD_4xY3gRcSS3p8ODO _25IkBM0rRUqWX5ZojEMAFQ" style="color:#1A1A1B">${fakepost_like}</div><button aria-label="downvote" aria-pressed="false" class="voteButton" data-click-id="downvote" data-adclicklocation="downvote"><span class="_1iKd82bq_nqObFvSH1iC_Q Q0BxYHtCOJ_rNSPJMU2Y7 _2fe-KdD2OM0ciaiux-G1EL _3yQIOwaIuF6gn8db96Gu7y"><i class="icon icon-downvote ZyxIIl4FP5gHGrJDzNpUC"></i></span></button></div><div class="_3-miAEojrCvx_4FQ8x3P-s"><a rel="nofollow" data-click-id="comments" data-adclicklocation="comments" data-test-id="comments-page-link-num-comments" class="_1UoeAeSRhOKSNdY_h3iS1O _1Hw7tY9pMr-T1F4P1C-xNU _3U_7i38RDPV5eBv7m4M-9J _2qww3J5KKzsD7e5DO0BvvU" href=${fakepost_url}><i class="icon icon-comment _3DVrpDrMM9NLT6TlsTUMxC" role="presentation"></i><span class="FHCV02u6Cp2zYL0fhQPsO">2 comments</span></a><div data-ignore-click="false" class="_3U_7i38RDPV5eBv7m4M-9J" data-adclicklocation="fl_unknown"><button class="_10K5i7NW6qcm-UoCtpB3aK YszYBnnIoNY8pZ6UwCivd _3yh2bniLq7bYr4BaiXowdO _1EWxiIupuIjiExPQeK4Kud _28vEaVlLWeas1CDiLuTCap"><span class="pthKOcceozMuXLYrLlbL1"><i class="_3yNNYT3e1avhAAWVHd0-92 icon icon-award" id="View--GiveAward--t3_14x007q"></i></span><span class="_2-cXnP74241WI7fpcpfPmg _70940WUuFmpHbhKlj8EjZ">Award</span></button></div><div class="_JRBNstMcGxbZUxrrIKXe _3U_7i38RDPV5eBv7m4M-9J _3yh2bniLq7bYr4BaiXowdO _1pShbCnOaF7EGWTq6IvZux _28vEaVlLWeas1CDiLuTCap" id="t3_14x007q-share-menu"><button data-click-id="share" data-adclicklocation="fl_share" class="kU8ebCMnbXfjCWfqn0WPb"><i class="icon icon-share _1GQDWqbF-wkYWbrpmOvjqJ"></i><span class="_6_44iTtZoeY6_XChKt5b0">share</span></button></div><div data-ignore-click="false" class="_3U_7i38RDPV5eBv7m4M-9J" data-adclicklocation="fl_unknown"><button class="_10K5i7NW6qcm-UoCtpB3aK YszYBnnIoNY8pZ6UwCivd _3yh2bniLq7bYr4BaiXowdO _2sAFaB0tx4Hd5KxVkdUcAx _28vEaVlLWeas1CDiLuTCap"><span class="pthKOcceozMuXLYrLlbL1"><i class="_1Xe01txJfRB9udUU85DNeR icon icon-save"></i></span><span class="_2-cXnP74241WI7fpcpfPmg _70940WUuFmpHbhKlj8EjZ">save</span></button></div><div class="OccjSdFd6HkHhShRg6DOl"></div><div class="_3MmwvEEt6fv5kQPFCVJizH"><div><button aria-expanded="false" aria-haspopup="true" aria-label="more options" id="t3_14x007q-overflow-menu" data-adclicklocation="overflow_menu" class="_2pFdCpgBihIaYh9DSMWBIu _1EbinKu2t3KjaT2gR156Qp uMPgOFYlCc5uvpa2Lbteu"><i class="_38GxRFSqSC-Z2VLi5Xzkjy icon icon-overflow_horizontal"></i></button></div></div><div class="_21pmAV9gWG6F_UKVe7YIE0"></div></div></div></div></div>`;
-                              let elements = document.querySelector('.rpBJOHq2PR60pnwJlUyP0');
-
-
-                              var upvoteButton = fakepost.querySelector('[aria-label="upvote"]');
-                              var downvoteButton = fakepost.querySelector('[aria-label="downvote"]');
-
-                              if (upvoteButton) {
-                                // Do something with the upvote button, like adding an event listener
-                                upvoteButton.addEventListener('click', function () {
-                                  event.preventDefault(); // Prevent the default behavior (i.e., navigating to fakepost_url)
-                                  event.stopPropagation();
-
-                                  var span = upvoteButton.querySelector('span');
-                                  var i = span.querySelector('i');
-                                  if (upvoteButton.hasAttribute("buttonclicked")) {
-                                    // Update class names of the span element
-                                    span.classList.add('_3emIxnIscWEPB7o5LgU_rn');
-                                    span.classList.remove('Z3lT0VGlALek4Q9j0ZQCr');
-
-                                    // Select the i element within the span
-
-                                    // Update class name of the i element
-                                    i.classList.add('icon-upvote');
-                                    i.classList.remove('icon-upvote_fill');
-                                    // Select the element by its class name
-                                    var element = fakepost.querySelector('._1rZYMD_4xY3gRcSS3p8ODO');
-
-                                    // Check if the element was found
-                                    if (element) {
-                                      // Change the color style to orginal color
-
-                                      element.style.color = '#1A1A1B';
-                                      element.textContent = parseInt(element.textContent) - 1;
-                                      delete_uservotefake_to_background(fakepost_url);
-                                    } else {
-                                      console.log('Element not found');
-                                    }
-                                    upvoteButton.removeAttribute("buttonclicked");
-                                  }
-                                  else {
-
-                                    upvoteButton.setAttribute("buttonclicked", "true");
-                                    if (downvoteButton.hasAttribute("buttonclicked")) {
-
-                                      // Select the i element within the span
-                                      var downvotespan = downvoteButton.querySelector('span');
-                                      // remove downvote button color 
-                                      downvotespan.classList.remove('_3emIxnIscWEPB7o5LgU_rn');
-                                      downvotespan.classList.add('_3yQIOwaIuF6gn8db96Gu7y');
-                                      var downvotei = downvoteButton.querySelector('i');
-                                      downvotei.classList.add('icon-downvote');
-                                      downvotei.classList.remove('icon-downvote_fill');
-
-                                      // remove downvotebutton color 
-                                      var element = fakepost.querySelector('._1rZYMD_4xY3gRcSS3p8ODO');
-                                      // Select the element by its class name
-                                      if (element) {
-                                        // Change the color style to orginal color
-
-                                        element.style.color = 'rgb(255, 69, 0)';
-                                        element.textContent = parseInt(element.textContent) + 2;
-                                        delete_uservotefake_to_background(fakepost_url);
-                                      } else {
-                                        console.log('Element not found');
-                                      }
-
-                                      downvoteButton.removeAttribute("buttonclicked");
-
-                                    }
-                                    else {
-                                      var element = fakepost.querySelector('._1rZYMD_4xY3gRcSS3p8ODO');
-
-                                      // Check if the element was found
-                                      if (element) {
-                                        // Change the color style
-                                        element.style.color = 'rgb(255, 69, 0)';
-                                        element.textContent = parseInt(element.textContent) + 1;
-
-                                      } else {
-                                        console.log('Element not found');
-                                      }
-                                    }
-
-                                    // Update class names of the span element
-                                    //downvotespan.classList.remove('_3emIxnIscWEPB7o5LgU_rn');
-                                    span.classList.add('Z3lT0VGlALek4Q9j0ZQCr');
-                                    // Update class name of the i element
-                                    i.classList.remove('icon-upvote');
-                                    i.classList.add('icon-upvote_fill');
-                                    //alert("send upvote to background");
-                                    send_uservotefake_to_background("upvote", fakepost_url);
-
-
-                                  }
-
-
-
-                                  //alert("Upvote button clicked");
-                                });
-
-                              } else {
-                                console.log('No element with aria-label="upvote" found.');
-                              }
-                              if (downvoteButton) {
-                                // Do something with the upvote button, like adding an event listener
-                                downvoteButton.addEventListener('click', function () {
-                                  event.preventDefault(); // Prevent the default behavior (i.e., navigating to fakepost_url)
-                                  event.stopPropagation();
-                                  var span = downvoteButton.querySelector('span');
-                                  var i = span.querySelector('i');
-                                  if (downvoteButton.hasAttribute("buttonclicked")) {
-                                    // Update class names of the span element
-                                    span.classList.remove('_3emIxnIscWEPB7o5LgU_rn');
-                                    span.classList.add('_3yQIOwaIuF6gn8db96Gu7y');
-                                    // Select the i element within the span
-
-                                    // Update class name of the i element
-                                    i.classList.add('icon-downvote');
-                                    i.classList.remove('icon-downvote_fill');
-                                    // Select the element by its class name
-                                    var element = fakepost.querySelector('._1rZYMD_4xY3gRcSS3p8ODO');
-
-                                    // Check if the element was found
-                                    if (element) {
-                                      // Change the color style to orginal color
-
-                                      element.style.color = '#1A1A1B';
-                                      element.textContent = parseInt(element.textContent) + 1;
-                                      delete_uservotefake_to_background(fakepost_url);
-                                    } else {
-                                      console.log('Element not found');
-                                    }
-                                    downvoteButton.removeAttribute("buttonclicked");
-                                  }
-                                  else {
-                                    span.classList.remove('_3yQIOwaIuF6gn8db96Gu7y');
-                                    span.classList.add('_3emIxnIscWEPB7o5LgU_rn');
-                                    downvoteButton.setAttribute("buttonclicked", "true");
-                                    if (upvoteButton.hasAttribute("buttonclicked")) {
-
-                                      // Select the i element within the span
-                                      var upvotespan = upvoteButton.querySelector('span');
-                                      // remove downvote button color 
-                                      span.classList.add('_3emIxnIscWEPB7o5LgU_rn');
-                                      upvotespan.classList.remove('Z3lT0VGlALek4Q9j0ZQCr');
-                                      var upvotei = upvoteButton.querySelector('i');
-                                      upvotei.classList.add('icon-upvote');
-                                      upvotei.classList.remove('icon-upvote_fill');
-                                      var element = fakepost.querySelector('._1rZYMD_4xY3gRcSS3p8ODO');
-                                      i.classList.remove('icon-downvote');
-                                      i.classList.add('icon-downvote_fill');
-                                      // Check if the element was found
-                                      if (element) {
-                                        // Change the color style to orginal color
-
-                                        element.style.color = 'rgb(113, 147, 255)';
-                                        element.textContent = parseInt(element.textContent) - 2;
-                                        delete_uservotefake_to_background(fakepost_url);
-                                      } else {
-                                        console.log('Element not found');
-                                      }
-                                      // remove downvotebutton color 
-
-                                      // Select the element by its class name
-
-
-                                      upvoteButton.removeAttribute("buttonclicked");
-
-                                    }
-                                    else {
-
-
-
-                                      // Update class name of the i element
-                                      i.classList.remove('icon-downvote');
-                                      i.classList.add('icon-downvote_fill');
-
-                                      var element = fakepost.querySelector('._1rZYMD_4xY3gRcSS3p8ODO');
-
-                                      // Check if the element was found
-                                      if (element) {
-                                        // Change the color style
-                                        element.style.color = 'rgb(113, 147, 255)';
-                                        element.textContent = parseInt(element.textContent) - 1;
-
-                                      } else {
-                                        console.log('Element not found');
-                                      }
-
-
-                                      send_uservotefake_to_background("downvote", fakepost_url);
-                                    }
-
-
-                                  }
-
-
-
-                                  //alert("Upvote button clicked");
-                                });
-
-
-                              } else {
-                                console.log('No element with aria-label="upvote" found.');
-                              }
-
-
-                              fakepost.addEventListener('click', function () {
-                                // Replace 'https://example.com' with the desired URL
-                                window.location.href = fakepost_url;
-                              });
-
-                              // Insert the cloned post with the modified img src
-                              elements.insertBefore(fakepost, elements.children[fakepost_index])
-                            }
-                          })
-                          .catch(error => {
-                            console.error("Error:", error);
-                          });
-
-                        ;
-
-
-                        // Select the element with class name "_2BMnTatQ5gjKGK5OWROgaG"
-
-
-
-
-                        // Do further processing with the startDate variable
-                      } else {
-                        console.log("Response does not contain the expected data.");
-                      }
-
-                    });
-
-                  }
-                } else {
-                  console.log("The response is not an array or is empty.");
-                }
-              })
-              .catch(error => {
-                console.error('An error occurred while fetching data:', error);
-              });
-
-
-
-
-
-            // Proceed with further actions using the decoded data
-          });
+  // Define the fetch URL without hardcoding it
+  var fetchUrl = `https://outer.socialsandbox.xyz/api/getfakepost`; // No URL provided here, this will fetch all posts
+  console.log("Fetching URL:", fetchUrl);
+
+  // Fetch the data
+  fetch(fetchUrl)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json(); // Parse the JSON from the response
+    })
+    .then(data => {
+      // Check if the result is an array (when no URL is provided)
+      if (Array.isArray(data)) {
+        if (data.length === 0) {
+          console.log("No fake posts found.");
         } else {
-          console.error("Invalid data format received");
+          // Loop through all fake posts in the array
+          data.forEach(fakePost => {
+            console.log("Fake post data:", fakePost);
+
+            // Destructure fake post details
+            var {
+              _id: id,
+              fakepost_id,
+              fakepost_url,
+              fakepost_index,
+              fakepost_title,
+              fakepost_content,
+              fakepost_image,
+              fakepost_likes,
+              fakepost_time,
+              fakepost_community,
+              fakepost_poster,
+              fake_comments
+            } = fakePost;
+            
+            // Handle comments
+            var commentsCount = 0;
+            if (Array.isArray(fake_comments)) {
+              commentsCount = fake_comments.length;
+              console.log(`Post titled '${fakepost_title}' has ${commentsCount} comments.`);
+            } else {
+              console.log(`Post titled '${fakepost_title}' has no comments.`);
+            }
+
+            var postFeedDiv = document.querySelector('div.sitetable.linklisting');
+
+            var expandoDiv;
+            var fakepostHTML;
+            var newElement
+            if (! fakepost_image ) { // Text-only fake post
+              // no image fake post , it is only text based
+              fakepostHTML = `<div class="thing odd link self" onclick="click_thing(this)" data-fullname="t3_1fsnypx" data-type="link" data-gildings="0" data-whitelist-status="all_ads" data-is-gallery="false" data-author="${fakepost_poster}" data-author-fullname="t2_a1ylwv6td" data-subreddit="books" data-subreddit-prefixed="${fakepost_community}" data-subreddit-fullname="t5_2qh4i" data-subreddit-type="public" data-timestamp="1727672815000" data-url="/r/books/comments/1fsnypx/books_that_make_you_feel_loved_as_if_getting_a/" data-permalink="/r/books/comments/1fsnypx/books_that_make_you_feel_loved_as_if_getting_a/" data-domain="self.books" data-rank="13" data-comments-count="${commentsCount}" data-score="${fakepost_likes}" data-promoted="false" data-nsfw="false" data-spoiler="false" data-oc="false" data-num-crossposts="0" data-context="listing"><p class="parent"></p><span class="rank">${fakepost_index}</span><div class="midcol unvoted"><div class="arrow up login-required access-required" data-event-action="upvote" role="button" aria-label="upvote" tabindex="0"></div><div class="score dislikes" title="604">${parseInt(fakepost_likes) - 1}</div><div class="score unvoted" title="605">${fakepost_likes}</div><div class="score likes" title="606">${parseInt(fakepost_likes) + 1}</div><div class="arrow down login-required access-required" data-event-action="downvote" role="button" aria-label="downvote" tabindex="0"></div></div><a class="thumbnail invisible-when-pinned self may-blank loggedin" data-event-action="thumbnail" href="/r/books/comments/1fsnypx/books_that_make_you_feel_loved_as_if_getting_a/"></a><div class="entry unvoted"><div class="top-matter"><p class="title"><a class="title may-blank loggedin" data-event-action="title" href="/r/books/comments/1fsnypx/books_that_make_you_feel_loved_as_if_getting_a/" tabindex="1">${fakepost_title}</a> </p><div class="expando-button hide-when-pinned selftext collapsed"></div><p class="tagline">submitted <time title="Mon Sep 30 05:06:55 2024 UTC" datetime="2024-09-30T05:06:55+00:00" class="live-timestamp">${fakepost_time}</time> <time class="edited-timestamp" title="last edited 21 hours ago" datetime="2024-09-30T05:12:44+00:00">*</time> by <a href="https://old.reddit.com/user/${fakepost_poster}" class="author may-blank">${fakepost_poster}</a><span class="userattrs"></span> to <a href="https://old.reddit.com/${fakepost_community}/" class="subreddit hover may-blank">${fakepost_community}</a></p><ul class="flat-list buttons"><li class="first"><a href="${fakepost_url}" data-event-action="comments" class="bylink comments may-blank" rel="nofollow">${commentsCount} comments</a></li><li class="share"><a class="post-sharing-button" href="javascript: void 0;">share</a></li><li class="link-save-button save-button login-required"><a href="#">save</a></li><li><form action="/post/hide" method="post" class="state-button hide-button"><span><a href="javascript:void(0)" class="" data-event-action="hide" onclick="change_state(this, \'hide\', hide_thing);">hide</a></span></form></li><li class="report-button login-required"><a href="javascript:void(0)" class="reportbtn access-required" data-event-action="report">report</a></li><li class="crosspost-button"><a class="post-crosspost-button" href="javascript: void 0;" data-crosspost-fullname="t3_1fsnypx">crosspost</a></li></ul><div class="reportform"></div></div><div class="expando" style="display: none;" data-pin-condition="function() {return this.style.display != \'none\';}"></div></div><div class="child"></div><div class="clearleft"></div></div><div class="clearleft"></div>`;
+              // Create a temporary element to hold the HTML
+              var tempDiv = document.createElement('div');
+              tempDiv.innerHTML = fakepostHTML;
+
+              // Extract the new element
+              newElement = tempDiv.firstElementChild;
+              insertCachedHTMLandMonitorExpandoButton(newElement);
+              // Handle the expando logic
+              expandoDiv = newElement.querySelector('.expando');
+              var textHTML = `<form action="#" class="usertext warn-on-unload" onsubmit="return post_form(this, 'editusertext')" id="form-t3_1fsnypxij2"><input type="hidden" name="thing_id" value="t3_1fsnypx"><div class="usertext-body may-blank-within md-container"><div class="md"></div></div></form>`;
+              expandoDiv.insertAdjacentHTML('beforeend', textHTML);
+              // Only append text content if available
+              if (fakepost_content) {
+                var paragraphArray = fakepost_content.split('\n');
+                var mdDiv = expandoDiv.querySelector('.md');
+
+                // Append paragraphs to the md div
+                paragraphArray.forEach(paragraphText => {
+                  var newParagraph = document.createElement('p');
+                  newParagraph.textContent = paragraphText.trim();
+                  mdDiv.appendChild(newParagraph);
+                });
+
+
+
+              }
+
+            }
+            else { // Image and/or Text fake post
+              fakepostHTML = `<div class="thing odd link" onclick="click_thing(this)" data-fullname="t3_1fspb50" data-type="link" data-gildings="0" data-whitelist-status="all_ads" data-is-gallery="false" data-author="gazman70k" data-author-fullname="t2_osz9r6jj" data-subreddit="rolex" data-subreddit-prefixed="${fakepost_community}" data-subreddit-fullname="t5_2qy0y" data-subreddit-type="public" data-timestamp="1727678513000" data-url="" data-permalink="/r/rolex/comments/1fspb50/enjoying_this_5513/" data-domain="i.redd.it" data-rank="38" data-comments-count="4" data-score="56" data-promoted="false" data-nsfw="false" data-spoiler="false" data-oc="false" data-num-crossposts="0" data-context="listing"><p class="parent"></p><span class="rank">${fakepost_index}</span><div class="midcol unvoted"><div class="arrow up login-required access-required" data-event-action="upvote" role="button" aria-label="upvote" tabindex="0"></div><div class="score dislikes" title="55">55</div><div class="score unvoted" title="56">56</div><div class="score likes" title="57">57</div><div class="arrow down login-required access-required" data-event-action="downvote" role="button" aria-label="downvote" tabindex="0"></div></div><a class="thumbnail invisible-when-pinned may-blank loggedin outbound" data-event-action="thumbnail" href="https://i.redd.it/umr0xp767wrd1.jpeg" data-href-url="https://i.redd.it/umr0xp767wrd1.jpeg" data-outbound-url="https://i.redd.it/umr0xp767wrd1.jpeg" data-outbound-expiration="0" rel="nofollow ugc"><img src="${fakepost_image}" width="70" height="70" alt=""></a><div class="entry unvoted"><div class="top-matter"><p class="title"><a class="title may-blank loggedin outbound" data-event-action="title" href="https://i.redd.it/umr0xp767wrd1.jpeg" tabindex="1" data-href-url="https://i.redd.it/umr0xp767wrd1.jpeg" data-outbound-url="https://i.redd.it/umr0xp767wrd1.jpeg" data-outbound-expiration="0" rel="nofollow ugc">${fakepost_title}</a> <span class="domain">(<a href="/domain/i.redd.it/">i.redd.it</a>)</span></p><div class="expando-button hide-when-pinned video collapsed"></div><p class="tagline ">submitted <time title="Mon Sep 30 06:41:53 2024 UTC" datetime="2024-09-30T06:41:53+00:00" class="live-timestamp">${fakepost_time}</time> by <a href="https://old.reddit.com/user/${fakepost_poster}" class="author may-blank">${fakepost_poster}</a><span class="userattrs"></span> to <a href="https://old.reddit.com/${fakepost_community}/" class="subreddit hover may-blank">${fakepost_community}</a></p><ul class="flat-list buttons"><li class="first"><a href="${fakepost_url}" data-event-action="comments" class="bylink comments may-blank" rel="nofollow">4 comments</a></li><li class="share"><a class="post-sharing-button" href="javascript: void 0;">share</a></li><li class="link-save-button save-button login-required"><a href="#">save</a></li><li><form action="/post/hide" method="post" class="state-button hide-button"><span><a href="javascript:void(0)" class="" data-event-action="hide" onclick="change_state(this, \'hide\', hide_thing);">hide</a></span></form></li><li class="report-button login-required"><a href="javascript:void(0)" class="reportbtn access-required" data-event-action="report">report</a></li><li class="crosspost-button"><a class="post-crosspost-button" href="javascript: void 0;" data-crosspost-fullname="t3_1fspb50">crosspost</a></li></ul><div class="reportform"></div></div><div class="expando" style="display: none;" data-cachedhtml=\'<div class="media-preview" style="max-width: 576px"><div class="media-preview-content"><a href="https://i.redd.it/umr0xp767wrd1.jpeg" class="may-blank post-link"><img class="preview" src="${fakepost_image}" width="576" height="768"></a></div></div><div class="usertext usertext-body"><div class="md"></div></div>\'></div></div><div class="child"></div><div class="clearleft"></div></div><div class="clearleft"></div><div class="clearleft"></div>`;
+              // Create a temporary element to hold the HTML
+              var tempDiv = document.createElement('div');
+              tempDiv.innerHTML = fakepostHTML;
+
+              // Extract the new element
+              newElement = tempDiv.firstElementChild;
+              var expandoDiv = newElement.querySelector('.expando');
+        
+              insertCachedHTMLandMonitorExpandoButton(newElement);
+              // Only append text content if available
+              if (fakepost_content) {
+                var paragraphArray = fakepost_content.split('\n');
+                var mdDiv = newElement.querySelector('.md');
+
+                // Append paragraphs to the md div
+                paragraphArray.forEach(paragraphText => {
+                  var newParagraph = document.createElement('p');
+                  newParagraph.textContent = paragraphText.trim();
+                  mdDiv.appendChild(newParagraph);
+                });
+              }
+              else {
+                console.log("fakepost_content is null, proceeding to remove the usertext-body element.");
+
+                // Find the element with the class "usertext usertext-body"
+                var userTextBody = newElement.querySelector('.usertext.usertext-body');
+
+                // Check if the element exists
+                if (userTextBody) {
+                  // Remove the element from the DOM
+                  userTextBody.remove();
+                  console.log('Removed element with class "usertext usertext-body".' ,userTextBody );
+                } else {
+                  console.log('Element with class "usertext usertext-body" not found.');
+                }
+              }
+
+
+
+            }
+            var authorElement = newElement.querySelector('.author');
+            authorElement.addEventListener('mouseover', function () {
+              // Code to execute when the mouse hovers over the element
+              console.log('Mouse is hovering over the author element');
+              event.preventDefault();  // Prevent Reddit's action
+              event.stopPropagation();
+            });
+            applyUserVoteOnElement(newElement, getUserVoteOnFakePost, fakepost_url);
+            handleVoteButtons(newElement, "fakepost","", fakepost_url);
+            for (let i = 0; i < postFeedDiv.children.length; i++) {
+              var rankElement = postFeedDiv.children[i].querySelector('span.rank');
+
+              // Log the rankElement to verify its content
+              if (rankElement) {
+                console.log("Rank found:", rankElement.textContent);
+
+                // Check if rankElement.textContent matches fakepost_index
+                if (rankElement.textContent === fakepost_index) {
+                  console.log("Match found at index", i, "with rank:", fakepost_index);
+                  var oldChild = postFeedDiv.children[i];
+
+                  // replace the child element
+                  postFeedDiv.replaceChild(newElement, oldChild);
+                  console.log("Replaced element with rank:", fakepost_index);
+
+                  // Break the loop once a match is found
+                  break;
+                }
+              } else {
+                console.log("No rank element found in child", i);
+              }
+            }
+
+            // Optionally, render the fake post details on the page
+            // document.querySelector("#post-details").innerHTML += `<p>${fakepost_title}</p>`;
+          });
         }
-      })
-      .catch(error => console.error('Error:', error));
-
-
-    // Proceed with further actions using the userpid
-  });
-
-
-
+      }
+    })
+    .catch(error => {
+      console.error("Failed to fetch fake post:", error);
+      // Optionally, handle the error (e.g., show an error message to the user)
+      document.querySelector("#post-status").textContent = "Failed to fetch the fake post.";
+    });
 
 }
 
@@ -1940,75 +1274,13 @@ function changeRealPostPage() {
 
         monitorUserReplyToFakePost(fakepost_id);
         // Replace its inner HTML
-        let parentDiv = document.querySelector('div.sitetable.linklisting');
+        var parentDiv = document.querySelector('div.sitetable.linklisting');
 
         // Check if the parent div was found
         if (parentDiv) {
 
 
-          /// this is THE CASE WHERE THE CONTENT IS HIDDEN OR HAS HIDDEN BUTTON // Check if there is a div with the class name "expando-button"
-          let expandoButtonDiv = parentDiv.querySelector('.expando-button');
-          /// hide button 
-          if (expandoButtonDiv) {
-            // If the div exists
-            console.log('The div with class "expando-button" exists.');
-
-            let expandoDiv = parentDiv.querySelector('.expando');
-
-            if (expandoDiv) {
-              let cachedHTML = expandoDiv.getAttribute('data-cachedhtml');
-
-              if (cachedHTML) {
-
-                let decodedHTML = decodeHTMLEntities(cachedHTML);
-
-                let cachedHTMLStartIndex = Array.from(expandoDiv.childNodes).findIndex(child => {
-                  return child.nodeType === Node.COMMENT_NODE || child.nodeType === Node.TEXT_NODE ? false : child.outerHTML === decodedHTML;
-                });
-
-                // Select the <span> element with the class 'error'
-                let errorSpan = expandoDiv.querySelector('span.error');
-
-                // Check if the element exists
-                if (errorSpan) {
-                  // Remove the span element from the DOM
-                  errorSpan.remove();
-                  console.log('Removed the error span: loading...');
-                } else {
-                  console.log('No span with class "error" found.');
-                }
-
-                expandoDiv.insertAdjacentHTML('beforeend', decodedHTML);
-              }
-            }
-
-            expandoButtonDiv.addEventListener('click', function (event) {
-              //event.preventDefault();  // Prevent Reddit's action
-              event.stopPropagation(); // Stop the event from bubbling up to Reddit's listener
-
-              if (expandoButtonDiv.classList.contains('expanded')) {
-                // Change display to 'none' if it's expanded
-                expandoDiv.style.display = 'none';
-                console.log('The div was expanded, now changing display to none.');
-
-                // toggle the class to 'collapsed'
-                expandoButtonDiv.classList.remove('expanded');
-                expandoButtonDiv.classList.add('collapsed');
-              }
-              // Check if the div has the 'collapsed' class
-              else if (expandoButtonDiv.classList.contains('collapsed')) {
-                // Change display to 'block' if it's collapsed
-                expandoDiv.style.display = 'block';
-                console.log('The div was collapsed, now changing display to block.');
-
-                //  toggle the class to 'expanded'
-                expandoButtonDiv.classList.remove('collapsed');
-                expandoButtonDiv.classList.add('expanded');
-              }
-            }, true);
-
-          }
-
+          insertCachedHTMLandMonitorExpandoButton(parentDiv);
 
 
           updatePostContent(parentDiv, fakepost_image, fakepost_content);
@@ -2020,7 +1292,7 @@ function changeRealPostPage() {
           // Replace with your dynamic value
 
           // Select the <a> element with the class "author"
-          let authorElement = parentDiv.querySelector('p.tagline a.author');
+          var authorElement = parentDiv.querySelector('p.tagline a.author');
 
           // Check if the author element was found
           if (authorElement) {
@@ -2086,13 +1358,13 @@ function changeRealPostPage() {
             console.log('No <time> element found');
           }
           // Find the div with class "score dislikes" inside the parent div
-          let dislikesDiv = parentDiv.querySelector('div.score.dislikes');
+          var dislikesDiv = parentDiv.querySelector('div.score.dislikes');
 
           // Find the div with class "score likes" inside the parent div
-          let likesDiv = parentDiv.querySelector('div.score.likes');
+          var likesDiv = parentDiv.querySelector('div.score.likes');
 
           // Find the div with class "score unvoted" inside the parent div
-          let unvotedDiv = parentDiv.querySelector('div.score.unvoted');
+          var unvotedDiv = parentDiv.querySelector('div.score.unvoted');
 
           // Check if the dislikes div was found and modify it
           if (dislikesDiv) {
@@ -2124,7 +1396,7 @@ function changeRealPostPage() {
           // Select the upvote, downvote, and score elements then stop it from default action 
           applyUserVoteOnElement(parentDiv, getUserVoteOnFakePost, window.location.href);
           // Check if the elements are found
-          handleVoteButtons(parentDiv, "fakepost");
+          handleVoteButtons(parentDiv, "fakepost", "",window.location.href);
           // change number of comments 
           // Select the <a> element that contains the number of comments
           let commentsElement = parentDiv.querySelector('a.bylink.comments.may-blank');
@@ -2551,12 +1823,12 @@ function sendDeleteVoteFakeCommentMessage(action_fake_comment, action_fake_post)
 /// this function is used to update fake post content and image. 
 // we need this function since each post is different some may has hidden button while some may not 
 function updatePostContent(parentDiv, fakepost_image, fakepost_content) {
-  let mediaPreviewDiv = parentDiv.querySelector('.media-preview');
+  var mediaPreviewDiv = parentDiv.querySelector('.media-preview');
 
   // Check if the div was found
   if (mediaPreviewDiv) {
     // Find the image element inside the media-preview div
-    let imgElement = mediaPreviewDiv.querySelector('img');
+    var imgElement = mediaPreviewDiv.querySelector('img');
 
     // Check if the image element exists
     if (imgElement) {
@@ -2572,23 +1844,23 @@ function updatePostContent(parentDiv, fakepost_image, fakepost_content) {
 
   //// below is the case where nothing hidden NOTHING hidden 
   // Select the div with class name 'usertext-body'
-  let usertextBodyDiv = parentDiv.querySelector('.usertext-body');
+  var usertextBodyDiv = parentDiv.querySelector('.usertext-body');
   if (usertextBodyDiv) {
     // Select the child div with class name 'md' inside the 'usertext-body' div
-    let mdDiv = usertextBodyDiv.querySelector('.md');
+    var mdDiv = usertextBodyDiv.querySelector('.md');
 
     // Remove all <p> elements inside the 'md' div
-    let paragraphs = mdDiv.querySelectorAll('p');
+    var paragraphs = mdDiv.querySelectorAll('p');
     paragraphs.forEach(p => p.remove());
 
     // Insert a new <p> element with the fake_content inside the 'md' div
     // Assuming 'fake_content' contains the content you want to insert
-    let paragraphArray = fakepost_content.split('\n');
+    var paragraphArray = fakepost_content.split('\n');
 
 
     // Insert each paragraph as a new <p> element inside the 'md' div
     paragraphArray.forEach(paragraphText => {
-      let newParagraph = document.createElement('p');
+      var newParagraph = document.createElement('p');
       newParagraph.textContent = paragraphText.trim(); // Ensure that extra whitespace is removed
       mdDiv.appendChild(newParagraph); // Add the new <p> element to the 'md' div
     });
@@ -2680,7 +1952,7 @@ function applyUserVoteOnElement(parentDiv, voteFunction, postOrCommentId) {
     });
 }
 
-function handleVoteButtons(parentDiv, voteType, fakeCommentId) {
+function handleVoteButtons(parentDiv, voteType, fakeCommentId,url) {
   let upvoteButton = parentDiv.querySelector('[aria-label="upvote"]');
   let downvoteButton = parentDiv.querySelector('[aria-label="downvote"]');
   let midcolDiv = parentDiv.querySelector('.midcol');
@@ -2707,7 +1979,7 @@ function handleVoteButtons(parentDiv, voteType, fakeCommentId) {
           entryDiv.classList.remove('likes');
           entryDiv.classList.add('unvoted');
         }
-        sendDeleteVoteMessage(voteType, fakeCommentId);
+        sendDeleteVoteMessage(voteType, fakeCommentId,url);
       } else {
         // If downvote was previously clicked, reset it
         if (downvoteButton.classList.contains('downmod')) {
@@ -2719,7 +1991,7 @@ function handleVoteButtons(parentDiv, voteType, fakeCommentId) {
             entryDiv.classList.remove('dislikes');
             entryDiv.classList.add('unvoted');
           }
-          sendDeleteVoteMessage(voteType, fakeCommentId);
+          sendDeleteVoteMessage(voteType, fakeCommentId, url);
         }
 
         // Apply the upvote changes
@@ -2732,7 +2004,7 @@ function handleVoteButtons(parentDiv, voteType, fakeCommentId) {
           entryDiv.classList.add('likes');
         }
         console.log('Upvoted');
-        sendVoteMessage("upvote", voteType, fakeCommentId);
+        sendVoteMessage("upvote", voteType, fakeCommentId,url);
       }
     }, true);  // Using capture phase to prevent Reddit's listener
 
@@ -2753,7 +2025,7 @@ function handleVoteButtons(parentDiv, voteType, fakeCommentId) {
           entryDiv.classList.add('unvoted');
         }
         console.log('Downvote undone');
-        sendDeleteVoteMessage(voteType, fakeCommentId);
+        sendDeleteVoteMessage(voteType, fakeCommentId, url);
       } else {
         // If upvote was previously clicked, reset it
         if (upvoteButton.classList.contains('upmod')) {
@@ -2765,7 +2037,7 @@ function handleVoteButtons(parentDiv, voteType, fakeCommentId) {
             entryDiv.classList.remove('likes');
             entryDiv.classList.add('unvoted');
           }
-          sendDeleteVoteMessage(voteType, fakeCommentId);
+          sendDeleteVoteMessage(voteType, fakeCommentId, url);
         }
 
         // Apply the downvote changes
@@ -2778,7 +2050,7 @@ function handleVoteButtons(parentDiv, voteType, fakeCommentId) {
           entryDiv.classList.add('dislikes');
         }
         console.log('Downvoted');
-        sendVoteMessage("downvote", voteType, fakeCommentId);
+        sendVoteMessage("downvote", voteType, fakeCommentId,url);
       }
     }, true);  // Using capture phase to prevent Reddit's listener
   } else {
@@ -2787,24 +2059,24 @@ function handleVoteButtons(parentDiv, voteType, fakeCommentId) {
 }
 
 // Function to send vote // this function is used to deal with different vote , fake post levele and fake comments level 
-function sendVoteMessage(voteAction, voteType, targetId) {
+function sendVoteMessage(voteAction, voteType, targetId, url) {
   if (voteType === 'fakepost') {
 
     // Add logic to send vote for fake post
-    sendVoteFakePostMessage(voteAction, window.location.href);
+    sendVoteFakePostMessage(voteAction, url);
   } else if (voteType === 'fakecomment') {
-    sendVoteFakeCommentMessage(voteAction, targetId, window.location.href);
+    sendVoteFakeCommentMessage(voteAction, targetId, url);
     // Add logic to send vote for comment
   }
 }
 
 // Function to delete vote
-function sendDeleteVoteMessage(voteType, targetId) {
+function sendDeleteVoteMessage(voteType, targetId, url) {
   if (voteType === 'fakepost') {
-    sendDeleteVoteFakePostMessage(window.location.href);
+    sendDeleteVoteFakePostMessage(url);
     // Add logic to delete vote for fake post
   } else if (voteType === 'fakecomment') {
-    sendDeleteVoteFakeCommentMessage(targetId, window.location.href);
+    sendDeleteVoteFakeCommentMessage(targetId, url);
     // Add logic to delete vote for comment
   }
 }
@@ -2823,7 +2095,7 @@ function insertCommentFormORReplyFakeComment(parentDiv, fakeCommentID, fakePostI
         if (userElement) {
           var username = userElement.textContent.trim();  // Get the text inside the anchor tag
           var content = reply.reply_content;
-          insertUserReplyFakeComments(childDiv, username, content,fakeCommentID,fakePostId);
+          insertUserReplyFakeComments(childDiv, username, content, fakeCommentID, fakePostId);
           addDeleteCommentListener(childDiv, fakeCommentID, fakePostId, reply.reply_content);
           console.log('Username:', username);
         } else {
@@ -2875,7 +2147,7 @@ function insertCommentFormORReplyFakeComment(parentDiv, fakeCommentID, fakePostI
                       // Check if the element exists and extract the username
                       if (userElement) {
                         var username = userElement.textContent.trim();  // Get the text inside the anchor tag
-                        insertUserReplyFakeComments(childDiv, username, enteredText,fakeCommentID,fakePostId);
+                        insertUserReplyFakeComments(childDiv, username, enteredText, fakeCommentID, fakePostId);
                         addDeleteCommentListener(childDiv, fakeCommentID, fakePostId, enteredText);
                         console.log('Username:', username);
                       } else {
@@ -3177,4 +2449,69 @@ function sendRemoveUserReplyFromFakePostMessage(fakePostId, replyContent) {
       console.error("Failed to remove user reply.");
     }
   });
+}
+
+function insertCachedHTMLandMonitorExpandoButton(parentDiv)
+{
+  var expandoButtonDiv = parentDiv.querySelector('.expando-button');
+  /// hide button 
+  if (expandoButtonDiv) {
+    // If the div exists
+    console.log('The div with class "expando-button" exists.');
+
+    var expandoDiv = parentDiv.querySelector('.expando');
+
+    if (expandoDiv) {
+      var cachedHTML = expandoDiv.getAttribute('data-cachedhtml');
+
+      if (cachedHTML) {
+
+        var decodedHTML = decodeHTMLEntities(cachedHTML);
+
+        var cachedHTMLStartIndex = Array.from(expandoDiv.childNodes).findIndex(child => {
+          return child.nodeType === Node.COMMENT_NODE || child.nodeType === Node.TEXT_NODE ? false : child.outerHTML === decodedHTML;
+        });
+
+        // Select the <span> element with the class 'error'
+        var errorSpan = expandoDiv.querySelector('span.error');
+
+        // Check if the element exists
+        if (errorSpan) {
+          // Remove the span element from the DOM
+          errorSpan.remove();
+          console.log('Removed the error span: loading...');
+        } else {
+          console.log('No span with class "error" found.');
+        }
+
+        expandoDiv.insertAdjacentHTML('beforeend', decodedHTML);
+      }
+    }
+
+    expandoButtonDiv.addEventListener('click', function (event) {
+      //event.preventDefault();  // Prevent Reddit's action
+      event.stopPropagation(); // Stop the event from bubbling up to Reddit's listener
+
+      if (expandoButtonDiv.classList.contains('expanded')) {
+        // Change display to 'none' if it's expanded
+        expandoDiv.style.display = 'none';
+        console.log('The div was expanded, now changing display to none.');
+
+        // toggle the class to 'collapsed'
+        expandoButtonDiv.classList.remove('expanded');
+        expandoButtonDiv.classList.add('collapsed');
+      }
+      // Check if the div has the 'collapsed' class
+      else if (expandoButtonDiv.classList.contains('collapsed')) {
+        // Change display to 'block' if it's collapsed
+        expandoDiv.style.display = 'block';
+        console.log('The div was collapsed, now changing display to block.');
+
+        //  toggle the class to 'expanded'
+        expandoButtonDiv.classList.remove('collapsed');
+        expandoButtonDiv.classList.add('expanded');
+      }
+    }, true);
+
+  }
 }
