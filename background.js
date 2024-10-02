@@ -423,6 +423,38 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
     // Send a response back to the content script confirming success
     sendResponse({ success: true });
+  }else if (request.message === "removeUserVoteFromPost") {
+    console.log("Received request to remove user vote from real post:", request);
+  
+    // Process the variables received from the content script
+    deleteUserVoteOnPost(userpid, request.postId);
+  
+    // Send a response back to the content script confirming success
+    sendResponse({ success: true });
+  }else if (request.message === "addUserVoteToPost") {
+    console.log("Received request to add user vote to real post:", request);
+  
+    // Process the variables received from the content script
+    updateUserVoteOnPost(userpid,  request.userAction, request.postId);
+  
+    // Send a response back to the content script confirming success
+    sendResponse({ success: true });
+  }else if (request.message === "removeUserVoteFromComment") {
+    console.log("Received request to remove user vote from real comment:", request);
+  
+    // Process the variables received from the content script
+    deleteUserVoteOnComment(userpid, request.commentId, request.postId);
+  
+    // Send a response back to the content script confirming success
+    sendResponse({ success: true });
+  }else if (request.message === "addUserVoteToComment") {
+    console.log("Received request to add user vote to real comment:", request);
+  
+    // Process the variables received from the content script
+    updateUserVoteOnComment(userpid, request.userAction,request.commentId,request.postId);
+  
+    // Send a response back to the content script confirming success
+    sendResponse({ success: true });
   }
 });
 
@@ -1163,6 +1195,122 @@ function updateUserViewedPost(userid, post_url) {
     });
 }
 
+function updateUserVoteOnPost(userid, useraction, postId) {
+  var insert_date = new Date();
+
+  fetch("https://outer.socialsandbox.xyz/api/updateUserVote_onPosts", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      userid: userid,
+      user_vote_onPosts: [{
+        action_date: insert_date,
+        user_action: useraction,
+        action_post: postId
+      }]
+    })
+  })
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error("Failed to update user vote on post");
+      }
+    })
+    .then(data => {
+      console.log("User vote on post updated successfully:", data);
+    })
+    .catch(error => {
+      console.error(error);
+    });
+}
+function deleteUserVoteOnPost(userid, postId) {
+  fetch("https://outer.socialsandbox.xyz/api/removeUserVote_onPosts", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      userid: userid,
+      action_post: postId
+    })
+  })
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error("Failed to delete user vote on post");
+      }
+    })
+    .then(data => {
+      console.log("User vote on post deleted successfully:", data);
+    })
+    .catch(error => {
+      console.error(error);
+    });
+}
+
+function updateUserVoteOnComment(userid, useraction, commentId, postId) {
+  var insert_date = new Date();
+
+  fetch("https://outer.socialsandbox.xyz/api/updateUserVote_onComments", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      userid: userid,
+      user_vote_onComments: [{
+        action_date: insert_date,
+        user_action: useraction,
+        action_comment: commentId,
+        action_post: postId
+      }]
+    })
+  })
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error("Failed to update user vote on comment");
+      }
+    })
+    .then(data => {
+      console.log("User vote on comment updated successfully:", data);
+    })
+    .catch(error => {
+      console.error(error);
+    });
+}
+
+function deleteUserVoteOnComment(userid, commentId, postId) {
+  fetch("https://outer.socialsandbox.xyz/api/removeUserVote_onComments", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      userid: userid,
+      action_comment: commentId,
+      action_post: postId
+    })
+  })
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error("Failed to delete user vote on comment");
+      }
+    })
+    .then(data => {
+      console.log("User vote on comment deleted successfully:", data);
+    })
+    .catch(error => {
+      console.error(error);
+    });
+}
 // Listen for messages from the content script and send back userid 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (message.message === "get_user_id_frombackground") {

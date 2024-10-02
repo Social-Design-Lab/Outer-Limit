@@ -177,6 +177,7 @@ function runMyCode() {
         //monitor_viewed_post();
         //changePostImageUrlandTitleURl();
         combinedFunction();
+        monitorPostVote();
 
       } else {
         console.log(`This is not the Reddit main page: ${window.location.href}`);
@@ -291,7 +292,67 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   }
 });
 
+function monitorPostVote() {
+  var siteTable = document.querySelector('#siteTable');
+  // Update and observe all existing posts
+  siteTable.querySelectorAll('.thing').forEach(child => {
 
+    if (!child.classList.contains('clearleft')) {
+
+      var postLink =     child.querySelector('a.bylink.comments')?.getAttribute('href');
+
+      realButtonVote(child, "post" ,"",postLink);
+
+
+    }
+  });
+
+}
+
+function realButtonVote(parentDiv, voteType, comment, url)
+{
+  var upvoteButton = parentDiv.querySelector('[aria-label="upvote"]');
+  var downvoteButton = parentDiv.querySelector('[aria-label="downvote"]');
+  if (upvoteButton && downvoteButton) {
+    // Upvote button functionality
+    upvoteButton.setAttribute('outer-limit-monitored', 'true');
+    downvoteButton.setAttribute('outer-limit-monitored', 'true');
+
+    upvoteButton.addEventListener('click', function (event) {
+
+      if (upvoteButton.classList.contains('upmod')) {
+
+        sendDeleteRealVoteMessage(voteType, comment, url);
+      } else {
+        // If downvote was previously clicked, reset it
+        if (downvoteButton.classList.contains('downmod')) {
+
+          sendDeleteRealVoteMessage(voteType, comment, url);
+        }
+        sendRealVoteMessage("upvote", voteType, comment, url);
+      }
+    }, true);  // Using capture phase to prevent Reddit's listener
+
+    // Downvote button functionality
+    downvoteButton.addEventListener('click', function (event) {
+      
+      if (downvoteButton.classList.contains('downmod')) {
+        // Undo the downvote (reset to unvoted state)
+        
+        console.log('Downvote undone');
+        sendDeleteRealVoteMessage(voteType, comment, url);
+      } else {
+        // If upvote was previously clicked, reset it
+        if (upvoteButton.classList.contains('upmod')) {
+    
+          sendDeleteRealVoteMessage(voteType, comment, url);
+        }
+        console.log('Downvoted');
+        sendRealVoteMessage("downvote", voteType, comment, url);
+      }
+    }, true);
+  }
+}
 
 // fake comments insertation insert 
 function insertFakeComments(postElement, fakeComments, fakePostID) {
@@ -623,14 +684,14 @@ function user_active_time() {
 }
 
 function combinedFunction() {
-  const siteTable = document.querySelector('#siteTable');
+  var siteTable = document.querySelector('#siteTable');
 
   // Function to update the links of each post
   function updateLinks(child) {
     if (!child.classList.contains('clearleft')) {
-      const thumbnailLink = child.querySelector('a.thumbnail');
-      const titleLink = child.querySelector('p.title a');
-      const commentsLink = child.querySelector('a.bylink.comments')?.getAttribute('href');
+      var thumbnailLink = child.querySelector('a.thumbnail');
+      var titleLink = child.querySelector('p.title a');
+      var commentsLink = child.querySelector('a.bylink.comments')?.getAttribute('href');
 
       if (commentsLink) {
         // Update thumbnail link
@@ -671,11 +732,11 @@ function combinedFunction() {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         console.log(`Element has been viewed:`, entry.target);
-        const fetchUrl = `https://outer.socialsandbox.xyz/api/getfakepost`;
+        var fetchUrl = `https://outer.socialsandbox.xyz/api/getfakepost`;
 
-        const commentLink = entry.target.querySelector('li.first a');
-        const dataRank = entry.target.getAttribute('data-rank');
-        const commentUrl = commentLink.getAttribute('href');
+        var commentLink = entry.target.querySelector('li.first a');
+        var dataRank = entry.target.getAttribute('data-rank');
+        var commentUrl = commentLink.getAttribute('href');
 
         console.log("Comment URL:", commentUrl);
 
@@ -694,12 +755,12 @@ function combinedFunction() {
                 var Isfakepost = false;
                 data.forEach(fakePost => {
                   const { fakepost_url, fakepost_index } = fakePost;
-                  if (commentUrl === fakepost_url ) {
+                  if (commentUrl === fakepost_url) {
                     sendUpdateViewedPostToBackground(fakepost_index);
                     Isfakepost = true;
                   }
                   if (fakepost_index == dataRank) {
-                    
+
                     Isfakepost = true;
                   }
                 });
@@ -736,9 +797,10 @@ function combinedFunction() {
 
   // Update and observe all existing posts
   siteTable.querySelectorAll('.thing').forEach(child => {
-    updateLinks(child); // Update links for existing elements
+
     if (!child.classList.contains('clearleft')) {
       intersectObserver.observe(child); // Start observing the child element
+      updateLinks(child); // Update links for existing elements
     }
   });
 
@@ -2114,6 +2176,93 @@ function sendDeleteVoteMessage(voteType, targetId, url) {
   }
 }
 
+
+// Function to send real  vote // this function is used to deal with different vote , fake post levele and fake comments level 
+function sendRealVoteMessage(voteAction, voteType, targetId, url) {
+  if (voteType === 'post') {
+
+    // Add logic to send vote for fake post
+    sendVoteRealPostMessage( url,voteAction);
+  } else if (voteType === 'comment') {
+    sendVoteRealCommentMessage( targetId, url,voteAction);
+    // Add logic to send vote for comment
+  }
+}
+
+// Function to delete real vote
+function sendDeleteRealVoteMessage(voteType, targetId, url) {
+  if (voteType === 'post') {
+    sendDeleteVoteRealPostMessage(url);
+    // Add logic to delete vote for fake post
+  } else if (voteType === 'comment') {
+    sendDeleteVoteRealCommentMessage(targetId, url);
+    // Add logic to delete vote for comment
+  }
+}
+function sendVoteRealPostMessage(postId, userAction) {
+  chrome.runtime.sendMessage(
+    {
+      message: "addUserVoteToPost",
+      postId: postId,
+      userAction: userAction // e.g., "upvote" or "downvote"
+    },
+    function (response) {
+      if (response.success) {
+        console.log("Successfully added user vote to post:", postId);
+      } else {
+        console.error("Failed to add user vote to post:", postId);
+      }
+    }
+  );
+}
+function sendVoteRealCommentMessage(commentId, postId, userAction) {
+  chrome.runtime.sendMessage(
+    {
+      message: "addUserVoteToComment",
+      commentId: commentId,
+      postId: postId,
+      userAction: userAction // e.g., "upvote" or "downvote"
+    },
+    function (response) {
+      if (response.success) {
+        console.log("Successfully added user vote to comment:", commentId);
+      } else {
+        console.error("Failed to add user vote to comment:", commentId);
+      }
+    }
+  );
+}
+function sendDeleteVoteRealPostMessage(postId) {
+  chrome.runtime.sendMessage(
+    {
+      message: "removeUserVoteFromPost",
+      postId: postId
+    },
+    function (response) {
+      if (response.success) {
+        console.log("Successfully removed user vote from post:", postId);
+      } else {
+        console.error("Failed to remove user vote from post:", postId);
+      }
+    }
+  );
+}
+function sendDeleteVoteRealCommentMessage(commentId, postId) {
+  chrome.runtime.sendMessage(
+    {
+      message: "removeUserVoteFromComment",
+      commentId: commentId,
+      postId: postId
+    },
+    function (response) {
+      if (response.success) {
+        console.log("Successfully removed user vote from comment:", commentId);
+      } else {
+        console.error("Failed to remove user vote from comment:", commentId);
+      }
+    }
+  );
+}
 
 function insertCommentFormORReplyFakeComment(parentDiv, fakeCommentID, fakePostId) {
   var replyButton = parentDiv.querySelector('.reply-button');
