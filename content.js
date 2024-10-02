@@ -174,9 +174,9 @@ function runMyCode() {
 
 
         fakepost();
-        monitor_viewed_post();
-
-
+        //monitor_viewed_post();
+        //changePostImageUrlandTitleURl();
+        combinedFunction();
 
       } else {
         console.log(`This is not the Reddit main page: ${window.location.href}`);
@@ -291,21 +291,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   }
 });
 
-
-/* chrome.runtime.onMessage.addListener(
-    function(request, sender, sendResponse) {
-        window.addEventListener('load', function() {
-            // Select all elements with the class "_1rZYMD_4xjzK" (which represents the like button)
-            const likeButtons = document.getElementsByClassName("_1rZYMD_4xY3gRcSS3p8ODO _25IkBM0rRUqWX5ZojEMAFQ _3ChHiOyYyUkpZ_Nm3ZyM2M");
-        
-            console.log("print out likebuttons length: ");
-            console.log(likeButtons['length'] );
-            // For each like button, change the text content to the desired number
-            for (let i = 0; i < likeButtons['length']; i++) {
-                likeButtons[i].textContent=0;
-              }
-          });
-}); */
 
 
 // fake comments insertation insert 
@@ -637,61 +622,88 @@ function user_active_time() {
   }
 }
 
-function monitor_viewed_post() {
+function combinedFunction() {
+  const siteTable = document.querySelector('#siteTable');
+
+  // Function to update the links of each post
+  function updateLinks(child) {
+    if (!child.classList.contains('clearleft')) {
+      const thumbnailLink = child.querySelector('a.thumbnail');
+      const titleLink = child.querySelector('p.title a');
+      const commentsLink = child.querySelector('a.bylink.comments')?.getAttribute('href');
+
+      if (commentsLink) {
+        // Update thumbnail link
+        if (thumbnailLink) {
+          thumbnailLink.addEventListener('click', function () {
+            thumbnailLink.setAttribute('href', commentsLink);
+            console.log('Updated thumbnail link on click:', thumbnailLink.getAttribute('href'));
+            window.location.href = commentsLink; // Redirect after setting the link
+          });
+
+          thumbnailLink.addEventListener('mouseover', function () {
+            thumbnailLink.setAttribute('href', commentsLink);
+            console.log('Updated thumbnail link on hover:', thumbnailLink.getAttribute('href'));
+          });
+        }
+
+        // Update title link
+        if (titleLink) {
+          titleLink.addEventListener('click', function () {
+            titleLink.setAttribute('href', commentsLink);
+            console.log('Updated title link on click:', titleLink.getAttribute('href'));
+            window.location.href = commentsLink; // Redirect after setting the link
+          });
+
+          titleLink.addEventListener('mouseover', function () {
+            titleLink.setAttribute('href', commentsLink);
+            console.log('Updated title link on hover:', titleLink.getAttribute('href'));
+          });
+        }
+      } else {
+        console.log('Comments link not found.');
+      }
+    }
+  }
+
   // Function to handle when elements intersect (come into or out of view)
- 
   function handleIntersect(entries, observer) {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         console.log(`Element has been viewed:`, entry.target);
-        var fetchUrl = `https://outer.socialsandbox.xyz/api/getfakepost`; // No URL provided here, this will fetch all posts
+        const fetchUrl = `https://outer.socialsandbox.xyz/api/getfakepost`;
 
-        // Select the <a> element inside the <li> with class "first"
-        var commentLink = entry.target.querySelector('li.first a');
-        var dataRank = entry.target.getAttribute('data-rank');
-       
-        // Check if the element exists
-        var Isfakepost = false;
-        // Get the value of the href attribute (URL)
-        var commentUrl = commentLink.getAttribute('href');
+        const commentLink = entry.target.querySelector('li.first a');
+        const dataRank = entry.target.getAttribute('data-rank');
+        const commentUrl = commentLink.getAttribute('href');
 
         console.log("Comment URL:", commentUrl);
 
-        // Fetch the data
         fetch(fetchUrl)
           .then(response => {
             if (!response.ok) {
               throw new Error(`HTTP error! status: ${response.status}`);
             }
-            return response.json(); // Parse the JSON from the response
+            return response.json();
           })
           .then(data => {
-            // Check if the result is an array (when no URL is provided)
             if (Array.isArray(data)) {
               if (data.length === 0) {
                 console.log("No fake posts found.");
               } else {
-                // Loop through all fake posts in the array
+                var Isfakepost = false;
                 data.forEach(fakePost => {
-                  console.log("Fake post data:", fakePost);
-
-                  // Destructure fake post details
-                  var {
-                    fakepost_url,
-                    fakepost_index
-                  } = fakePost;
-
-                  if (commentUrl == fakepost_url) {
+                  const { fakepost_url, fakepost_index } = fakePost;
+                  if (commentUrl === fakepost_url ) {
                     sendUpdateViewedPostToBackground(fakepost_index);
                     Isfakepost = true;
                   }
-                  // comment out for non fake post case 
-                  if(fakepost_index ==dataRank)
-                  {
+                  if (fakepost_index == dataRank) {
+                    
                     Isfakepost = true;
                   }
                 });
-                if (Isfakepost == false) {
+                if (!Isfakepost) {
                   sendUpdateViewedPostToBackground(commentUrl);
                 }
               }
@@ -700,65 +712,60 @@ function monitor_viewed_post() {
           .catch(error => {
             console.error("Failed to fetch fake post:", error);
           });
-       
-      } else {
-        console.log(`Element is not visible:`, entry.target);
       }
     });
   }
 
-  // Set up observer options
+  // Set up observer options for IntersectionObserver
   const options = {
-    root: null, // Viewport as the root container
-    rootMargin: '0px', // No margin around the root
+    root: null,
+    rootMargin: '0px',
     threshold: 1 // 100% of the element needs to be visible to trigger
   };
 
   // Create a new IntersectionObserver with the handleIntersect function as callback
-  const observer = new IntersectionObserver(handleIntersect, options);
-
-  const siteTable = document.querySelector('#siteTable');
+  const intersectObserver = new IntersectionObserver(handleIntersect, options);
 
   // Function to observe new elements
   function observeNewElements(newNode) {
     if (newNode.classList && newNode.classList.contains('thing') && !newNode.classList.contains('clearleft')) {
-      observer.observe(newNode); // Start observing the new element
+      intersectObserver.observe(newNode); // Start observing the new element
+      updateLinks(newNode); // Update links for new elements
     }
   }
 
-  // Initial observation of existing elements
+  // Update and observe all existing posts
   siteTable.querySelectorAll('.thing').forEach(child => {
+    updateLinks(child); // Update links for existing elements
     if (!child.classList.contains('clearleft')) {
-      observer.observe(child); // Start observing the child element
+      intersectObserver.observe(child); // Start observing the child element
     }
   });
 
-  // MutationObserver to monitor changes to the DOM and observe new elements
-  // need to comment out if there is not fake post , starts below 
+  // MutationObserver to monitor changes to the DOM and handle new/removed elements
   const mutationObserver = new MutationObserver(mutations => {
-    // observe added new element 
     mutations.forEach(mutation => {
       mutation.addedNodes.forEach(node => {
-        observeNewElements(node); // Observe any newly added nodes
+        if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('thing')) {
+          observeNewElements(node); // Observe and update links for newly added nodes
+        }
       });
-      // Handle removed nodes
+
       mutation.removedNodes.forEach(removedNode => {
         if (removedNode.nodeType === Node.ELEMENT_NODE && removedNode.classList.contains('thing')) {
-          observer.unobserve(removedNode); // Stop observing removed elements
+          intersectObserver.unobserve(removedNode); // Stop observing removed elements
           console.log("Stopped observing removed element:", removedNode);
         }
       });
     });
   });
 
-  // Start observing the #siteTable for childList changes
+  // Start observing the siteTable for added or removed elements
   mutationObserver.observe(siteTable, {
     childList: true,
     subtree: true // Observe all children, not just immediate
   });
-  // above the code needs to comment out if it is not fake post case
 }
-
 
 
 // this function is used for only post page(sub reddit page ) when user scroll the page or clicked more reply(new elements added into the DOM)
@@ -915,7 +922,7 @@ function fakepost() {
 
             }
             else { // Image and/or Text fake post
-              fakepostHTML = `<div class="thing odd link" onclick="click_thing(this)" data-fullname="t3_1fspb50" data-type="link" data-gildings="0" data-whitelist-status="all_ads" data-is-gallery="false" data-author="gazman70k" data-author-fullname="t2_osz9r6jj" data-subreddit="rolex" data-subreddit-prefixed="${fakepost_community}" data-subreddit-fullname="t5_2qy0y" data-subreddit-type="public" data-timestamp="1727678513000" data-url="" data-permalink="/r/rolex/comments/1fspb50/enjoying_this_5513/" data-domain="i.redd.it" data-rank="38" data-comments-count="4" data-score="56" data-promoted="false" data-nsfw="false" data-spoiler="false" data-oc="false" data-num-crossposts="0" data-context="listing"><p class="parent"></p><span class="rank">${fakepost_index}</span><div class="midcol unvoted"><div class="arrow up login-required access-required" data-event-action="upvote" role="button" aria-label="upvote" tabindex="0"></div><div class="score dislikes" title="55">55</div><div class="score unvoted" title="56">56</div><div class="score likes" title="57">57</div><div class="arrow down login-required access-required" data-event-action="downvote" role="button" aria-label="downvote" tabindex="0"></div></div><a class="thumbnail invisible-when-pinned may-blank loggedin outbound" data-event-action="thumbnail" href="https://i.redd.it/umr0xp767wrd1.jpeg" data-href-url="https://i.redd.it/umr0xp767wrd1.jpeg" data-outbound-url="https://i.redd.it/umr0xp767wrd1.jpeg" data-outbound-expiration="0" rel="nofollow ugc"><img src="${fakepost_image}" width="70" height="70" alt=""></a><div class="entry unvoted"><div class="top-matter"><p class="title"><a class="title may-blank loggedin outbound" data-event-action="title" href="https://i.redd.it/umr0xp767wrd1.jpeg" tabindex="1" data-href-url="https://i.redd.it/umr0xp767wrd1.jpeg" data-outbound-url="https://i.redd.it/umr0xp767wrd1.jpeg" data-outbound-expiration="0" rel="nofollow ugc">${fakepost_title}</a> <span class="domain">(<a href="/domain/i.redd.it/">i.redd.it</a>)</span></p><div class="expando-button hide-when-pinned video collapsed"></div><p class="tagline ">submitted <time title="Mon Sep 30 06:41:53 2024 UTC" datetime="2024-09-30T06:41:53+00:00" class="live-timestamp">${fakepost_time}</time> by <a href="https://old.reddit.com/user/${fakepost_poster}" class="author may-blank">${fakepost_poster}</a><span class="userattrs"></span> to <a href="https://old.reddit.com/${fakepost_community}/" class="subreddit hover may-blank">${fakepost_community}</a></p><ul class="flat-list buttons"><li class="first"><a href="${fakepost_url}" data-event-action="comments" class="bylink comments may-blank" rel="nofollow">4 comments</a></li><li class="share"><a class="post-sharing-button" href="javascript: void 0;">share</a></li><li class="link-save-button save-button login-required"><a href="#">save</a></li><li><form action="/post/hide" method="post" class="state-button hide-button"><span><a href="javascript:void(0)" class="" data-event-action="hide" onclick="change_state(this, \'hide\', hide_thing);">hide</a></span></form></li><li class="report-button login-required"><a href="javascript:void(0)" class="reportbtn access-required" data-event-action="report">report</a></li><li class="crosspost-button"><a class="post-crosspost-button" href="javascript: void 0;" data-crosspost-fullname="t3_1fspb50">crosspost</a></li></ul><div class="reportform"></div></div><div class="expando" style="display: none;" data-cachedhtml=\'<div class="media-preview" style="max-width: 576px"><div class="media-preview-content"><a href="https://i.redd.it/umr0xp767wrd1.jpeg" class="may-blank post-link"><img class="preview" src="${fakepost_image}" width="576" height="768"></a></div></div><div class="usertext usertext-body"><div class="md"></div></div>\'></div></div><div class="child"></div><div class="clearleft"></div></div><div class="clearleft"></div><div class="clearleft"></div>`;
+              fakepostHTML = `<div class="thing odd link" onclick="click_thing(this)" data-fullname="t3_1fspb50" data-type="link" data-gildings="0" data-whitelist-status="all_ads" data-is-gallery="false" data-author="gazman70k" data-author-fullname="t2_osz9r6jj" data-subreddit="rolex" data-subreddit-prefixed="${fakepost_community}" data-subreddit-fullname="t5_2qy0y" data-subreddit-type="public" data-timestamp="1727678513000" data-url="" data-permalink="/r/rolex/comments/1fspb50/enjoying_this_5513/" data-domain="i.redd.it" data-rank="38" data-comments-count="4" data-score="56" data-promoted="false" data-nsfw="false" data-spoiler="false" data-oc="false" data-num-crossposts="0" data-context="listing"><p class="parent"></p><span class="rank">${fakepost_index}</span><div class="midcol unvoted"><div class="arrow up login-required access-required" data-event-action="upvote" role="button" aria-label="upvote" tabindex="0"></div><div class="score dislikes" title="55">55</div><div class="score unvoted" title="56">56</div><div class="score likes" title="57">57</div><div class="arrow down login-required access-required" data-event-action="downvote" role="button" aria-label="downvote" tabindex="0"></div></div><a class="thumbnail invisible-when-pinned may-blank loggedin outbound" data-event-action="thumbnail" href="{fakepost_url}" data-href-url="https://i.redd.it/umr0xp767wrd1.jpeg" data-outbound-url="https://i.redd.it/umr0xp767wrd1.jpeg" data-outbound-expiration="0" rel="nofollow ugc"><img src="${fakepost_image}" width="70" height="70" alt=""></a><div class="entry unvoted"><div class="top-matter"><p class="title"><a class="title may-blank loggedin outbound" data-event-action="title" href="${fakepost_url}" tabindex="1" data-href-url="https://i.redd.it/umr0xp767wrd1.jpeg" data-outbound-url="https://i.redd.it/umr0xp767wrd1.jpeg" data-outbound-expiration="0" rel="nofollow ugc">${fakepost_title}</a> <span class="domain">(<a href="/domain/i.redd.it/">i.redd.it</a>)</span></p><div class="expando-button hide-when-pinned video collapsed"></div><p class="tagline ">submitted <time title="Mon Sep 30 06:41:53 2024 UTC" datetime="2024-09-30T06:41:53+00:00" class="live-timestamp">${fakepost_time}</time> by <a href="https://old.reddit.com/user/${fakepost_poster}" class="author may-blank">${fakepost_poster}</a><span class="userattrs"></span> to <a href="https://old.reddit.com/${fakepost_community}/" class="subreddit hover may-blank">${fakepost_community}</a></p><ul class="flat-list buttons"><li class="first"><a href="${fakepost_url}" data-event-action="comments" class="bylink comments may-blank" rel="nofollow">4 comments</a></li><li class="share"><a class="post-sharing-button" href="javascript: void 0;">share</a></li><li class="link-save-button save-button login-required"><a href="#">save</a></li><li><form action="/post/hide" method="post" class="state-button hide-button"><span><a href="javascript:void(0)" class="" data-event-action="hide" onclick="change_state(this, \'hide\', hide_thing);">hide</a></span></form></li><li class="report-button login-required"><a href="javascript:void(0)" class="reportbtn access-required" data-event-action="report">report</a></li><li class="crosspost-button"><a class="post-crosspost-button" href="javascript: void 0;" data-crosspost-fullname="t3_1fspb50">crosspost</a></li></ul><div class="reportform"></div></div><div class="expando" style="display: none;" data-cachedhtml=\'<div class="media-preview" style="max-width: 576px"><div class="media-preview-content"><a href="${fakepost_url}" class="may-blank post-link"><img class="preview" src="${fakepost_image}" width="576" height="768"></a></div></div><div class="usertext usertext-body"><div class="md"></div></div>\'></div></div><div class="child"></div><div class="clearleft"></div></div><div class="clearleft"></div><div class="clearleft"></div>`;
               // Create a temporary element to hold the HTML
               var tempDiv = document.createElement('div');
               tempDiv.innerHTML = fakepostHTML;
