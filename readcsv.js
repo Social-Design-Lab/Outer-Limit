@@ -35,36 +35,67 @@ async function insertComment(rowData) {
   }
 }
 
-// Function to read and insert fake posts first
-function read_and_insert_fake_posts(callback) {
-  const fakePosts = [];
+// Function to read CSV line by line and execute post insertions sequentially
+async function read_and_insert_fake_posts() {
+  return new Promise((resolve, reject) => {
+    const fakePosts = [];
+    
+    fs.createReadStream('fakepost.csv', { encoding: 'utf8' })
+      .pipe(csvParser())
+      .on('data', (rowData) => {
+        fakePosts.push(rowData);
+      })
+      .on('end', async () => {
+        console.log('Finished reading fake posts.');
 
-  fs.createReadStream('fakepost.csv')
-    .pipe(csvParser())
-    .on('data', (rowData) => {
-      fakePosts.push(insertPost(rowData));
-    })
-    .on('end', async () => {
-      console.log('Finished reading and inserting fake posts.');
-      // Wait for all posts to be inserted before proceeding to comments
-      await Promise.all(fakePosts);
-      // Call the callback to proceed with comments insertion
-      callback();
-    });
+        // Sequentially insert posts one after the other
+        for (const rowData of fakePosts) {
+          await insertPost(rowData);
+        }
+        resolve();
+      })
+      .on('error', (error) => {
+        reject(error);
+      });
+  });
 }
 
-// Function to read and insert fake comments only after posts are inserted
-function read_and_insert_fake_comments() {
-  fs.createReadStream('fake_comment.csv')
-    .pipe(csvParser())
-    .on('data', async (rowData) => {
-      // Insert each comment, ensuring that its corresponding post has been inserted
-      await insertComment(rowData);
-    })
-    .on('end', () => {
-      console.log('Finished reading and inserting fake comments.');
-    });
+// Function to read CSV line by line and execute comment insertions sequentially
+async function read_and_insert_fake_comments() {
+  return new Promise((resolve, reject) => {
+    const fakeComments = [];
+    
+    fs.createReadStream('fake_comment.csv', { encoding: 'utf8' })
+      .pipe(csvParser())
+      .on('data', (rowData) => {
+        fakeComments.push(rowData);
+      })
+      .on('end', async () => {
+        console.log('Finished reading fake comments.');
+
+        // Sequentially insert comments one after the other
+        for (const rowData of fakeComments) {
+          await insertComment(rowData);
+        }
+        resolve();
+      })
+      .on('error', (error) => {
+        reject(error);
+      });
+  });
 }
 
-// First, insert all posts, then insert comments
-read_and_insert_fake_posts(read_and_insert_fake_comments);
+// Main function to run the process linearly
+async function processPostsAndComments() {
+  try {
+    await read_and_insert_fake_posts();  // Insert posts first
+    console.log('All fake posts inserted. Now inserting comments...');
+    await read_and_insert_fake_comments(); // Insert comments after posts
+    console.log('All fake comments inserted.');
+  } catch (error) {
+    console.error('Error in the process:', error);
+  }
+}
+
+// Start the process
+processPostsAndComments();
