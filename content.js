@@ -185,9 +185,32 @@ function runMyCode() {
 
 
         changeRealPostPage();
-        monitor_new_comment(replyPostButtonSelector, replyCommentSelector, filterText, commentSelector);
+        // Fetch a fake post based on the current URL
+        var fetchUrl = `https://outer.socialsandbox.xyz/api/getfakepost?fakepost_url=${window.location.href}`;
+        console.log("Fetching URL:", fetchUrl);
+        fetch(fetchUrl)
+          .then(response => {
+            if (!response.ok) {
+              if (response.status === 404) {
+                // Action to take if the fake post is not found (404)
+                console.log("No fake post found for this URL. Taking alternative action...");
 
-        listentobuttons(likebuttonSelector, dislikebuttonSelector, commentTextClassName);
+                monitorUsreVoteOnRealPost();
+                return null;
+              } else {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+            }
+            return response.json(); // Parse the JSON from the response if no error
+          })
+          .then(data => {
+            // Process the fake post data if available
+            console.log("Fake post data:", data);
+          })
+          .catch(error => {
+            console.error("Failed to fetch the fake post:", error);
+          });
+
       }
     }
 
@@ -210,72 +233,7 @@ function findAncestorWithClass(node, targetClassName) {
   }
 }
 
-// post page listen to buttons 
-function listentobuttons(likebuttonSelector, dislikebuttonSelector = null, commentTextClassName) {
-  const upvoteButtons = document.querySelectorAll(likebuttonSelector);
-  upvoteButtons.forEach((button) => {
-    if (!button.getAttribute('outer-limit-monitored')) {
 
-      button.addEventListener('click', () => {
-        //var post = button.parentNode.parentNode.parentNode.getElementsByClassName('_292iotee39Lmt0MkQZ2hPV');
-        var post = findAncestorWithClass(button, commentTextClassName);
-        var text = post[0].innerText;
-        //var uid = get_user_id_from_background();
-        if (text == '') {
-          const currentUrl = window.location.href;
-          console.log(`upvote button clicked for post: "${currentUrl}"`);
-          send_votePost_to_background("upvote", currentUrl);
-
-        }
-        //var uid = get_user_id_from_background();
-
-        else {
-          console.log(`upvote button clicked for post comment teest: "${text}"`);
-          //senddatatodb(uid,"upvote", text);
-          send_voteComment_to_background("upvote", text, window.location.href);
-          //alert("whyyyy");
-        }
-
-
-      });
-      button.setAttribute('outer-limit-monitored', 'true');
-    }
-  });
-
-  if (dislikebuttonSelector) {
-    const downvoteButtons = document.querySelectorAll(dislikebuttonSelector);
-    downvoteButtons.forEach((button) => {
-      if (!button.getAttribute('outer-limit-monitored')) {
-        button.addEventListener('click', () => {
-          //var post = button.parentNode.parentNode.parentNode.getElementsByClassName('_292iotee39Lmt0MkQZ2hPV');
-          var post = findAncestorWithClass(button, commentTextClassName);
-          var text = post[0].innerText;
-          if (text == '') {
-
-            const currentUrl = window.location.href;
-            console.log(`downvote button clicked for post: "${currentUrl}"`);
-            send_votePost_to_background("downvote", currentUrl);
-          }
-          //var uid = get_user_id_from_background();
-
-          else {
-
-            console.log(`downvote button clicked for post comment: "${text}"`);
-            //send_data_to_background("downvote_comment", text);
-            send_voteComment_to_background("downvote", text, window.location.href);
-          }
-          //senddatatodb(uid,"downvote", text);
-
-        });
-        button.setAttribute('outer-limit-monitored', 'true');
-      }
-    });
-  }
-
-
-
-
-}
 
 
 
@@ -284,7 +242,7 @@ function listentobuttons(likebuttonSelector, dislikebuttonSelector = null, comme
 // this is when the experimenet first start
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.message === "start experiment") {
-    user_active_time();
+    //user_active_time();
     runMyCode();
     new_active_triggered = true;
     console.log("Received message from the background script for listen the button:", request.message);
@@ -299,18 +257,37 @@ function monitorPostVote() {
 
     if (!child.classList.contains('clearleft')) {
 
-      var postLink =     child.querySelector('a.bylink.comments')?.getAttribute('href');
+      var postLink = child.querySelector('a.bylink.comments')?.getAttribute('href');
 
-      realButtonVote(child, "post" ,"",postLink);
+      realButtonVote(child, "post", "", postLink);
 
 
     }
   });
 
 }
+function monitorUsreVoteOnRealPost() {
+  var siteTable = document.querySelector('div.sitetable.linklisting');
+  realButtonVote(siteTable, "post", "", window.location.href);
+  var commentElementDiv = document.querySelector('.sitetable.nestedlisting');
+  commentElementDiv.querySelectorAll('.thing').forEach(child => {
 
-function realButtonVote(parentDiv, voteType, comment, url)
-{
+    if (!child.classList.contains('clearleft')) {
+
+     
+      var commentContent = child.querySelector('.md p').textContent;
+      realButtonVote(child, "comment", commentContent, window.location.href);
+     
+      
+    }
+  });
+
+
+}
+
+
+
+function realButtonVote(parentDiv, voteType, comment, url) {
   var upvoteButton = parentDiv.querySelector('[aria-label="upvote"]');
   var downvoteButton = parentDiv.querySelector('[aria-label="downvote"]');
   if (upvoteButton && downvoteButton) {
@@ -335,16 +312,16 @@ function realButtonVote(parentDiv, voteType, comment, url)
 
     // Downvote button functionality
     downvoteButton.addEventListener('click', function (event) {
-      
+
       if (downvoteButton.classList.contains('downmod')) {
         // Undo the downvote (reset to unvoted state)
-        
+
         console.log('Downvote undone');
         sendDeleteRealVoteMessage(voteType, comment, url);
       } else {
         // If upvote was previously clicked, reset it
         if (upvoteButton.classList.contains('upmod')) {
-    
+
           sendDeleteRealVoteMessage(voteType, comment, url);
         }
         console.log('Downvoted');
@@ -984,7 +961,7 @@ function fakepost() {
 
             }
             else { // Image and/or Text fake post
-              fakepostHTML = `<div class="thing odd link" onclick="click_thing(this)" data-fullname="t3_1fspb50" data-type="link" data-gildings="0" data-whitelist-status="all_ads" data-is-gallery="false" data-author="gazman70k" data-author-fullname="t2_osz9r6jj" data-subreddit="rolex" data-subreddit-prefixed="${fakepost_community}" data-subreddit-fullname="t5_2qy0y" data-subreddit-type="public" data-timestamp="1727678513000" data-url="" data-permalink="/r/rolex/comments/1fspb50/enjoying_this_5513/" data-domain="i.redd.it" data-rank="38" data-comments-count="4" data-score="56" data-promoted="false" data-nsfw="false" data-spoiler="false" data-oc="false" data-num-crossposts="0" data-context="listing"><p class="parent"></p><span class="rank">${fakepost_index}</span><div class="midcol unvoted"><div class="arrow up login-required access-required" data-event-action="upvote" role="button" aria-label="upvote" tabindex="0"></div><div class="score dislikes" title="55">55</div><div class="score unvoted" title="56">56</div><div class="score likes" title="57">57</div><div class="arrow down login-required access-required" data-event-action="downvote" role="button" aria-label="downvote" tabindex="0"></div></div><a class="thumbnail invisible-when-pinned may-blank loggedin outbound" data-event-action="thumbnail" href="{fakepost_url}" data-href-url="https://i.redd.it/umr0xp767wrd1.jpeg" data-outbound-url="https://i.redd.it/umr0xp767wrd1.jpeg" data-outbound-expiration="0" rel="nofollow ugc"><img src="${fakepost_image}" width="70" height="70" alt=""></a><div class="entry unvoted"><div class="top-matter"><p class="title"><a class="title may-blank loggedin outbound" data-event-action="title" href="${fakepost_url}" tabindex="1" data-href-url="https://i.redd.it/umr0xp767wrd1.jpeg" data-outbound-url="https://i.redd.it/umr0xp767wrd1.jpeg" data-outbound-expiration="0" rel="nofollow ugc">${fakepost_title}</a> <span class="domain">(<a href="/domain/i.redd.it/">i.redd.it</a>)</span></p><div class="expando-button hide-when-pinned video collapsed"></div><p class="tagline ">submitted <time title="Mon Sep 30 06:41:53 2024 UTC" datetime="2024-09-30T06:41:53+00:00" class="live-timestamp">${fakepost_time}</time> by <a href="https://old.reddit.com/user/${fakepost_poster}" class="author may-blank">${fakepost_poster}</a><span class="userattrs"></span> to <a href="https://old.reddit.com/${fakepost_community}/" class="subreddit hover may-blank">${fakepost_community}</a></p><ul class="flat-list buttons"><li class="first"><a href="${fakepost_url}" data-event-action="comments" class="bylink comments may-blank" rel="nofollow">${commentsCount} comments</a></li><li class="share"><a class="post-sharing-button" href="javascript: void 0;">share</a></li><li class="link-save-button save-button login-required"><a href="#">save</a></li><li><form action="/post/hide" method="post" class="state-button hide-button"><span><a href="javascript:void(0)" class="" data-event-action="hide" onclick="change_state(this, \'hide\', hide_thing);">hide</a></span></form></li><li class="report-button login-required"><a href="javascript:void(0)" class="reportbtn access-required" data-event-action="report">report</a></li><li class="crosspost-button"><a class="post-crosspost-button" href="javascript: void 0;" data-crosspost-fullname="t3_1fspb50">crosspost</a></li></ul><div class="reportform"></div></div><div class="expando" style="display: none;" data-cachedhtml=\'<div class="media-preview" style="max-width: 576px"><div class="media-preview-content"><a href="${fakepost_url}" class="may-blank post-link"><img class="preview" src="${fakepost_image}" width="576" height="768"></a></div></div><div class="usertext usertext-body"><div class="md"></div></div>\'></div></div><div class="child"></div><div class="clearleft"></div></div><div class="clearleft"></div><div class="clearleft"></div>`;
+              fakepostHTML = `<div class="thing odd link" onclick="click_thing(this)" data-fullname="t3_1fspb50" data-type="link" data-gildings="0" data-whitelist-status="all_ads" data-is-gallery="false" data-author="gazman70k" data-author-fullname="t2_osz9r6jj" data-subreddit="rolex" data-subreddit-prefixed="${fakepost_community}" data-subreddit-fullname="t5_2qy0y" data-subreddit-type="public" data-timestamp="1727678513000" data-url="" data-permalink="/r/rolex/comments/1fspb50/enjoying_this_5513/" data-domain="i.redd.it" data-rank="38" data-comments-count="4" data-score="56" data-promoted="false" data-nsfw="false" data-spoiler="false" data-oc="false" data-num-crossposts="0" data-context="listing"><p class="parent"></p><span class="rank">${fakepost_index}</span><div class="midcol unvoted"><div class="arrow up login-required access-required" data-event-action="upvote" role="button" aria-label="upvote" tabindex="0"></div><div class="score dislikes" title="55">${parseInt(fakepost_likes) + 1}</div><div class="score unvoted" title="56">${fakepost_likes}</div><div class="score likes" title="57">${parseInt(fakepost_likes) + 1}</div><div class="arrow down login-required access-required" data-event-action="downvote" role="button" aria-label="downvote" tabindex="0"></div></div><a class="thumbnail invisible-when-pinned may-blank loggedin outbound" data-event-action="thumbnail" href="{fakepost_url}" data-href-url="https://i.redd.it/umr0xp767wrd1.jpeg" data-outbound-url="https://i.redd.it/umr0xp767wrd1.jpeg" data-outbound-expiration="0" rel="nofollow ugc"><img src="${fakepost_image}" width="70" height="70" alt=""></a><div class="entry unvoted"><div class="top-matter"><p class="title"><a class="title may-blank loggedin outbound" data-event-action="title" href="${fakepost_url}" tabindex="1" data-href-url="https://i.redd.it/umr0xp767wrd1.jpeg" data-outbound-url="https://i.redd.it/umr0xp767wrd1.jpeg" data-outbound-expiration="0" rel="nofollow ugc">${fakepost_title}</a> <span class="domain">(<a href="/domain/i.redd.it/">i.redd.it</a>)</span></p><div class="expando-button hide-when-pinned video collapsed"></div><p class="tagline ">submitted <time title="Mon Sep 30 06:41:53 2024 UTC" datetime="2024-09-30T06:41:53+00:00" class="live-timestamp">${fakepost_time}</time> by <a href="https://old.reddit.com/user/${fakepost_poster}" class="author may-blank">${fakepost_poster}</a><span class="userattrs"></span> to <a href="https://old.reddit.com/${fakepost_community}/" class="subreddit hover may-blank">${fakepost_community}</a></p><ul class="flat-list buttons"><li class="first"><a href="${fakepost_url}" data-event-action="comments" class="bylink comments may-blank" rel="nofollow">${commentsCount} comments</a></li><li class="share"><a class="post-sharing-button" href="javascript: void 0;">share</a></li><li class="link-save-button save-button login-required"><a href="#">save</a></li><li><form action="/post/hide" method="post" class="state-button hide-button"><span><a href="javascript:void(0)" class="" data-event-action="hide" onclick="change_state(this, \'hide\', hide_thing);">hide</a></span></form></li><li class="report-button login-required"><a href="javascript:void(0)" class="reportbtn access-required" data-event-action="report">report</a></li><li class="crosspost-button"><a class="post-crosspost-button" href="javascript: void 0;" data-crosspost-fullname="t3_1fspb50">crosspost</a></li></ul><div class="reportform"></div></div><div class="expando" style="display: none;" data-cachedhtml=\'<div class="media-preview" style="max-width: 576px"><div class="media-preview-content"><a href="${fakepost_url}" class="may-blank post-link"><img class="preview" src="${fakepost_image}" width="576" height="768"></a></div></div><div class="usertext usertext-body"><div class="md"></div></div>\'></div></div><div class="child"></div><div class="clearleft"></div></div><div class="clearleft"></div><div class="clearleft"></div>`;
               // Create a temporary element to hold the HTML
               var tempDiv = document.createElement('div');
               tempDiv.innerHTML = fakepostHTML;
@@ -2182,9 +2159,9 @@ function sendRealVoteMessage(voteAction, voteType, targetId, url) {
   if (voteType === 'post') {
 
     // Add logic to send vote for fake post
-    sendVoteRealPostMessage( url,voteAction);
+    sendVoteRealPostMessage(url, voteAction);
   } else if (voteType === 'comment') {
-    sendVoteRealCommentMessage( targetId, url,voteAction);
+    sendVoteRealCommentMessage(targetId, url, voteAction);
     // Add logic to send vote for comment
   }
 }
