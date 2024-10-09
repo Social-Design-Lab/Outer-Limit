@@ -276,8 +276,14 @@ function monitorUsreVoteOnRealPost() {
 
     if (!child.classList.contains('clearleft')) {
 
+      console.log("individual comment html: ", child);
+      var commentContent = "";
+      var textElements = child.querySelector('.md');
 
-      var commentContent = child.querySelector('.md p').textContent;
+      if (textElements) {
+        commentContent = textElements.textContent.trim();
+      }
+
       realButtonVote(child, "comment", commentContent, window.location.href);
 
 
@@ -305,11 +311,12 @@ function observeNewCommentsAndReplies(commentSection) {
             // Check if the element exists
             if (userTextDiv) {
               // Select the <p> element inside the div
-              var paragraph = userTextDiv.querySelector('.md > p');
+              var paragraph = userTextDiv.querySelector('.md');
 
-              // Get the text content inside the <p> element
-              var commentContent = paragraph.textContent;
-
+              if (paragraph) {
+                // Get the text content inside the <p> element
+                commentContent = paragraph.textContent;
+              }
               // Log the text content to the console or use it elsewhere
               //console.log(commentContent);
             }
@@ -324,19 +331,22 @@ function observeNewCommentsAndReplies(commentSection) {
               // Check if the element exists
               if (replyToTextDiv) {
                 // Select the <p> element inside the div
-                var replyToparagraph = replyToTextDiv.querySelector('.md > p');
-
+                var replyToparagraph = replyToTextDiv.querySelector('.md');
+                if (replyToparagraph) {
+                  replyTo = replyToparagraph.textContent;
+                }
                 // Get the text content inside the <p> element
-                var replyTo = replyToparagraph.textContent;
+                //var replyTo = replyToparagraph.textContent;
 
                 // Log the text content to the console or use it elsewhere
                 //console.log(commentContent);
               }
-
+              realButtonVote(newNode, "comment", commentContent, window.location.href);
               console.log('This comment is a child comment of another comment', parentThing);
               reviseORdeleteComment(newNode, "commentlevel", commentContent, replyTo);
 
             } else {
+              realButtonVote(newNode, "comment", commentContent, window.location.href);
               reviseORdeleteComment(newNode, "postlevel", commentContent)
               console.log('This comment is not a child comment of another comment');
             }
@@ -382,40 +392,42 @@ function monitorUserCommentOnRealPost() {
 
       // Select the reply link inside the li with class 'reply-button'
       var replyLink = child.querySelector('li.reply-button');
+      if (replyLink) {
+        // Add an event listener to the reply link
+        replyLink.addEventListener('click', function (event) {
+          var replyForm = child.querySelector('.child');
+          var saveButtonInReplyForm = replyForm.querySelector('button.save');
+          // Select the div with class "usertext-body may-blank-within md-container"
+          var userTextDiv = child.querySelector('.usertext-body.may-blank-within.md-container');
+          var commentContent;
+          // Check if the element exists
+          if (userTextDiv) {
+            // Select the <p> element inside the div
+            var paragraph = userTextDiv.querySelector('.md');
+            if (paragraph) {
+              commentContent = paragraph.textContent;
+            }
+            // Get the text content inside the <p> element
+            //var commentContent = paragraph.textContent;
 
-      // Add an event listener to the reply link
-      replyLink.addEventListener('click', function (event) {
-        var replyForm = child.querySelector('.child');
-        var saveButtonInReplyForm = replyForm.querySelector('button.save');
-        // Select the div with class "usertext-body may-blank-within md-container"
-        var userTextDiv = child.querySelector('.usertext-body.may-blank-within.md-container');
-        var commentContent;
-        // Check if the element exists
-        if (userTextDiv) {
-          // Select the <p> element inside the div
-          var paragraph = userTextDiv.querySelector('.md > p');
-
-          // Get the text content inside the <p> element
-          var commentContent = paragraph.textContent;
-
-          // Log the text content to the console or use it elsewhere
-          console.log(commentContent);
-        }
-        saveButtonInReplyForm.addEventListener('click', function (event) {
-          var textareaInReplyForm = replyForm.querySelector('textarea[name="text"]');
-          if (textareaInReplyForm && textareaInReplyForm.value !== null) {
-            var enteredTextInReplyForm = textareaInReplyForm.value;
-
-            sendAddUserReplyRealCommentMessage(commentContent, window.location.href, enteredTextInReplyForm);
-
+            // Log the text content to the console or use it elsewhere
+            console.log(commentContent);
           }
-          console.log('Save button clicked!');
+          saveButtonInReplyForm.addEventListener('click', function (event) {
+            var textareaInReplyForm = replyForm.querySelector('textarea[name="text"]');
+            if (textareaInReplyForm && textareaInReplyForm.value !== null) {
+              var enteredTextInReplyForm = textareaInReplyForm.value;
+
+              sendAddUserReplyRealCommentMessage(commentContent, window.location.href, enteredTextInReplyForm);
+
+            }
+            console.log('Save button clicked!');
+            // Your custom logic here
+          });
+          console.log('Reply link clicked!');
           // Your custom logic here
         });
-        console.log('Reply link clicked!');
-        // Your custom logic here
-      });
-
+      }
 
     }
   });
@@ -445,10 +457,12 @@ function reviseUserCommentonRealPost() {
       // Check if the element exists
       if (userTextDiv) {
         // Select the <p> element inside the div
-        var paragraph = userTextDiv.querySelector('.md > p');
-
+        var paragraph = userTextDiv.querySelector('.md');
+        if (paragraph) {
+          commentContent = paragraph.textContent;
+        }
         // Get the text content inside the <p> element
-        var commentContent = paragraph.textContent;
+        //var commentContent = paragraph.textContent;
 
         // Log the text content to the console or use it elsewhere
         //console.log(commentContent);
@@ -464,10 +478,12 @@ function reviseUserCommentonRealPost() {
           // Check if the element exists
           if (replyToTextDiv) {
             // Select the <p> element inside the div
-            var replyToparagraph = replyToTextDiv.querySelector('.md > p');
-
+            var replyToparagraph = replyToTextDiv.querySelector('.md');
+            if (replyToparagraph) {
+              replyTo = replyToparagraph.textContent;
+            }
             // Get the text content inside the <p> element
-            var replyTo = replyToparagraph.textContent;
+            // var replyTo = replyToparagraph.textContent;
 
             // Log the text content to the console or use it elsewhere
             //console.log(commentContent);
@@ -494,70 +510,72 @@ function reviseUserCommentonRealPost() {
 function reviseORdeleteComment(parentDiv, commentType, replyContent, replyTo) {
   // Select the <a> element with the class 'yes'
   var deleteFrom = parentDiv.querySelector('form.toggle.del-button');
-  var yesLink = deleteFrom.querySelector('a.yes');
-  console.log("reviseORdeleteComment is called");
+  if (deleteFrom) {
+    var yesLink = deleteFrom.querySelector('a.yes');
+    console.log("reviseORdeleteComment is called");
 
-  // Check if the element exists
-  if (yesLink) {
-    console.log("Found the 'yes' link:", yesLink); // Add a log here to verify
+    // Check if the element exists
+    if (yesLink) {
+      console.log("Found the 'yes' link:", yesLink); // Add a log here to verify
 
-    // Add an event listener to the element
-    yesLink.addEventListener('click', function (event) {
+      // Add an event listener to the element
+      yesLink.addEventListener('click', function (event) {
 
-      console.log('Custom Yes link clicked');
+        console.log('Custom Yes link clicked');
 
-      // Check commentType and call appropriate function
-      if (commentType === "postlevel") {
-        console.log("Deleting reply on real post");
-        sendDeleteUserReplyRealPostMessage(window.location.href, replyContent);
-      }
-      else if (commentType === "commentlevel") {
-        console.log("Deleting reply on real comment", replyTo, window.location.href, replyContent);
-        sendDeleteUserReplyRealCommentMessage(replyTo, window.location.href, replyContent);
-      }
-
-      // Let the original inline event handler run as well (no preventDefault or stopPropagation)
-    });
-  } else {
-    console.error("Cannot find the 'yes' button");
-
-  }
-  var editUserTextLink = parentDiv.querySelector('li > a.edit-usertext');
-
-  // Check if the element exists
-  if (editUserTextLink) {
-    console.log("Element found:", editUserTextLink);
-
-    // Add an event listener to the element
-    editUserTextLink.addEventListener('click', function (event) {
-      var saveButtonInReplyForm = parentDiv.querySelector('button.save');
-      saveButtonInReplyForm.addEventListener('click', function (event) {
-        var textareaInReplyForm = parentDiv.querySelector('textarea[name="text"]');
-        if (textareaInReplyForm && textareaInReplyForm.value !== null) {
-          var enteredTextInReplyForm = textareaInReplyForm.value;
-
-          if (commentType === "postlevel") {
-            console.log("Deleting reply on real post");
-            sendDeleteUserReplyRealPostMessage(window.location.href, replyContent);
-            sendAddUserReplyRealPostMessage(enteredTextInReplyForm, window.location.href);
-          }
-          else if (commentType === "commentlevel") {
-            console.log("Deleting reply on real comment", replyTo, window.location.href, replyContent);
-            sendDeleteUserReplyRealCommentMessage(replyTo, window.location.href, replyContent);
-            sendAddUserReplyRealCommentMessage(replyTo, window.location.href, enteredTextInReplyForm);
-          }
-
-
+        // Check commentType and call appropriate function
+        if (commentType === "postlevel") {
+          console.log("Deleting reply on real post");
+          sendDeleteUserReplyRealPostMessage(window.location.href, replyContent);
         }
-        console.log('Save button clicked!');
+        else if (commentType === "commentlevel") {
+          console.log("Deleting reply on real comment", replyTo, window.location.href, replyContent);
+          sendDeleteUserReplyRealCommentMessage(replyTo, window.location.href, replyContent);
+        }
+
+        // Let the original inline event handler run as well (no preventDefault or stopPropagation)
+      });
+    } else {
+      console.error("Cannot find the 'yes' button");
+
+    }
+    var editUserTextLink = parentDiv.querySelector('li > a.edit-usertext');
+
+    // Check if the element exists
+    if (editUserTextLink) {
+      console.log("Element found:", editUserTextLink);
+
+      // Add an event listener to the element
+      editUserTextLink.addEventListener('click', function (event) {
+        var saveButtonInReplyForm = parentDiv.querySelector('button.save');
+        saveButtonInReplyForm.addEventListener('click', function (event) {
+          var textareaInReplyForm = parentDiv.querySelector('textarea[name="text"]');
+          if (textareaInReplyForm && textareaInReplyForm.value !== null) {
+            var enteredTextInReplyForm = textareaInReplyForm.value;
+
+            if (commentType === "postlevel") {
+              console.log("Deleting reply on real post");
+              sendDeleteUserReplyRealPostMessage(window.location.href, replyContent);
+              sendAddUserReplyRealPostMessage(enteredTextInReplyForm, window.location.href);
+            }
+            else if (commentType === "commentlevel") {
+              console.log("Deleting reply on real comment", replyTo, window.location.href, replyContent);
+              sendDeleteUserReplyRealCommentMessage(replyTo, window.location.href, replyContent);
+              sendAddUserReplyRealCommentMessage(replyTo, window.location.href, enteredTextInReplyForm);
+            }
+
+
+          }
+          console.log('Save button clicked!');
+          // Your custom logic here
+        });
+        console.log('Edit link clicked!');
         // Your custom logic here
       });
-      console.log('Edit link clicked!');
-      // Your custom logic here
-    });
 
-  } else {
-    console.log("Element not found.");
+    } else {
+      console.log("Element not found.");
+    }
   }
 }
 
