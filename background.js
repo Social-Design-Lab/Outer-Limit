@@ -462,9 +462,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     // Call function to delete user reply on real comment
     deleteUserReplyOnComment(
       userpid,                             // User ID
-      request.data.replyTo,                // Real comment ID being replied to
+      request.data.replyTo.trim(),                // Real comment ID being replied to
       request.data.replyPost,              // The post that contains the real comment
-      request.data.replyContent            // The reply content
+      request.data.replyContent.trim()            // The reply content
     );
   
     sendResponse({ message: "deleteUserReplyRealComment" });
@@ -475,8 +475,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     // Call function to add user reply on real comment
     updateUserReplyOnComment(
       userpid,                             // User ID
-      request.data.replyContent,           // The content of the reply
-      request.data.replyTo,                // Real comment ID being replied to
+      request.data.replyContent.trim(),           // The content of the reply
+      request.data.replyTo.trim(),                // Real comment ID being replied to
       request.data.replyPost               // The post that contains the real comment
     );
   
@@ -488,7 +488,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     // Call function to add user reply on real post
     updateUserReplyOnPost(
       userpid,                             // User ID
-      request.data.replyContent,           // The content of the reply
+      request.data.replyContent.trim(),           // The content of the reply
       request.data.replyPost               // The post ID
     );
   
@@ -501,7 +501,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     deleteUserReplyOnPost(
       userpid,                             // User ID
       request.data.replyPost,              // The post ID
-      request.data.replyContent            // The reply content to delete
+      request.data.replyContent.trim()            // The reply content to delete
     );
   
     sendResponse({ message: "deleteUserReplyRealPost" });
@@ -1892,4 +1892,3 @@ function deleteUserReplyOnPost(userid, replyPost, replyContent) {
     console.error("Error deleting user reply on post:", error);
   });
 }
-
