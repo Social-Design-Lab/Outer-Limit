@@ -456,6 +456,57 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     // Send a response back to the content script confirming success
     sendResponse({ success: true });
   }
+  else if (request.message === "deleteUserReplyRealComment") {
+    console.log("Received data to delete user reply on real comment:", request.data);
+  
+    // Call function to delete user reply on real comment
+    deleteUserReplyOnComment(
+      userpid,                             // User ID
+      request.data.replyTo,                // Real comment ID being replied to
+      request.data.replyPost,              // The post that contains the real comment
+      request.data.replyContent            // The reply content
+    );
+  
+    sendResponse({ message: "deleteUserReplyRealComment" });
+  }
+  else if (request.message === "addUserReplyRealComment") {
+    console.log("Received data to add user reply on real comment:", request.data);
+  
+    // Call function to add user reply on real comment
+    updateUserReplyOnComment(
+      userpid,                             // User ID
+      request.data.replyContent,           // The content of the reply
+      request.data.replyTo,                // Real comment ID being replied to
+      request.data.replyPost               // The post that contains the real comment
+    );
+  
+    sendResponse({ message: "addUserReplyRealComment" });
+  }
+  else if (request.message === "addUserReplyRealPost") {
+    console.log("Received data to add user reply on real post:", request.data);
+  
+    // Call function to add user reply on real post
+    updateUserReplyOnPost(
+      userpid,                             // User ID
+      request.data.replyContent,           // The content of the reply
+      request.data.replyPost               // The post ID
+    );
+  
+    sendResponse({ message: "addUserReplyRealPost" });
+  }
+  else if (request.message === "deleteUserReplyRealPost") {
+    console.log("Received data to delete user reply on real post:", request.data);
+  
+    // Call function to delete user reply on real post
+    deleteUserReplyOnPost(
+      userpid,                             // User ID
+      request.data.replyPost,              // The post ID
+      request.data.replyContent            // The reply content to delete
+    );
+  
+    sendResponse({ message: "deleteUserReplyRealPost" });
+  }
+
 });
 
 /**
@@ -1311,6 +1362,67 @@ function deleteUserVoteOnComment(userid, commentId, postId) {
       console.error(error);
     });
 }
+
+
+function deleteUserReplyOnComment(userid,  commentId, postId,replyContent) {
+  fetch("https://outer.socialsandbox.xyz/api/removeUserReply_onComments", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      userid: userid,
+      reply_content: replyContent,   // The reply content to be deleted
+      reply_to: commentId,           // The comment ID to which the reply belongs
+      reply_post: postId             // The post ID to which the comment belongs
+    })
+  })
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error("Failed to delete user reply on comment");
+      }
+    })
+    .then(data => {
+      console.log("User reply on comment deleted successfully:", data);
+    })
+    .catch(error => {
+      console.error(error);
+    });
+}
+function updateUserReplyOnComment(userid, replyContent, commentId, postId) {
+  var action_date = new Date(); // Capture the current date and time
+
+  fetch("https://outer.socialsandbox.xyz/api/updateUserReply_onComments", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      userid: userid,
+      user_reply_onComments: [{
+        action_date: action_date,      // Timestamp of the reply action
+        reply_to: commentId,           // The comment ID being replied to
+        reply_content: replyContent,   // The content of the user's reply
+        reply_post: postId             // The post ID to which the comment belongs
+      }]
+    })
+  })
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error("Failed to update user reply on comment");
+      }
+    })
+    .then(data => {
+      console.log("User reply on comment updated successfully:", data);
+    })
+    .catch(error => {
+      console.error(error);
+    });
+}
 // Listen for messages from the content script and send back userid 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (message.message === "get_user_id_frombackground") {
@@ -1721,4 +1833,63 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   }
 });
 
+// content.js
+
+function updateUserReplyOnPost(userid, replyContent, replyPost) {
+  fetch("https://outer.socialsandbox.xyz/api/updateUserReply_onPosts", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      userid: userid,
+      user_reply_onPosts: [{
+        action_date: new Date(),     // Record the current date for the reply
+        reply_content: replyContent, // Content of the reply
+        reply_post: replyPost        // The post where the reply is being added
+      }]
+    })
+  })
+  .then(response => {
+    if (response.ok) {
+      return response.json();
+    } else {
+      throw new Error("Failed to update user reply on post");
+    }
+  })
+  .then(data => {
+    console.log("User reply on post added successfully:", data);
+  })
+  .catch(error => {
+    console.error("Error updating user reply on post:", error);
+  });
+}
+
+function deleteUserReplyOnPost(userid, replyPost, replyContent) {
+  fetch("https://outer.socialsandbox.xyz/api/removeUserReply_onPosts", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      userid: userid,
+      reply_content: replyContent,
+      reply_post: replyPost,         // The post where the reply is being removed
+  
+    })
+  })
+  .then(response => {
+    if (response.ok) {
+      return response.json();
+    } else {
+      throw new Error("Failed to delete user reply on post");
+    }
+  })
+  .then(data => {
+    console.log("User reply on post deleted successfully:", data);
+  })
+  .catch(error => {
+    console.error("Error deleting user reply on post:", error);
+  });
+}
 
