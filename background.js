@@ -136,7 +136,7 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (message.message === "send_userid_from_timerjs" && message.userId) {
     // Do something with the user ID
-    userpid = message.userId;
+    userpid = message.userId.trim();
 
     // store the userpid on local so it does not disappear later
     chrome.storage.local.set({ userpid: userpid }, function () {
@@ -155,7 +155,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
       }
     });
 
-    insertdata(userpid);
+    insertdata(userpid.trim());
     read_csv(userpid);
     console.log(`Background Received user ID from timer js: ${message.userId}`);
   }
