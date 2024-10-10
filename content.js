@@ -766,7 +766,7 @@ function monitor_new_comment(replyPostButtonSelector, replyCommentSelector, filt
   //console.log("monitor_new_comment is called");
   // reply to the post 
   //const div = document.querySelector('._3MknXZVbkWU8JL9XGlzASi');
-  const firstSubmitButtons = document.querySelector(replyPostButtonSelector);
+  var firstSubmitButtons = document.querySelector(replyPostButtonSelector);
   //console.log(firstSubmitButtons);
   //console.log(firstSubmitButtons.hasEventListener);
   //console.log("top submit comments: " ,firstSubmitButtons);
@@ -776,7 +776,7 @@ function monitor_new_comment(replyPostButtonSelector, replyCommentSelector, filt
   if (firstSubmitButtons && !firstSubmitButtons.hasEventListener & !firstSubmitButtons.hasAttribute('data-listening')) {
     firstSubmitButtons.addEventListener('click', function (event) {
       console.log('Comment submit button clicked!');
-      let currentNode = firstSubmitButtons;
+      var currentNode = firstSubmitButtons;
 
       // Go up the tree until a node has innerText
 
@@ -839,7 +839,7 @@ function monitor_new_comment(replyPostButtonSelector, replyCommentSelector, filt
               if (commentSubmitButtons && !commentSubmitButtons.hasEventListener) {
                 commentSubmitButtons.addEventListener('click', function (event) {
                   console.log('Comment submit button clicked!');
-                  let currentNode = commentSubmitButtons;
+                  var currentNode = commentSubmitButtons;
 
                   // Go up the tree until a node has innerText
                   console.log(currentNode);
@@ -856,7 +856,7 @@ function monitor_new_comment(replyPostButtonSelector, replyCommentSelector, filt
                   //console.log('My span: 1', spanElement.textContent);
 
 
-                  let current = commentSubmitButtons;
+                  var current = commentSubmitButtons;
                   while (current && !current.querySelector(commentSelector)) {
                     current = current.parentNode;
                   }
@@ -1165,6 +1165,23 @@ function fakepost() {
             var expandoDiv;
             var fakepostHTML;
             var newElement
+            let styleTag = document.querySelector('div.content[role="main"] > style');
+
+            // Check if the style tag exists
+            if (styleTag) {
+              // Use a regular expression to find the current value of .midcol-spacer width
+              let currentWidthMatch = styleTag.innerHTML.match(/\.midcol-spacer\s*{\s*width:\s*(\d+\.?\d*)ex\s*}/);
+
+              if (currentWidthMatch && parseFloat(currentWidthMatch[1]) < 6.1) {
+                // If the current width is less than 6.1ex, replace it with 6.1ex
+                styleTag.innerHTML = styleTag.innerHTML.replace(/\.midcol-spacer\s*{\s*width:\s*(\d+\.?\d*)ex\s*}/, '.midcol-spacer { width: 6.1ex }');
+                console.log('midcol-spacer width changed to 6.1ex');
+              } else {
+                console.log('Current width is greater than or equal to 6.1ex, no changes made.');
+              }
+            } else {
+              console.log('Style tag not found');
+            }
             if (!fakepost_image) { // Text-only fake post
               // no image fake post , it is only text based
               fakepostHTML = `<div class="thing odd link self" onclick="click_thing(this)" data-fullname="t3_1fsnypx" data-type="link" data-gildings="0" data-whitelist-status="all_ads" data-is-gallery="false" data-author="${fakepost_poster}" data-author-fullname="t2_a1ylwv6td" data-subreddit="books" data-subreddit-prefixed="${fakepost_community}" data-subreddit-fullname="t5_2qh4i" data-subreddit-type="public" data-timestamp="1727672815000" data-url="/r/books/comments/1fsnypx/books_that_make_you_feel_loved_as_if_getting_a/" data-permalink="/r/books/comments/1fsnypx/books_that_make_you_feel_loved_as_if_getting_a/" data-domain="self.books" data-rank="13" data-comments-count="${commentsCount}" data-score="${fakepost_likes}" data-promoted="false" data-nsfw="false" data-spoiler="false" data-oc="false" data-num-crossposts="0" data-context="listing"><p class="parent"></p><span class="rank">${fakepost_index}</span><div class="midcol unvoted"><div class="arrow up login-required access-required" data-event-action="upvote" role="button" aria-label="upvote" tabindex="0"></div><div class="score dislikes" title="604">${parseInt(fakepost_likes) - 1}</div><div class="score unvoted" title="605">${fakepost_likes}</div><div class="score likes" title="606">${parseInt(fakepost_likes) + 1}</div><div class="arrow down login-required access-required" data-event-action="downvote" role="button" aria-label="downvote" tabindex="0"></div></div><a class="thumbnail invisible-when-pinned self may-blank loggedin" data-event-action="thumbnail" href="/r/books/comments/1fsnypx/books_that_make_you_feel_loved_as_if_getting_a/"></a><div class="entry unvoted"><div class="top-matter"><p class="title"><a class="title may-blank loggedin" data-event-action="title" href="/r/books/comments/1fsnypx/books_that_make_you_feel_loved_as_if_getting_a/" tabindex="1">${fakepost_title}</a> </p><div class="expando-button hide-when-pinned selftext collapsed"></div><p class="tagline">submitted <time title="Mon Sep 30 05:06:55 2024 UTC" datetime="2024-09-30T05:06:55+00:00" class="live-timestamp">${fakepost_time}</time> <time class="edited-timestamp" title="last edited 21 hours ago" datetime="2024-09-30T05:12:44+00:00">*</time> by <a href="https://old.reddit.com/user/${fakepost_poster}" class="author may-blank">${fakepost_poster}</a><span class="userattrs"></span> to <a href="https://old.reddit.com/${fakepost_community}/" class="subreddit hover may-blank">${fakepost_community}</a></p><ul class="flat-list buttons"><li class="first"><a href="${fakepost_url}" data-event-action="comments" class="bylink comments may-blank" rel="nofollow">${commentsCount} comments</a></li><li class="share"><a class="post-sharing-button" href="javascript: void 0;">share</a></li><li class="link-save-button save-button login-required"><a href="#">save</a></li><li><form action="/post/hide" method="post" class="state-button hide-button"><span><a href="javascript:void(0)" class="" data-event-action="hide" onclick="change_state(this, \'hide\', hide_thing);">hide</a></span></form></li><li class="report-button login-required"><a href="javascript:void(0)" class="reportbtn access-required" data-event-action="report">report</a></li><li class="crosspost-button"><a class="post-crosspost-button" href="javascript: void 0;" data-crosspost-fullname="t3_1fsnypx">crosspost</a></li></ul><div class="reportform"></div></div><div class="expando" style="display: none;" data-pin-condition="function() {return this.style.display != \'none\';}"></div></div><div class="child"></div><div class="clearleft"></div></div><div class="clearleft"></div>`;
@@ -1247,7 +1264,7 @@ function fakepost() {
             });
             applyUserVoteOnElement(newElement, getUserVoteOnFakePost, fakepost_url);
             handleVoteButtons(newElement, "fakepost", "", fakepost_url);
-            for (let i = 0; i < postFeedDiv.children.length; i++) {
+            for (var i = 0; i < postFeedDiv.children.length; i++) {
               var rankElement = postFeedDiv.children[i].querySelector('span.rank');
 
               // Log the rankElement to verify its content
@@ -1623,12 +1640,12 @@ function changeRealPostPage() {
 
 
           // Select the <a> element with the class "thumbnail invisible-when-pinned may-blank loggedin outbound"
-          let anchorElement = parentDiv.querySelector('a.thumbnail.invisible-when-pinned.may-blank.loggedin.outbound');
+          var anchorElement = parentDiv.querySelector('a.thumbnail.invisible-when-pinned.may-blank.loggedin.outbound');
 
           // Check if the anchor element was found
           if (anchorElement) {
             // Find the img element inside the <a> tag
-            let imgElement = anchorElement.querySelector('img');
+            var imgElement = anchorElement.querySelector('img');
 
             // Check if the img element exists
             if (imgElement) {
@@ -1642,7 +1659,7 @@ function changeRealPostPage() {
             console.log('No <a> element found with the specified class');
           }
           // Select the <a> element with the class "title may-blank loggedin outbound"
-          let titleofcurrentpost = parentDiv.querySelector('a.title.may-blank');
+          var titleofcurrentpost = parentDiv.querySelector('a.title.may-blank');
 
           // Check if the anchor element was found
           if (titleofcurrentpost) {
@@ -1654,7 +1671,7 @@ function changeRealPostPage() {
           }
 
           // Select the <time> element within the <p> with the class "tagline"
-          let timeElement = parentDiv.querySelector('p.tagline time');
+          var timeElement = parentDiv.querySelector('p.tagline time');
 
           // Check if the time element was found
           if (timeElement) {
@@ -1707,7 +1724,7 @@ function changeRealPostPage() {
           handleVoteButtons(parentDiv, "fakepost", "", window.location.href);
           // change number of comments 
           // Select the <a> element that contains the number of comments
-          let commentsElement = parentDiv.querySelector('a.bylink.comments.may-blank');
+          var commentsElement = parentDiv.querySelector('a.bylink.comments.may-blank');
 
           // Check if the element was found
           if (commentsElement) {
@@ -1724,12 +1741,12 @@ function changeRealPostPage() {
 
 
           // Select the div with the class "panestack-title"
-          let paneStackTitleDiv = document.querySelector('.panestack-title');
+          var paneStackTitleDiv = document.querySelector('.panestack-title');
 
           // Check if the div exists
           if (paneStackTitleDiv) {
             // Select the span with the class "title" inside the div
-            let titleSpan = paneStackTitleDiv.querySelector('.title');
+            var titleSpan = paneStackTitleDiv.querySelector('.title');
 
             // Check if the span exists
             if (titleSpan) {
@@ -1824,12 +1841,12 @@ function getUserVoteOnFakePost(postId) {
         .then(data => {
           // Check if the data contains the expected structure
           if (data && data.userInteractions && data.userInteractions.votes && Array.isArray(data.userInteractions.votes.onFakePosts)) {
-            const userVotesOnFakePosts = data.userInteractions.votes.onFakePosts;
+            var userVotesOnFakePosts = data.userInteractions.votes.onFakePosts;
 
             console.log("User votes on fake posts retrieved successfully:", userVotesOnFakePosts);
 
             // Process each user vote for a fake post
-            const vote = userVotesOnFakePosts.find(vote => vote.action_fake_post === postId);
+            var vote = userVotesOnFakePosts.find(vote => vote.action_fake_post === postId);
             if (vote) {
               // If a vote is found, resolve with the vote action
               if (vote.user_action === "upvote") {
@@ -2178,8 +2195,8 @@ function updatePostContent(parentDiv, fakepost_image, fakepost_content) {
 
 /// this fucntion is used to decode the cache html
 function decodeHTMLEntities(text) {
-  let parser = new DOMParser();
-  let decodedString = parser.parseFromString(text, "text/html").body.innerHTML;
+  var parser = new DOMParser();
+  var decodedString = parser.parseFromString(text, "text/html").body.innerHTML;
   return decodedString;
 }
 
@@ -2220,10 +2237,10 @@ function removeAllCommentsFromSpecificPost(containerElement) {
 }
 
 function applyUserVoteOnElement(parentDiv, voteFunction, postOrCommentId) {
-  let upvoteButton = parentDiv.querySelector('[aria-label="upvote"]');
-  let downvoteButton = parentDiv.querySelector('[aria-label="downvote"]');
-  let midcolDiv = parentDiv.querySelector('.midcol.unvoted');
-  let entryDiv = parentDiv.querySelector('.entry');
+  var upvoteButton = parentDiv.querySelector('[aria-label="upvote"]');
+  var downvoteButton = parentDiv.querySelector('[aria-label="downvote"]');
+  var midcolDiv = parentDiv.querySelector('.midcol');
+  var entryDiv = parentDiv.querySelector('.entry');
 
   voteFunction(postOrCommentId)
     .then(result => {
@@ -2251,6 +2268,23 @@ function applyUserVoteOnElement(parentDiv, voteFunction, postOrCommentId) {
         // Add logic for downvote
       } else if (result === "novote") {
         console.log("User has not voted on the post/comment.");
+
+        midcolDiv.classList.remove('dislikes');
+        midcolDiv.classList.remove('likes');
+        midcolDiv.classList.add('unvoted');
+
+        downvoteButton.classList.remove('downmod');
+        downvoteButton.classList.add('down');
+
+        upvoteButton.classList.remove('upmod');
+        upvoteButton.classList.add('up');
+
+        entryDiv.classList.remove('likes');
+        entryDiv.classList.remove('dislikes');
+        entryDiv.classList.add('unvoted');
+
+
+
         // Add logic for no vote
       }
     })
@@ -2261,10 +2295,10 @@ function applyUserVoteOnElement(parentDiv, voteFunction, postOrCommentId) {
 }
 
 function handleVoteButtons(parentDiv, voteType, fakeCommentId, url) {
-  let upvoteButton = parentDiv.querySelector('[aria-label="upvote"]');
-  let downvoteButton = parentDiv.querySelector('[aria-label="downvote"]');
-  let midcolDiv = parentDiv.querySelector('.midcol');
-  let entryDiv = parentDiv.querySelector('.entry');
+  var upvoteButton = parentDiv.querySelector('[aria-label="upvote"]');
+  var downvoteButton = parentDiv.querySelector('[aria-label="downvote"]');
+  var midcolDiv = parentDiv.querySelector('.midcol');
+  var entryDiv = parentDiv.querySelector('.entry');
   // Check if the elements are found
   if (upvoteButton && downvoteButton) {
     // Upvote button functionality
@@ -2526,9 +2560,9 @@ function insertCommentFormORReplyFakeComment(parentDiv, fakeCommentID, fakePostI
                   event.preventDefault();
                   event.stopPropagation();
                   console.log('Save button clicked');
-                  let textarea = childDiv.querySelector('textarea[name="text"]');
+                  var textarea = childDiv.querySelector('textarea[name="text"]');
                   if (textarea && textarea.value !== null) {
-                    let enteredText = textarea.value;
+                    var enteredText = textarea.value;
 
                     changeReplyButtonToReplied(parentDiv);
                     replyButton.removeEventListener('click', replyHandler);
@@ -2698,10 +2732,10 @@ function insertUserReplyFakeComments(childDiv, username, content, fakeCommentId,
     event.stopPropagation();
     console.log('Save button clicked');
 
-    let textarea = childDiv.querySelector('textarea[name="text"]');
+    var textarea = childDiv.querySelector('textarea[name="text"]');
 
     if (textarea && textarea.value !== null) {
-      let enteredText = textarea.value;
+      var enteredText = textarea.value;
       childDiv.innerHTML = '';  // Clears all content inside childDiv
       insertUserReplyFakeComments(childDiv, username, enteredText, fakeCommentId, fakePostId);
       // remove the old user reply to fake comment according to old conten
