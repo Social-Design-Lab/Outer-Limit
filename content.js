@@ -217,7 +217,8 @@ function runMyCode() {
     }
 
     setTimeout(() => {
-      document.documentElement.style.visibility = 'visible';
+      //document.documentElement.style.visibility = 'visible';
+      document.documentElement.style.opacity = '1';  // or you can set it to an empty string to remove inline styling
     }, 500);
   });
 }
