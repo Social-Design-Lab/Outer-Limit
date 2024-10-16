@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
       alert("Participant ID is required");
     } else {
       // Your code to submit the form
-      alert("The experiment has started. Scroll down the Reddit home page to view the first 10 posts. In one minute, the post-survey will appear. Do not uninstall Outer Limit until you complete the post-survey, as you will need it for the survey.");
+      alert("The experiment has started. Scroll down the Reddit Home Page (Outer Limit will open a new tab of the Reddit Home Page for you) to view the first 10 posts. Do not uninstall Outer Limit until you complete the post-survey, as you will need it for the survey.");
       startExp();
       var newTab = window.open('https://old.reddit.com', '_blank');
           if (newTab) {
@@ -84,25 +84,7 @@ function load() {
       hide("endexp");
       hide("midpop");
 
-    } else if (endexp == false) {
-      // User ID is not null and experiment is not ended
-      // time for survey 
-
-      if (pop_survey === true) {
-        hide("settings");
-        hide("display");
-        hide("endexp");
-        show("midpop");
-
-      }
-      /// time display experiment information and filters 
-      else {
-        hide("settings");
-        show("display");
-        hide("endexp");
-        hide("midpop");
-      }
-    }
+    } 
     else {
       // User ID is not null and experiment is ended
       hide("settings");
