@@ -1004,45 +1004,47 @@ function combinedFunction() {
         console.log(`Element has been viewed:`, entry.target);
         var fetchUrl = `https://outer.socialsandbox.xyz/api/getfakepost`;
 
-        var commentLink = entry.target.querySelector('li.first a');
-        var dataRank = entry.target.getAttribute('data-rank');
-        var commentUrl = commentLink.getAttribute('href');
+        if (!entry.target.classList.contains('promoted')) {
+          var commentLink = entry.target.querySelector('li.first a');
+          var dataRank = entry.target.getAttribute('data-rank');
+          var commentUrl = commentLink.getAttribute('href');
 
-        console.log("Comment URL:", commentUrl);
+          console.log("Comment URL:", commentUrl);
 
-        fetch(fetchUrl)
-          .then(response => {
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-          })
-          .then(data => {
-            if (Array.isArray(data)) {
-              if (data.length === 0) {
-                console.log("No fake posts found.");
-              } else {
-                var Isfakepost = false;
-                data.forEach(fakePost => {
-                  const { fakepost_url, fakepost_index } = fakePost;
-                  if (commentUrl === fakepost_url) {
-                    sendUpdateViewedPostToBackground(fakepost_index);
-                    Isfakepost = true;
+          fetch(fetchUrl)
+            .then(response => {
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              return response.json();
+            })
+            .then(data => {
+              if (Array.isArray(data)) {
+                if (data.length === 0) {
+                  console.log("No fake posts found.");
+                } else {
+                  var Isfakepost = false;
+                  data.forEach(fakePost => {
+                    const { fakepost_url, fakepost_index } = fakePost;
+                    if (commentUrl === fakepost_url) {
+                      sendUpdateViewedPostToBackground(fakepost_index);
+                      Isfakepost = true;
+                    }
+                    if (fakepost_index == dataRank) {
+
+                      Isfakepost = true;
+                    }
+                  });
+                  if (!Isfakepost) {
+                    sendUpdateViewedPostToBackground(commentUrl);
                   }
-                  if (fakepost_index == dataRank) {
-
-                    Isfakepost = true;
-                  }
-                });
-                if (!Isfakepost) {
-                  sendUpdateViewedPostToBackground(commentUrl);
                 }
               }
-            }
-          })
-          .catch(error => {
-            console.error("Failed to fetch fake post:", error);
-          });
+            })
+            .catch(error => {
+              console.error("Failed to fetch fake post:", error);
+            });
+        }
       }
     });
   }
