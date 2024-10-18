@@ -1600,6 +1600,30 @@ function changeRealPostPage() {
           console.log("No comments available.");
         }
 
+        // Select the first <time> element
+        var timeElement = document.querySelector('time');
+
+        // Get the current date
+        var currentDate = new Date();
+
+        // Subtract one day
+        currentDate.setDate(currentDate.getDate() - 1);
+
+        // Format the new date as 'DD MMM YYYY'
+        var formattedDate = currentDate.toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric'
+        });
+
+        // Set the text content of the <time> element to the previous day's date
+        if (timeElement) { timeElement.textContent = formattedDate; }
+        // Select the <span> element with class "number"
+        var numberElement = document.querySelector('span.number');
+
+        // Change the number inside the <span> element (for example, setting it to 200)
+        if (numberElement) { numberElement.textContent = fakepost_likes; }
+
         monitorUserReplyToFakePost(fakepost_id);
         // Replace its inner HTML
         var parentDiv = document.querySelector('div.sitetable.linklisting');
