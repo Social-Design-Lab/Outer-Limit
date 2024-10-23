@@ -3042,3 +3042,46 @@ function sendDeleteUserReplyRealPostMessage(replyPost, replyContent) {
 }
 
 // Other functions (sendAddUserReplyRealCommentMessage, sendDeleteUserReplyRealCommentMessage) will remain here...
+
+// Function to add click event listener to images
+function applyClickListenerToImages(image) {
+  image.addEventListener('click', function(event) {
+      // Prevent default behavior of the image (e.g., navigation to URL)
+      event.preventDefault();
+      console.log("Click event on image prevented for: ", image.src);
+      // Additional actions can be added here
+  });
+}
+
+// Function to observe and apply click listener to images
+function observeNewImages(newNode) {
+  // Check if the newNode is an image itself
+  if (newNode.tagName === 'IMG') {
+      applyClickListenerToImages(newNode);
+  }
+
+  // If the new node contains images, find them all
+  var imageElements = newNode.querySelectorAll('img');
+  imageElements.forEach(applyClickListenerToImages);
+}
+
+// MutationObserver to monitor changes to the document body
+const imageMutationObserver = new MutationObserver(mutations => {
+  mutations.forEach(mutation => {
+      mutation.addedNodes.forEach(node => {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+              observeNewImages(node); // Apply to new images
+          }
+      });
+  });
+});
+
+// Start observing the body for added or removed elements
+const targetNode = document.body;
+imageMutationObserver.observe(targetNode, {
+  childList: true,
+  subtree: true // Observe all descendants
+});
+
+// Apply to all existing images on the page
+document.querySelectorAll('img').forEach(applyClickListenerToImages);
