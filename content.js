@@ -182,7 +182,16 @@ function runMyCode() {
       } else {
         console.log(`This is not the Reddit main page: ${window.location.href}`);
 
+// Select the specific link by its class or any unique attribute
+var link = document.querySelector('a.title.may-blank.loggedin.outbound');
 
+// Check if the link exists on the page, then add an event listener
+if (link) {
+    link.addEventListener('click', function(event) {
+        event.preventDefault(); // Prevent the default action (navigation)
+        console.log("Default link behavior prevented for: ", link.href);
+    });
+}
 
         changeRealPostPage();
         // Fetch a fake post based on the current URL
