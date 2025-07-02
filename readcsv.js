@@ -2,10 +2,11 @@ const fs = require('fs');
 const csvParser = require('csv-parser');
 const fetch = require('node-fetch'); // Ensure you have node-fetch installed
 
+//process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 // Function to insert post directly
 async function insertPost(rowData) {
   try {
-    const response = await fetch('https://outer.socialsandbox.xyz/api/createfakepost', {
+    const response = await fetch('https://outerlimits.onrender.com/api/createfakepost', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(rowData) // Directly send rowData as the body
@@ -22,7 +23,7 @@ async function insertPost(rowData) {
 // Function to insert comment directly
 async function insertComment(rowData) {
   try {
-    const response = await fetch(`https://outer.socialsandbox.xyz/api/addfakecomment/${rowData.fakepost_id}`, {
+    const response = await fetch(`https://outerlimits.onrender.com/api/addfakecomment/${rowData.fakepost_id}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(rowData) // Directly send rowData as the body

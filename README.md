@@ -18,11 +18,11 @@ This Chrome extension is an experimental tool designed to explore the impact of 
 3. Click on 'Load unpacked' and select the directory `/path/to/folder` where the extension files are located.
 4. Once the extension is loaded, you should see its icon in the Chrome toolbar.
 
-Reference link for download instructions: https://developer.chrome.com/docs/extensions/mv3/getstarted/development-basics/
+Reference link for download instructions: http://developer.chrome.com/docs/extensions/mv3/getstarted/development-basics/
 
 ### Usage
 
-1. Navigate to [reddit.com](https://www.reddit.com/).
+1. Navigate to [reddit.com](http://www.reddit.com/).
 2. Click on the extension icon in the Chrome toolbar to activate the COVID-19 Framing tool.
 3. Enter your participant ID to start the experiment.
 

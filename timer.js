@@ -5,7 +5,7 @@ let pop_survey = false;
 let options = 0;
 // Define a variable in the popup
 
-//let myUrl = `https://www.example.com/?param=${uid}`;
+//let myUrl = `http://www.example.com/?param=${uid}`;
 document.addEventListener('DOMContentLoaded', function () {
   load();
   //document.querySelector('#start').addEventListener('click', startExp);
@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function () {
       // Your code to submit the form
       alert("The experiment has started. Scroll down the Reddit Home Page (Outer Limit will open a new tab of the Reddit Home Page for you) to view the first 10 posts. Do not uninstall Outer Limit until you complete the post-survey, as you will need it for the survey.");
       startExp();
-      var newTab = window.open('https://old.reddit.com', '_blank');
+      var newTab = window.open('http://old.reddit.com', '_blank');
           if (newTab) {
             newTab.focus();
           } else {
@@ -91,7 +91,7 @@ function load() {
       hide("display");
       show("endexp");
       hide("midpop");
-      const newUrl = `https://lehigh.co1.qualtrics.com/jfe/form/SV_50BCu68Dhap6vBk?uid=${uid}`;
+      const newUrl = `http://lehigh.co1.qualtrics.com/jfe/form/SV_50BCu68Dhap6vBk?uid=${uid}`;
       // Get a reference to the link element
       const myLink = document.getElementById("my-link");
 

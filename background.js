@@ -3,6 +3,7 @@ var likesDate;
 var bgDate;
 let endexp = false;
 let userpid;
+let group;
 let change_bgcolor = false;
 let change_bgcolor_condition2 = false;
 let ifstartexp = false;
@@ -10,7 +11,7 @@ let activetime = 0;
 let activetime_start_date = new Date().toLocaleDateString();
 let survey;
 let endDate;
-
+const groupschoice = ['hh', 'pp'];
 
 /**
  * chrome.storage API to store, retrieve, and track changes to user data.
@@ -18,6 +19,7 @@ let endDate;
 chrome.storage.local.get(
   [
     'userpid',
+    'group',
     'change_bgcolor',
     'change_bgcolor_condition2',
     'ifstartexp',
@@ -33,6 +35,11 @@ chrome.storage.local.get(
       console.log('userpid has not been stored yet');
     } else {
       userpid = result.userpid;
+    }
+     if (result.group === null || result.group === undefined) {
+      console.log('group has not been stored yet');
+    } else {
+      group = result.group;
     }
     if (result.activetime === null || result.activetime === undefined) {
       console.log('activetime has not been stored yet');
@@ -143,6 +150,14 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
       console.log('userpid stored successfully.');
     });
 
+
+   
+    group = groupschoice[Math.floor(Math.random() * groupschoice.length)];
+    // store the group condition on local so it does not disappear later
+    chrome.storage.local.set({ group: group }, function () {
+      console.log('group stored successfully.');
+    });
+
     function forceRefreshTab(tabId) {
 
       chrome.tabs.reload(tabId);
@@ -155,8 +170,8 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
       }
     });
 
-    insertdata(userpid.trim());
-    read_csv(userpid);
+    insertdata(userpid.trim(), group.trim());
+  
     console.log(`Background Received user ID from timer js: ${message.userId}`);
   }
 });
@@ -337,7 +352,14 @@ function openDB() {
 }
 
 
-
+// Listen for messages from the content script and send back userid 
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'getGroup') {
+    // reply immediately with the current `group`
+    sendResponse({ group });
+    // no `return true` needed here because sendResponse is sync
+  }
+});
 // Listen for messages from the content script for insert data into database 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.message === "voteComment") {
@@ -515,9 +537,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
  *
  * @param {string} uid - The unique identifier of the user.
  */
-function insertdata(uid) {
+function insertdata(uid,group) {
   //var insert_date=  new Date();
-  fetch("https://outer.socialsandbox.xyz/api/insert", {
+  fetch("https://outerlimits.onrender.com/api/insert", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -525,6 +547,7 @@ function insertdata(uid) {
     body: JSON.stringify({
 
       userid: uid,
+      usergroup: group,
       userInteractions: {
         votes: {
           onPosts: [],              // Votes on real posts
@@ -571,7 +594,7 @@ function insertdata(uid) {
  */
 function insertUserVoteComments(uid, action, comment, post) {
   var insert_date = new Date();
-  fetch("https://outer.socialsandbox.xyz/api/updateUserVote_onComments", {  // Updated API route
+  fetch("https://outerlimits.onrender.com/api/updateUserVote_onComments", {  // Updated API route
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -619,7 +642,7 @@ function insertUserVoteComments(uid, action, comment, post) {
 
 function insertFakeComments(uid, comment_id, user_name, comment_content, insert_index, post_url, like, time, profile) {
   var insert_date = new Date();
-  fetch("https://outer.socialsandbox.xyz/api/updateuserFakeComment_infakepost", {
+  fetch("https://outerlimits.onrender.com/api/updateuserFakeComment_infakepost", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -678,7 +701,7 @@ function insertFakeComments(uid, comment_id, user_name, comment_content, insert_
  */
 function insertFakePosts(uid, fakepost_url, fakepost_index, fakepost_title, fakepost_content, fakepost_image) {
   var insert_date = new Date();
-  fetch("https://outer.socialsandbox.xyz/api/updateFakePost", {
+  fetch("https://outerlimits.onrender.com/api/updateFakePost", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -739,7 +762,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 function insertUserReplyFakeComments(uid, comment_id, comment_content, fake_post_id) {
   var insert_date = new Date();
-  fetch("https://outer.socialsandbox.xyz/api/updateUserReply_onFakeComments", {
+  fetch("https://outerlimits.onrender.com/api/updateUserReply_onFakeComments", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -781,7 +804,7 @@ function insertUserReplyFakeComments(uid, comment_id, comment_content, fake_post
  */
 function insertUserReplyPosts(uid, content, post, like, time) {
   var insert_date = new Date();
-  fetch("https://outer.socialsandbox.xyz/api/updateUserReply_Posts", {
+  fetch("https://outerlimits.onrender.com/api/updateUserReply_Posts", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -824,7 +847,7 @@ function insertUserReplyPosts(uid, content, post, like, time) {
  */
 function insertUserVotePosts(uid, action, post) {
   var insert_date = new Date();
-  fetch("https://outer.socialsandbox.xyz/api/updateUserVote_Posts", {
+  fetch("https://outerlimits.onrender.com/api/updateUserVote_Posts", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -866,7 +889,7 @@ function insertUserVotePosts(uid, action, post) {
 function updateUserVoteOnFakePost(userid, useraction, fakePostId) {
   var insert_date = new Date();
 
-  fetch("https://outer.socialsandbox.xyz/api/updateUserVote_onFakePosts", {
+  fetch("https://outerlimits.onrender.com/api/updateUserVote_onFakePosts", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -898,7 +921,7 @@ function updateUserVoteOnFakePost(userid, useraction, fakePostId) {
 function updateUserVoteOnFakeComment(userid, useraction, fakeCommentId, action_fake_post) {
   var insert_date = new Date();
 
-  fetch("https://outer.socialsandbox.xyz/api/updateUserVote_onFakeComments", {
+  fetch("https://outerlimits.onrender.com/api/updateUserVote_onFakeComments", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -938,7 +961,7 @@ function updateUserVoteOnFakeComment(userid, useraction, fakeCommentId, action_f
  * @param {string} fakeContent - The fake content which the user is removing a vote on.
  */
 function deleteUserReplyOnFakeComment(userid, replyTo, replyFakePost, replyContent) {
-  fetch("https://outer.socialsandbox.xyz/api/removeUserReply_onFakeComments", {
+  fetch("https://outerlimits.onrender.com/api/removeUserReply_onFakeComments", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -965,7 +988,7 @@ function deleteUserReplyOnFakeComment(userid, replyTo, replyFakePost, replyConte
     });
 }
 function deleteUserVoteOnFakePost(userid, fakePostId) {
-  fetch("https://outer.socialsandbox.xyz/api/removeUserVote_onFakePosts", {
+  fetch("https://outerlimits.onrender.com/api/removeUserVote_onFakePosts", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -991,7 +1014,7 @@ function deleteUserVoteOnFakePost(userid, fakePostId) {
 }
 
 function deleteUserVoteOnFakeComment(userid, fakeCommentId, action_fake_post) {
-  fetch("https://outer.socialsandbox.xyz/api/removeUserVote_onFakeComments", {
+  fetch("https://outerlimits.onrender.com/api/removeUserVote_onFakeComments", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -1020,7 +1043,7 @@ function deleteUserVoteOnFakeComment(userid, fakeCommentId, action_fake_post) {
 // Helper function to send the reply to the backend
 function sendUserReplyToFakePost(userId, fakePostId, replyContent) {
   var insert_date = new Date();
-  fetch('https://outer.socialsandbox.xyz/api/updateUserReply_onFakePosts', {
+  fetch('https://outerlimits.onrender.com/api/updateUserReply_onFakePosts', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -1061,7 +1084,7 @@ function sendUserReplyToFakePost(userId, fakePostId, replyContent) {
  */
 function insertUserReplyComments(uid, content, comment, post) {
   var insert_date = new Date();
-  fetch("https://outer.socialsandbox.xyz/api/updateUserReply_Comments", {
+  fetch("https://outerlimits.onrender.com/api/updateUserReply_Comments", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -1093,7 +1116,7 @@ function insertUserReplyComments(uid, content, comment, post) {
 
 
 function removeUserReplyFromFakePost(userId, fakePostId, replyContent) {
-  fetch('https://outer.socialsandbox.xyz/api/removeUserReply_onFakePosts', {
+  fetch('https://outerlimits.onrender.com/api/removeUserReply_onFakePosts', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -1142,7 +1165,7 @@ function insertBrowserHistory(uid, browserUrl) {
     ],
   };
 
-  fetch("https://outer.socialsandbox.xyz/api/updateBrowserHistory", {
+  fetch("https://outerlimits.onrender.com/api/updateBrowserHistory", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -1184,7 +1207,7 @@ function insertUserActive(uid, viewDate, total_time) {
     ],
   };
 
-  fetch("https://outer.socialsandbox.xyz/api/updateActiveOnReddit", {
+  fetch("https://outerlimits.onrender.com/api/updateActiveOnReddit", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -1218,7 +1241,7 @@ function insertUserActive(uid, viewDate, total_time) {
 function updateUserViewedPost(userid, post_url) {
   const viewpostDate = new Date();
 
-  fetch("https://outer.socialsandbox.xyz/api/updateViwedPost", {
+  fetch("https://outerlimits.onrender.com/api/updateViwedPost", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -1249,7 +1272,7 @@ function updateUserViewedPost(userid, post_url) {
 function updateUserVoteOnPost(userid, useraction, postId) {
   var insert_date = new Date();
 
-  fetch("https://outer.socialsandbox.xyz/api/updateUserVote_onPosts", {
+  fetch("https://outerlimits.onrender.com/api/updateUserVote_onPosts", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -1278,7 +1301,7 @@ function updateUserVoteOnPost(userid, useraction, postId) {
     });
 }
 function deleteUserVoteOnPost(userid, postId) {
-  fetch("https://outer.socialsandbox.xyz/api/removeUserVote_onPosts", {
+  fetch("https://outerlimits.onrender.com/api/removeUserVote_onPosts", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -1306,7 +1329,7 @@ function deleteUserVoteOnPost(userid, postId) {
 function updateUserVoteOnComment(userid, useraction, commentId, postId) {
   var insert_date = new Date();
 
-  fetch("https://outer.socialsandbox.xyz/api/updateUserVote_onComments", {
+  fetch("https://outerlimits.onrender.com/api/updateUserVote_onComments", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -1337,7 +1360,7 @@ function updateUserVoteOnComment(userid, useraction, commentId, postId) {
 }
 
 function deleteUserVoteOnComment(userid, commentId, postId) {
-  fetch("https://outer.socialsandbox.xyz/api/removeUserVote_onComments", {
+  fetch("https://outerlimits.onrender.com/api/removeUserVote_onComments", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -1365,7 +1388,7 @@ function deleteUserVoteOnComment(userid, commentId, postId) {
 
 
 function deleteUserReplyOnComment(userid,  commentId, postId,replyContent) {
-  fetch("https://outer.socialsandbox.xyz/api/removeUserReply_onComments", {
+  fetch("https://outerlimits.onrender.com/api/removeUserReply_onComments", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -1394,7 +1417,7 @@ function deleteUserReplyOnComment(userid,  commentId, postId,replyContent) {
 function updateUserReplyOnComment(userid, replyContent, commentId, postId) {
   var action_date = new Date(); // Capture the current date and time
 
-  fetch("https://outer.socialsandbox.xyz/api/updateUserReply_onComments", {
+  fetch("https://outerlimits.onrender.com/api/updateUserReply_onComments", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -1460,7 +1483,7 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     if (userpid != null && userpid != undefined) {
       console.log("URL changed to: " + changeInfo.url);
 
-      if (changeInfo.url !== "https://old.reddit.com/") {
+      if (changeInfo.url !== "http://old.reddit.com/") {
         // Insert the URL into browser history only if it's not the homepage
         insertBrowserHistory(userpid, changeInfo.url);
       }
@@ -1539,7 +1562,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 
 function insertQuestiondata(q1selected, q2selected, uid) {
-  fetch("https://outer.socialsandbox.xyz/api/midpopup_select", {
+  fetch("https://outerlimits.onrender.com/api/midpopup_select", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -1585,8 +1608,8 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 
 ///  Jingyi's work 
 
-const KEYWORDS_JSON = 'https://raw.githubusercontent.com/wjy1919da/FirefoxExtensionDemo/main/lib/test_keywords.json';
-const SITES_JSON = 'https://raw.githubusercontent.com/wjy1919da/FirefoxExtensionDemo/main/lib/test_sites.json';
+const KEYWORDS_JSON = 'http://raw.githubusercontent.com/wjy1919da/FirefoxExtensionDemo/main/lib/test_keywords.json';
+const SITES_JSON = 'http://raw.githubusercontent.com/wjy1919da/FirefoxExtensionDemo/main/lib/test_sites.json';
 const GLOBAL_DEFINITION_EXPIRATION_SEC = 86400;
 function getCurrentSeconds() {
   return new Date().getTime() / 1000 | 0;
@@ -1672,7 +1695,7 @@ function fetchAndUpdateAll(forceUpdate, updatedAction = undefined, notUpdatedAct
 
 // Fires when a new browser tab is opened.
 // If it's time to check for new definitions, and there's an update available, retrieve them.
-// https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/onCreated
+// http://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/onCreated
 chrome.tabs.onCreated.addListener(function () {
   fetchAndUpdateAll(false);
 });
@@ -1736,7 +1759,7 @@ chrome.runtime.onMessage.addListener(function (request, sender) {
 
 
 function insertQuestiondata(surveyObj, uid) {
-  fetch("https://outer.socialsandbox.xyz/api/midpopup_select", {
+  fetch("https://outerlimits.onrender.com/api/midpopup_select", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -1836,7 +1859,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 // content.js
 
 function updateUserReplyOnPost(userid, replyContent, replyPost) {
-  fetch("https://outer.socialsandbox.xyz/api/updateUserReply_onPosts", {
+  fetch("https://outerlimits.onrender.com/api/updateUserReply_onPosts", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -1866,7 +1889,7 @@ function updateUserReplyOnPost(userid, replyContent, replyPost) {
 }
 
 function deleteUserReplyOnPost(userid, replyPost, replyContent) {
-  fetch("https://outer.socialsandbox.xyz/api/removeUserReply_onPosts", {
+  fetch("https://outerlimits.onrender.com/api/removeUserReply_onPosts", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"

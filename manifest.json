@@ -27,7 +27,7 @@
     "webNavigation"
   ],
   "host_permissions": [
-    "https://outer.socialsandbox.xyz/"
+    "https://outerlimits.onrender.com/*"
   ],
   "content_scripts": [
     {
