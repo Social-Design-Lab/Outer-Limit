@@ -3859,14 +3859,14 @@
       const getToggleButton = this.matches(SELECTOR_DATA_TOGGLE$3) ? this : SelectorEngine.prev(this, SELECTOR_DATA_TOGGLE$3)[0] || SelectorEngine.next(this, SELECTOR_DATA_TOGGLE$3)[0] || SelectorEngine.findOne(SELECTOR_DATA_TOGGLE$3, event.delegateTarget.parentNode);
       const instance = Dropdown.getOrCreateInstance(getToggleButton);
       if (isUpOrDownEvent) {
-        event.stopPropagation();
+        event.stopImmediatePropagation();
         instance.show();
         instance._selectMenuItem(event);
         return;
       }
       if (instance._isShown()) {
         // else is escape and we check if it is shown
-        event.stopPropagation();
+        event.stopImmediatePropagation();
         instance.hide();
         getToggleButton.focus();
       }
@@ -5969,7 +5969,7 @@
       if (![ARROW_LEFT_KEY, ARROW_RIGHT_KEY, ARROW_UP_KEY, ARROW_DOWN_KEY, HOME_KEY, END_KEY].includes(event.key)) {
         return;
       }
-      event.stopPropagation(); // stopPropagation/preventDefault both added to support up/down keys without scrolling the page
+      event.stopImmediatePropagation(); // stopImmediatePropagation/preventDefault both added to support up/down keys without scrolling the page
       event.preventDefault();
       const children = this._getChildren().filter(element => !isDisabled(element));
       let nextActiveElement;

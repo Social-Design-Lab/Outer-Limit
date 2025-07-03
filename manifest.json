@@ -34,9 +34,7 @@
       "matches": [
         "https://old.reddit.com/*"
       ],
-      "js": [
-        "content_first.js"
-      ],
+      "js": ["content_first.js"],    
       "run_at": "document_start"
     },
     {

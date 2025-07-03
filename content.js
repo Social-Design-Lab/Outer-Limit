@@ -142,7 +142,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
-
 //alert("run my code is called");
 //}
 // });
@@ -239,20 +238,26 @@ function runMyCode() {
                 // Process the fake post data if available
                 console.log("Fake post data:", data);
               })
-              .catch(error => {
-                console.error("Failed to fetch the fake post:", error);
-              });
+             .catch(console.error)
+  
+              
           });
 
       }
     }
 
+   
     setTimeout(() => {
       //document.documentElement.style.visibility = 'visible';
       document.documentElement.style.opacity = '1';  // or you can set it to an empty string to remove inline styling
-    }, 500);
+    }, 2000);
   });
 }
+
+runMyCode().then(() => {
+  const overlay = document.getElementById('ext-mutation-overlay');
+  if (overlay) overlay.remove();
+});
 
 function findAncestorWithClass(node, targetClassName) {
   if (node == null) {
@@ -565,7 +570,7 @@ function reviseORdeleteComment(parentDiv, commentType, replyContent, replyTo) {
           sendDeleteUserReplyRealCommentMessage(replyTo, window.location.href, replyContent);
         }
 
-        // Let the original inline event handler run as well (no preventDefault or stopPropagation)
+        // Let the original inline event handler run as well (no preventDefault or stopImmediatePropagation)
       });
     } else {
       console.error("Cannot find the 'yes' button");
@@ -680,7 +685,7 @@ function insertFakeComments(postElement, fakeComments, fakePostID) {
       // Code to execute when the mouse hovers over the element
       console.log('Mouse is hovering over the author element');
       event.preventDefault();  // Prevent Reddit's action
-      event.stopPropagation();
+      event.stopImmediatePropagation();
     });
     insertCommentFormORReplyFakeComment(commentElement, comment.fake_comment_id, fakePostID);
     applyUserVoteOnElement(commentElement, getUserVoteOnFakeComment, comment.fake_comment_id);
@@ -1316,7 +1321,7 @@ function fakepost() {
                   // Code to execute when the mouse hovers over the element
                   console.log('Mouse is hovering over the author element');
                   event.preventDefault();  // Prevent Reddit's action
-                  event.stopPropagation();
+                  event.stopImmediatePropagation();
                 });
                 applyUserVoteOnElement(newElement, getUserVoteOnFakePost, fakepost_url);
                 handleVoteButtons(newElement, "fakepost", "", fakepost_url);
@@ -1632,7 +1637,7 @@ function changeRealPostPage() {
         `https://outerlimits.onrender.com/api/getfakepost?` +
         `fakepost_url=${encodeURIComponent(window.location.href)}` +
         `&group=${encodeURIComponent(response.group)}`;
-      console.log("Fetching URL:", window.location.href, response.group);
+      console.log("Fetching URL for post page:", fetchUrl);
       // Modify the fetch request to include the current URL in the API call
       fetch(fetchUrl)
         .then(response => {
@@ -1736,7 +1741,7 @@ function changeRealPostPage() {
                   // Code to execute when the mouse hovers over the element
                   console.log('Mouse is hovering over the author element');
                   event.preventDefault();  // Prevent Reddit's action
-                  event.stopPropagation();
+                  event.stopImmediatePropagation();
                 });
 
                 console.log('Author name and URL updated to:', authorElement.textContent, authorElement.href);
@@ -2414,9 +2419,10 @@ function handleVoteButtons(parentDiv, voteType, fakeCommentId, url) {
     downvoteButton.setAttribute('outer-limit-monitored', 'true');
 
     upvoteButton.addEventListener('click', function (event) {
+      
       event.preventDefault();  // Prevent Reddit's action
-      event.stopPropagation(); // Stop the event from bubbling up to Reddit's listener
-      console.log('Custom upvote - No data sent to Reddit');
+      event.stopImmediatePropagation();
+      console.log(' upvote in fake post page - No data sent to Reddit');
 
       if (upvoteButton.classList.contains('upmod')) {
         // Undo the upvote (reset to unvoted state)
@@ -2425,6 +2431,7 @@ function handleVoteButtons(parentDiv, voteType, fakeCommentId, url) {
         midcolDiv.classList.remove('likes');
         midcolDiv.classList.add('unvoted');
         console.log('Upvote undone');
+        console.log("update vote botton div: ", upvoteButton);
         if (entryDiv) {
           entryDiv.classList.remove('likes');
           entryDiv.classList.add('unvoted');
@@ -2461,7 +2468,7 @@ function handleVoteButtons(parentDiv, voteType, fakeCommentId, url) {
     // Downvote button functionality
     downvoteButton.addEventListener('click', function (event) {
       event.preventDefault();  // Prevent Reddit's action
-      event.stopPropagation(); // Stop the event from bubbling up to Reddit's listener
+      event.stopImmediatePropagation(); // Stop the event from bubbling up to Reddit's listener
       console.log('Custom downvote - No data sent to Reddit');
 
       if (downvoteButton.classList.contains('downmod')) {
@@ -2647,7 +2654,7 @@ function insertCommentFormORReplyFakeComment(parentDiv, fakeCommentID, fakePostI
           // Add event listener to the <a> tag inside the <li> element
           function replyHandler(event) {
             event.preventDefault(); // Prevent default action
-            event.stopPropagation();
+            event.stopImmediatePropagation();
             console.log('reply button clicked');
 
             var commentFormHTML = `<form action="#" class="usertext cloneable warn-on-unload trackcommentform" onsubmit="return post_form(this, 'comment')" id="commentreply_t1_lp30szd" style="display: block;"><input type="hidden" name="thing_id" value="t1_lp30szd"><div class="usertext-edit md-container" style="width: 500px;"><div class="md"><textarea rows="1" cols="1" name="text" class="" data-event-action="comment" data-type="link" style=""></textarea></div><div class="bottom-area"><span class="help-toggle toggle" style=""><a class="option active " href="#" tabindex="100" onclick="return toggle(this, helpon, helpoff)">formatting help</a><a class="option " href="#">hide help</a></span><a href="/help/contentpolicy" class="reddiquette" target="_blank" tabindex="100">content policy</a><span class="error CANT_REPLY field-parent" style="display:none"></span><span class="error TOO_LONG field-text" style="display:none"></span><span class="error RATELIMIT field-ratelimit" style="display:none"></span><span class="error NO_TEXT field-text" style="display:none"></span><span class="error SUBREDDIT_LINKING_DISALLOWED field-text" style="display:none"></span><span class="error SUBREDDIT_OUTBOUND_LINKING_DISALLOWED field-text" style="display:none"></span><span class="error USERNAME_LINKING_DISALLOWED field-text" style="display:none"></span><span class="error USERNAME_OUTBOUND_LINKING_DISALLOWED field-text" style="display:none"></span><span class="error TOO_OLD field-parent" style="display:none"></span><span class="error THREAD_LOCKED field-parent" style="display:none"></span><span class="error DELETED_COMMENT field-parent" style="display:none"></span><span class="error USER_BLOCKED field-parent" style="display:none"></span><span class="error USER_MUTED field-parent" style="display:none"></span><span class="error USER_BLOCKED_MESSAGE field-parent" style="display:none"></span><span class="error INVALID_USER field-parent" style="display:none"></span><span class="error MUTED_FROM_SUBREDDIT field-parent" style="display:none"></span><span class="error QUARANTINE_REQUIRES_VERIFICATION field-user" style="display:none"></span><span class="error TOO_MANY_COMMENTS field-text" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_REQUIRED field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_NOT_ALLOWED field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_BLACKLISTED_STRING field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_NOT_ALLOWED field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_REQUIRED field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_REQUIREMENT field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_REGEX_TIMEOUT field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_BODY_REGEX_REQUIREMENT field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_MAX_LENGTH field-body" style="display:none"></span><span class="error SUBMIT_VALIDATION_MIN_LENGTH field-body" style="display:none"></span><span class="error SOMETHING_IS_BROKEN field-parent" style="display:none"></span><span class="error COMMENT_GUIDANCE_VALIDATION_FAILED field-text" style="display:none"></span><span class="error placeholder field-body" style="display:none"></span><span class="error placeholder field-text" style="display:none"></span><div class="usertext-buttons"><button type="submit" onclick="" class="save">save</button><button type="button" onclick="return cancel_usertext(this);" class="cancel" style="">cancel</button><span class="status"></span></div></div><div class="markhelp" style="display:none"><p></p><p>reddit uses a slightly-customized version of <a href="https://daringfireball.net/projects/markdown/syntax">Markdown</a> for formatting. See below for some basics, or check <a href="/wiki/commenting">the commenting wiki page</a> for more detailed help and solutions to common issues.</p><p></p><table class="md"><tbody><tr style="background-color: #ffff99; text-align: center"><td><em>you type:</em></td><td><em>you see:</em></td></tr><tr><td>*italics*</td><td><em>italics</em></td></tr><tr><td>**bold**</td><td><b>bold</b></td></tr><tr><td>[reddit!](https://reddit.com)</td><td><a href="https://reddit.com">reddit!</a></td></tr><tr><td>* item 1<br>* item 2<br>* item 3</td><td><ul><li>item 1</li><li>item 2</li><li>item 3</li></ul></td></tr><tr><td>&gt; quoted text</td><td><blockquote>quoted text</blockquote></td></tr><tr><td>Lines starting with four spaces<br>are treated like code:<br><br><span class="spaces">&nbsp;&nbsp;&nbsp;&nbsp;</span>if 1 * 2 &lt; 3:<br><span class="spaces">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>print "hello, world!"<br></td><td>Lines starting with four spaces<br>are treated like code:<br><pre>if 1 * 2 &lt; 3:<br>&nbsp;&nbsp;&nbsp;&nbsp;print "hello, world!"</pre></td></tr><tr><td>~~strikethrough~~</td><td><strike>strikethrough</strike></td></tr><tr><td>super^script</td><td>super<sup>script</sup></td></tr></tbody></table></div></div></form>`;
@@ -2666,7 +2673,7 @@ function insertCommentFormORReplyFakeComment(parentDiv, fakeCommentID, fakePostI
                 // Add event listener to the save button
                 saveButton.addEventListener('click', function (event) {
                   event.preventDefault();
-                  event.stopPropagation();
+                  event.stopImmediatePropagation();
                   console.log('Save button clicked');
                   var textarea = childDiv.querySelector('textarea[name="text"]');
                   if (textarea && textarea.value !== null) {
@@ -2699,7 +2706,7 @@ function insertCommentFormORReplyFakeComment(parentDiv, fakeCommentID, fakePostI
                 // Add event listener to the cancel button
                 cancelButton.addEventListener('click', function (event) {
                   event.preventDefault();
-                  event.stopPropagation();
+                  event.stopImmediatePropagation();
                   console.log('Cancel button clicked');
                   var commentFormElement = childDiv.querySelector('form');
                   if (commentFormElement) {
@@ -2756,7 +2763,7 @@ function addDeleteCommentListener(parentDiv, replyTo, replyFakePost, replyConten
     // Add an event listener to the second 'yes' button
     yesButton.addEventListener('click', function (event) {
       event.preventDefault();
-      event.stopPropagation();
+      event.stopImmediatePropagation();
       console.log('Second Yes button clicked');
       sendDeleteUserReplyFakeCommentMessage(replyTo, replyFakePost, replyContent);
       // Select the form element with the 'del-button' class
@@ -2791,7 +2798,7 @@ function addDeleteUserReplyFakePostListener(parentDiv, replyFakePost, replyConte
     // Add an event listener to the second 'yes' button
     yesButton.addEventListener('click', function (event) {
       event.preventDefault();
-      event.stopPropagation();
+      event.stopImmediatePropagation();
       console.log('Second Yes button clicked');
       sendRemoveUserReplyFromFakePostMessage(replyFakePost, replyContent);
       // Select the form element with the 'del-button' class
@@ -2837,7 +2844,7 @@ function insertUserReplyFakeComments(childDiv, username, content, fakeCommentId,
   var saveButton = childDiv.querySelector('.usertext-buttons .save');
   saveButton.addEventListener('click', function (event) {
     event.preventDefault();
-    event.stopPropagation();
+    event.stopImmediatePropagation();
     console.log('Save button clicked');
 
     var textarea = childDiv.querySelector('textarea[name="text"]');
@@ -2879,7 +2886,7 @@ function monitorUserReplyToFakePost(fakePostId) {
       saveButton.addEventListener('click', function (event) {
 
         event.preventDefault(); // Prevent the default form submission behavior
-        event.stopPropagation();
+        event.stopImmediatePropagation();
 
         var userCommentForm = saveButton.closest('.usertext-edit');
         var textarea = userCommentForm.querySelector('textarea[name="text"]');
@@ -2933,7 +2940,7 @@ function insertUserReplyFakePost(childDiv, username, content, fakePostId, oldCom
   // this is for edit , if user edit the comment 
   saveButton.addEventListener('click', function (event) {
     event.preventDefault();
-    event.stopPropagation();
+    event.stopImmediatePropagation();
 
 
     var textarea = insertedElement.querySelector('textarea[name="text"]');
@@ -3026,7 +3033,7 @@ function insertCachedHTMLandMonitorExpandoButton(parentDiv) {
 
     expandoButtonDiv.addEventListener('click', function (event) {
       //event.preventDefault();  // Prevent Reddit's action
-      event.stopPropagation(); // Stop the event from bubbling up to Reddit's listener
+      event.stopImmediatePropagation(); // Stop the event from bubbling up to Reddit's listener
 
       if (expandoButtonDiv.classList.contains('expanded')) {
         // Change display to 'none' if it's expanded
