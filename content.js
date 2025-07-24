@@ -238,15 +238,15 @@ function runMyCode() {
                 // Process the fake post data if available
                 console.log("Fake post data:", data);
               })
-             .catch(console.error)
-  
-              
+              .catch(console.error)
+
+
           });
 
       }
     }
 
-   
+
     setTimeout(() => {
       //document.documentElement.style.visibility = 'visible';
       document.documentElement.style.opacity = '1';  // or you can set it to an empty string to remove inline styling
@@ -1762,6 +1762,15 @@ function changeRealPostPage() {
                 if (imgElement) {
                   // Change the src attribute
                   imgElement.src = fakepost_image; // Replace with your new image URL
+                  var hrefink = imgElement.closest('a[href]');
+                  if (hrefink) {
+                    console.log(" we found the href: ", hrefink);
+                    //remove the href so it no longer looks like a link
+                    hrefink.style.pointerEvents = 'none';
+                   // console.log(" we found the href: ", hrefink);
+
+                  }
+                  console.log("image element: ",imgElement );
                   console.log('Image src changed to:', imgElement.src);
                 } else {
                   console.log('No img element found inside the <a> tag');
@@ -2270,8 +2279,15 @@ function updatePostContent(parentDiv, fakepost_image, fakepost_content) {
 
     // Check if the image element exists
     if (imgElement) {
+      
       // Set a new source for the image
       imgElement.src = fakepost_image; // Replace with your new image URL
+      var hrefink = imgElement.closest('a[href]');
+      if (hrefink) {
+        //remove the href so it no longer looks like a link
+         hrefink.style.pointerEvents = 'none';
+
+      }
       console.log('Image source changed to:', imgElement.src);
     } else {
       console.log('No image found in the media-preview div');
@@ -2419,7 +2435,7 @@ function handleVoteButtons(parentDiv, voteType, fakeCommentId, url) {
     downvoteButton.setAttribute('outer-limit-monitored', 'true');
 
     upvoteButton.addEventListener('click', function (event) {
-      
+
       event.preventDefault();  // Prevent Reddit's action
       event.stopImmediatePropagation();
       console.log(' upvote in fake post page - No data sent to Reddit');

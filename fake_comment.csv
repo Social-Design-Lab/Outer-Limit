@@ -1,11 +1,13 @@
 ﻿fake_comment_id,fakepost_id,user_name,content,likes,time
-1,1,MonkeysOnMyBottom,A far cooler guy than his brother Damp Kevin,7,1 day ago 
-2,1,MonkeysOnMyBottom,A far cooler guy than his brother Damp Kevin,7,1 day ago 
-3,2,FatQuack,"""I tell ya, I get no respect!""",10,1 day ago 
-4,2,ConversationSad ,Fancy feast,3,23 hours ago 
-5,3,MonkeysOnMyBottom,A far cooler guy than his brother Damp Kevin,7,1 day ago 
-6,3,MonkeysOnMyBottom,A far cooler guy than his brother Damp Kevin,7,1 day ago 
-7,4,FatQuack,"""I tell ya, I get no respect!""",10,1 day ago 
-8,4,ConversationSad ,Fancy feast,3,23 hours ago 
-9,5,FatQuack,"""I tell ya, I get no respect!""",10,1 day ago 
-10,6,ConversationSad ,Fancy feast,3,23 hours ago 
+1,1,PolicyWatcher,Love seeing this call to action—time for our representatives to unite behind federal booster funding and keep everyone protected.,8,1 day ago 
+2,1,CapitolAdvocate,"When politicians put partisanship aside to back booster mandates, it sends a clear message: public health always comes first.",4,1 day ago 
+3,1,GovWatchdog,This graphic nails it—strong policy frameworks are exactly what we need to guarantee booster shots for every community.,1,1 day ago 
+4,2,FrontlineRN,Mobile clinics and no-cost appointments are lifesavers. I just got my booster at my local center—highly recommend everyone do the same!,8,1 day ago 
+5,2,HealthAndWellness,"Clear, science-based guidance like this gives me confidence. Book your booster today and boost our collective immunity!",4,1 day ago 
+6,2,CommunityMedic,I’ve been staffing one of these pop-up sites all week—seeing people protected by their booster shot is incredibly rewarding.,1,1 day ago 
+7,3,FrontlineRN,Boosters remain our best tool to prevent severe COVID-19—seeing lower ICU admissions where uptake is high,8,1 day ago 
+8,3,HealthAndWellness,Our teams reached underserved neighborhoods this week—widespread boosters are crucial to stopping new outbreaks.,4,1 day ago 
+9,3,CommunityMedic,Strengthening booster programs eases the strain on hospitals and protects high-risk patients.,1,1 day ago 
+10,4,PolicyWatcher,Bipartisan backing for these public-health measures ensures funding won’t run dry—booster access stays strong.,8,1 day ago 
+11,4,CapitolAdvocate,The governor’s executive order mandating booster availability shows real leadership in protecting communities.,4,1 day ago 
+12,4,GovWatchdog,Congressional appropriations for mobile clinics highlight political will to keep booster shots within everyone’s reach.,1,1 day ago 
