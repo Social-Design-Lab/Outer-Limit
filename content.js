@@ -254,10 +254,7 @@ function runMyCode() {
   });
 }
 
-runMyCode().then(() => {
-  const overlay = document.getElementById('ext-mutation-overlay');
-  if (overlay) overlay.remove();
-});
+
 
 function findAncestorWithClass(node, targetClassName) {
   if (node == null) {

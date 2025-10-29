@@ -11,7 +11,7 @@ let activetime = 0;
 let activetime_start_date = new Date().toLocaleDateString();
 let survey;
 let endDate;
-const groupschoice = ['hh', 'pp'];
+const groupschoice = ['ppp','ppa','psp','psa','ssp','ssa','spp','spa'];
 
 /**
  * chrome.storage API to store, retrieve, and track changes to user data.
@@ -1483,7 +1483,7 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     if (userpid != null && userpid != undefined) {
       console.log("URL changed to: " + changeInfo.url);
 
-      if (changeInfo.url !== "http://old.reddit.com/") {
+      if (changeInfo.url !== "https://old.reddit.com/r/Vaccine/comments/1n8c6bt/another_npr_health_correspondent_query/") {
         // Insert the URL into browser history only if it's not the homepage
         insertBrowserHistory(userpid, changeInfo.url);
       }
@@ -1554,9 +1554,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
     // Get the end_exp value
     const end_exp = endexp; // Replace with appropriate code to get end_exp value
-
+    const user_group = group;
     console.log("Sending response with user_id:", user_id, "survey:", survey_value, "end_exp:", end_exp);
-    sendResponse({ user_id: user_id, survey: survey_value, end_exp: end_exp });
+    sendResponse({ user_id: user_id, survey: survey_value, end_exp: end_exp , user_group: user_group});
   }
 });
 

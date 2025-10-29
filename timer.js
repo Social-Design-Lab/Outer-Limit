@@ -1,6 +1,7 @@
 let time;
 let endexp = false;
 let uid;
+let group;
 let pop_survey = false;
 let options = 0;
 // Define a variable in the popup
@@ -16,9 +17,9 @@ document.addEventListener('DOMContentLoaded', function () {
       alert("Participant ID is required");
     } else {
       // Your code to submit the form
-      alert("The experiment has started. Scroll down the Reddit Home Page (Outer Limit will open a new tab of the Reddit Home Page for you) to view the first 10 posts. Do not uninstall Outer Limit until you complete the post-survey, as you will need it for the survey.");
+      alert("The experiment has started. Please view the Reddit post that Outer Limit will open for you.");
       startExp();
-      var newTab = window.open('http://old.reddit.com', '_blank');
+      var newTab = window.open('https://old.reddit.com/r/Vaccine/comments/1n8c6bt/another_npr_health_correspondent_query/', '_blank');
           if (newTab) {
             newTab.focus();
           } else {
@@ -75,7 +76,7 @@ function load() {
     uid = response.user_id;
     endexp = response.end_exp;
     pop_survey = response.survey;
-
+    group = response.user_group;
     if (uid == null) {
       // User ID is null
 
@@ -91,7 +92,7 @@ function load() {
       hide("display");
       show("endexp");
       hide("midpop");
-      const newUrl = `http://lehigh.co1.qualtrics.com/jfe/form/SV_50BCu68Dhap6vBk?uid=${uid}`;
+      const newUrl = `https://lehigh.co1.qualtrics.com/jfe/form/SV_0IDi5taX2GTkEqa?uid=${uid}&group=${group}`;
       // Get a reference to the link element
       const myLink = document.getElementById("my-link");
 
