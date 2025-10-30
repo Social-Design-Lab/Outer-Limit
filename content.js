@@ -164,7 +164,7 @@ function runMyCode() {
     // Handle all button and active time
     if (response.ifstartexp) {
       console.log("ifstartexp ");
-
+      
       if (!new_active_triggered)
         user_active_time();
 
@@ -1672,7 +1672,7 @@ function changeRealPostPage() {
               fake_comments
             } = fakePost;
 
-
+            document.title = fakepost_title;
 
             var commentsCount = 0;
             if (Array.isArray(fake_comments)) {
