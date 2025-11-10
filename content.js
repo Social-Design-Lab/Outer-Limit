@@ -1353,9 +1353,10 @@ function fakepost() {
                 // Optionally, render the fake post details on the page
                 // document.querySelector("#post-details").innerHTML += `<p>${fakepost_title}</p>`;
               });
+                restoreOpacity();
             }
           }
-              restoreOpacity();
+            
         })
         .catch(error => {
           console.error("Failed to fetch fake post:", error);
