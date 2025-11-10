@@ -177,6 +177,7 @@ function runMyCode() {
         //changePostImageUrlandTitleURl();
         combinedFunction();
         monitorPostVote();
+     
 
       } else {
         console.log(`This is not the Reddit main page: ${window.location.href}`);
@@ -247,10 +248,7 @@ function runMyCode() {
     }
 
 
-    setTimeout(() => {
-      //document.documentElement.style.visibility = 'visible';
-      document.documentElement.style.opacity = '1';  // or you can set it to an empty string to remove inline styling
-    }, 2000);
+
   });
 }
 
@@ -688,8 +686,10 @@ function insertFakeComments(postElement, fakeComments, fakePostID) {
     applyUserVoteOnElement(commentElement, getUserVoteOnFakeComment, comment.fake_comment_id);
     handleVoteButtons(commentElement, "fakecomment", comment.fake_comment_id, window.location.href);
     postElement.appendChild(commentElement);
+  
   });
-
+  restoreOpacity();
+  
 }
 
 
@@ -1355,6 +1355,7 @@ function fakepost() {
               });
             }
           }
+              restoreOpacity();
         })
         .catch(error => {
           console.error("Failed to fetch fake post:", error);
@@ -1647,6 +1648,7 @@ function changeRealPostPage() {
           // Check if the fake post was found
           if (!Array.isArray(data) || data.length === 0) {
             console.log("This is a real post.");
+            restoreOpacity();
             document.querySelector("#post-status").textContent = "This is a real post.";
             return;
 
@@ -1917,6 +1919,7 @@ function changeRealPostPage() {
         })
         .catch(error => {
           console.error("Failed to fetch fake post:", error);
+          restoreOpacity();
           // Optionally, handle the error (e.g., show an error message to the user)
         });
 
@@ -1925,6 +1928,7 @@ function changeRealPostPage() {
 
 
     });
+    
 }
 
 
@@ -3186,3 +3190,11 @@ imageMutationObserver.observe(targetNode, {
 
 // Apply to all existing images on the page
 document.querySelectorAll('img').forEach(applyClickListenerToImages);
+
+
+function restoreOpacity() {
+  document.documentElement.style.opacity = '1';
+
+  
+  console.log('[OuterLimits] restoreOpacity() called, current opacity = 1' );
+}
