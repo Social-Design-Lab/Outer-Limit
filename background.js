@@ -1483,15 +1483,19 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     if (userpid != null && userpid != undefined) {
       console.log("URL changed to: " + changeInfo.url);
 
-      if (changeInfo.url !== "https://old.reddit.com/r/Vaccine/comments/1n8c6bt/another_npr_health_correspondent_query/") {
-        // Insert the URL into browser history only if it's not the homepage
-        insertBrowserHistory(userpid, changeInfo.url);
-      }
+      if (!isRedditPostUrl(changeInfo.url)) return;
+      insertBrowserHistory(userpid, changeInfo.url);
 
     }
   }
 });
-
+function isRedditPostUrl(url) {
+  try {
+    const u = new URL(url);
+    if (!["www.reddit.com","reddit.com","old.reddit.com"].includes(u.hostname) && !u.hostname.endsWith(".reddit.com")) return false;
+    return u.pathname.includes("/comments/");
+  } catch { return false; }
+}
 /**
  * Listens for messages from other parts of the extension or content scripts. 
  * If the message indicates an "active_time", it logs and stores the user's active time.
