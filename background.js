@@ -11,7 +11,7 @@ let activetime = 0;
 let activetime_start_date = new Date().toLocaleDateString();
 let survey;
 let endDate;
-const groupschoice = ['ppp','ppa','psp','psa','ssp','ssa','spp','spa'];
+const groupschoice = ['mlen','mley','mhen','mhey'];
 
 /**
  * chrome.storage API to store, retrieve, and track changes to user data.

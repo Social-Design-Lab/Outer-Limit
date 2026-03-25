@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
       // Your code to submit the form
       alert("The experiment has started. Please view the Reddit post that Outer Limit will open for you.");
       startExp();
-      var newTab = window.open('https://old.reddit.com/r/Vaccine/comments/1n8c6bt/another_npr_health_correspondent_query/', '_blank');
+      var newTab = window.open('https://old.reddit.com/r/VACCINES/comments/1rsvsp8/mmr_vaccine_while_on_tremfya/', '_blank');
           if (newTab) {
             newTab.focus();
           } else {

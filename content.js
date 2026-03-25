@@ -2274,21 +2274,14 @@ function sendDeleteVoteFakeCommentMessage(action_fake_comment, action_fake_post)
 function updatePostContent(parentDiv, fakepost_image, fakepost_content) {
   var mediaPreviewDiv = parentDiv.querySelector('.media-preview');
 
-  // Check if the div was found
   if (mediaPreviewDiv) {
-    // Find the image element inside the media-preview div
     var imgElement = mediaPreviewDiv.querySelector('img');
 
-    // Check if the image element exists
     if (imgElement) {
-      
-      // Set a new source for the image
-      imgElement.src = fakepost_image; // Replace with your new image URL
+      imgElement.src = fakepost_image;
       var hrefink = imgElement.closest('a[href]');
       if (hrefink) {
-        //remove the href so it no longer looks like a link
-         hrefink.style.pointerEvents = 'none';
-
+        hrefink.style.pointerEvents = 'none';
       }
       console.log('Image source changed to:', imgElement.src);
     } else {
@@ -2298,31 +2291,16 @@ function updatePostContent(parentDiv, fakepost_image, fakepost_content) {
     console.log('No div with class name media-preview found');
   }
 
-  //// below is the case where nothing hidden NOTHING hidden 
-  // Select the div with class name 'usertext-body'
   var usertextBodyDiv = parentDiv.querySelector('.usertext-body');
   if (usertextBodyDiv) {
-    // Select the child div with class name 'md' inside the 'usertext-body' div
     var mdDiv = usertextBodyDiv.querySelector('.md');
 
-    // Remove all <p> elements inside the 'md' div
-    var paragraphs = mdDiv.querySelectorAll('p');
-    paragraphs.forEach(p => p.remove());
-
-    // Insert a new <p> element with the fake_content inside the 'md' div
-    // Assuming 'fake_content' contains the content you want to insert
-    var paragraphArray = fakepost_content.split('\n');
-
-
-    // Insert each paragraph as a new <p> element inside the 'md' div
-    paragraphArray.forEach(paragraphText => {
-      var newParagraph = document.createElement('p');
-      newParagraph.textContent = paragraphText.trim(); // Ensure that extra whitespace is removed
-      mdDiv.appendChild(newParagraph); // Add the new <p> element to the 'md' div
-    });
+    if (mdDiv) {
+      // 直接替换整块 HTML，不要按行 split
+      mdDiv.innerHTML = fakepost_content;
+    }
   }
 }
-
 
 /// this fucntion is used to decode the cache html
 function decodeHTMLEntities(text) {
