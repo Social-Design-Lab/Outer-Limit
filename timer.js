@@ -2,12 +2,13 @@ let time;
 let endexp = false;
 let uid;
 let group;
-let pop_survey = false;
 let options = 0;
+const EXPERIMENT_POST_URL = 'https://old.reddit.com/r/VACCINES/comments/1rsvsp8/mmr_vaccine_while_on_tremfya/';
 // Define a variable in the popup
 
 //let myUrl = `http://www.example.com/?param=${uid}`;
 document.addEventListener('DOMContentLoaded', function () {
+  hideAllSections();
   load();
   //document.querySelector('#start').addEventListener('click', startExp);
 
@@ -16,36 +17,9 @@ document.addEventListener('DOMContentLoaded', function () {
     if (participantId === "") {
       alert("Participant ID is required");
     } else {
-      // Your code to submit the form
-      alert("The experiment has started. Please view the Reddit post that Outer Limit will open for you.");
-      startExp();
-      var newTab = window.open('https://old.reddit.com/r/VACCINES/comments/1rsvsp8/mmr_vaccine_while_on_tremfya/', '_blank');
-          if (newTab) {
-            newTab.focus();
-          } else {
-            console.log("Popup blocked. Please allow popups for this site.");
-          }
+      startExp(openExperimentPost);
     }
   });
-  document.getElementById("midpop-submit").addEventListener("click", function () {
-    const selectedQ1 = document.querySelector('[data-question-group="q1"].active');
-    const selectedQ2 = document.querySelector('[data-question-group="q2"].active');
-    //alert('Selected value for Q1: ' + selectedQ1.textContent + '\nSelected value for Q2: ' + selectedQ2.textContent);
-
-    chrome.runtime.sendMessage({
-      message: "send_question_data_from_timerjs_chrome",
-      data: {
-        q1selected: selectedQ1.textContent,
-        q2selected: selectedQ2.textContent
-      }
-    });
-    chrome.runtime.sendMessage({ action: 'changeSurveyValue', newValue: false });
-    hide("settings");
-    show("display");
-    hide("endexp");
-    hide("midpop");
-  });
-
 /*   $("#btnReset").onclick = e => {
     //console.log("btnHighlight is clicked")
     //alert("btnReset: "+ options)
@@ -73,93 +47,119 @@ function load() {
 
   // Send a message to the background script
   chrome.runtime.sendMessage({ message: "everything_for_timer" }, function (response) {
-    uid = response.user_id;
-    endexp = response.end_exp;
-    pop_survey = response.survey;
-    group = response.user_group;
-    if (uid == null) {
-      // User ID is null
-
-      show("settings");
-      hide("display");
-      hide("endexp");
-      hide("midpop");
-
-    } 
-    else {
-      // User ID is not null and experiment is ended
-      hide("settings");
-      hide("display");
-      show("endexp");
-      hide("midpop");
-      const newUrl = `https://lehigh.co1.qualtrics.com/jfe/form/SV_0IDi5taX2GTkEqa?uid=${uid}&group=${group}`;
-      // Get a reference to the link element
-      const myLink = document.getElementById("my-link");
-
-      
-      // Change the href attribute of the link
-      myLink.setAttribute("href", newUrl);
-
-
-     
-      if (myLink) {
-        // Change the href attribute of the link
-        myLink.setAttribute("href", newUrl);
-    
-        // Add click event listener to open the link in a new tab
-        myLink.addEventListener('click', function (e) {
-          e.preventDefault(); // Stop the default action of the link
-          chrome.tabs.create({url: this.href}); // Use Chrome's API to open a new tab
-        });
-      }
-      
+    if (chrome.runtime.lastError || !response) {
+      console.error("Unable to load popup state from background:", chrome.runtime.lastError && chrome.runtime.lastError.message);
+      loadFromStorage();
+      return;
     }
 
+    renderPopupState(response);
   });
+}
+
+function loadFromStorage() {
+  chrome.storage.local.get(['userpid', 'endexp', 'survey', 'group'], function (result) {
+    renderPopupState({
+      user_id: result.userpid,
+      end_exp: result.endexp,
+      survey: result.survey,
+      user_group: result.group
+    });
+  });
+}
+
+function renderPopupState(state) {
+  uid = state && state.user_id;
+  endexp = !!(state && state.end_exp);
+  group = state && state.user_group;
+
+  if (!uid) {
+    showOnly("settings");
+    return;
+  }
+
+  configurePostSurveyLink(uid, group);
+
+  showOnly("endexp");
+}
+
+function configurePostSurveyLink(userId, userGroup) {
+  const myLink = document.getElementById("my-link");
+  if (!myLink) {
+    return;
+  }
+
+  const newUrl = `https://lehigh.co1.qualtrics.com/jfe/form/SV_cVjSqBQgEqOkI2G?uid=${encodeURIComponent(userId)}&group=${encodeURIComponent(userGroup || '')}`;
+  myLink.setAttribute("href", newUrl);
+
+  if (!myLink.dataset.outerLimitListenerAttached) {
+    myLink.addEventListener('click', function (e) {
+      e.preventDefault();
+      chrome.tabs.create({ url: this.href });
+    });
+    myLink.dataset.outerLimitListenerAttached = "true";
+  }
+}
+
+function hideAllSections() {
+  hide("settings");
+  hide("endexp");
+}
+
+function showOnly(section) {
+  hideAllSections();
+  show(section);
 }
 
 function show(section) {
-  document.getElementById(section).style.display = "block";
+  const element = document.getElementById(section);
+  if (element) {
+    element.style.display = "block";
+  }
 }
 
 function hide(section) {
-  document.getElementById(section).style.display = "none";
+  const element = document.getElementById(section);
+  if (element) {
+    element.style.display = "none";
+  }
 }
 
 // call setExp function from background.js
-function startExp() {
-  chrome.runtime.sendMessage({ message: "call_function" });
-  hide("settings");
-  hide("endexp");
-  show("display");
-  hide("midpop");
+function startExp(onReady) {
+  const startButton = document.getElementById("start");
+  if (startButton) {
+    startButton.disabled = true;
+    startButton.textContent = "Starting...";
+  }
+
   uid = document.getElementById("pid").value;
-  chrome.runtime.sendMessage({ message: "send_userid_from_timerjs", userId: uid });
+  chrome.runtime.sendMessage({ message: "send_userid_from_timerjs", userId: uid }, function (response) {
+    if (chrome.runtime.lastError) {
+      console.error(chrome.runtime.lastError.message);
+      if (startButton) {
+        startButton.disabled = false;
+        startButton.textContent = "Submit";
+      }
+      return;
+    }
+
+    chrome.runtime.sendMessage({ message: "call_function" });
+    if (response && response.user_group) {
+      group = response.user_group;
+      configurePostSurveyLink(uid, group);
+    }
+    showOnly("endexp");
+    if (typeof onReady === "function") {
+      onReady();
+    }
+  });
 }
 
-
-
-
-// Add this script block inside the head
-// Add this script block inside the head
-document.addEventListener("DOMContentLoaded", function () {
-  const buttons = document.querySelectorAll(".btn-scale");
-
-  buttons.forEach((button) => {
-    button.addEventListener("click", function () {
-      const questionGroup = this.dataset.questionGroup;
-      const sameGroupButtons = document.querySelectorAll(`[data-question-group="${questionGroup}"]`);
-
-      sameGroupButtons.forEach((btn) => {
-        btn.classList.remove("active");
-      });
-
-      this.classList.add("active");
-    });
+function openExperimentPost() {
+  chrome.tabs.create({ url: EXPERIMENT_POST_URL, active: true }, function () {
+    if (chrome.runtime.lastError) {
+      console.error(chrome.runtime.lastError.message);
+    }
   });
-});
-
-
-
-
-
+}

@@ -23,6 +23,96 @@ const replyPostButtonSelector = '._22S4OsoDdOqiM-hPTeOURa._2iuoyPiKHN3kfOoeIQalD
 const replyCommentSelector = "_374Hkkigy4E4srsI2WktEd";
 const ButtonColorClass = "Z3lT0VGlALek4Q9j0ZQCr";
 const dislikebuttonColorClass = "_3emIxnIscWEPB7o5LgU_rn";
+const OUTER_LIMIT_API_BASE_URL = "https://outerlimits.onrender.com/api";
+const USER_VOTE_CACHE_KEY = "outerLimitUserVoteCache";
+const USER_REPLY_CACHE_KEY = "outerLimitUserReplyCache";
+const OUTER_LIMIT_RETRYABLE_STATUSES = new Set([408, 429, 500, 502, 503, 504]);
+let outerLimitVisibilityLocks = 0;
+
+function keepPageHidden(reason) {
+  outerLimitVisibilityLocks += 1;
+  document.documentElement.style.setProperty('opacity', '0', 'important');
+  document.documentElement.style.setProperty('visibility', 'hidden', 'important');
+  document.documentElement.style.setProperty('background', '#fff', 'important');
+  if (document.body) {
+    document.body.style.setProperty('opacity', '0', 'important');
+    document.body.style.setProperty('visibility', 'hidden', 'important');
+    document.body.style.setProperty('background', '#fff', 'important');
+  }
+  console.log(`[OuterLimits] page hidden lock +1 (${reason}). Locks: ${outerLimitVisibilityLocks}`);
+}
+
+function releasePageHidden(reason) {
+  outerLimitVisibilityLocks = Math.max(0, outerLimitVisibilityLocks - 1);
+  console.log(`[OuterLimits] page hidden lock -1 (${reason}). Locks: ${outerLimitVisibilityLocks}`);
+  if (outerLimitVisibilityLocks === 0) {
+    restoreOpacity(true);
+  }
+}
+
+function showOuterLimitFallback(message) {
+  function renderFallback() {
+    document.body.replaceChildren();
+    const fallback = document.createElement("main");
+    fallback.id = "outer-limit-fallback";
+    fallback.style.cssText = [
+      "min-height:100vh",
+      "display:flex",
+      "align-items:center",
+      "justify-content:center",
+      "font-family:Arial,sans-serif",
+      "font-size:18px",
+      "line-height:1.5",
+      "color:#1f2937",
+      "background:#f8fafc",
+      "padding:24px",
+      "text-align:center"
+    ].join(";");
+    fallback.textContent = message;
+    document.body.appendChild(fallback);
+  }
+
+  if (document.body) {
+    renderFallback();
+  } else {
+    document.addEventListener("DOMContentLoaded", renderFallback, { once: true });
+  }
+}
+
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function fetchWithRetry(url, options = {}, retryOptions = {}) {
+  const retries = retryOptions.retries === undefined ? 5 : retryOptions.retries;
+  const baseDelayMs = retryOptions.baseDelayMs === undefined ? 700 : retryOptions.baseDelayMs;
+
+  function attemptFetch(attempt) {
+    return fetch(url, options)
+      .then(response => {
+        if (
+          attempt < retries &&
+          !response.ok &&
+          OUTER_LIMIT_RETRYABLE_STATUSES.has(response.status)
+        ) {
+          console.log(`[OuterLimits] Retrying API request after HTTP ${response.status}; attempt ${attempt + 1}; ${url}`);
+          return wait(baseDelayMs * (attempt + 1)).then(() => attemptFetch(attempt + 1));
+        }
+
+        return response;
+      })
+      .catch(error => {
+        if (attempt < retries) {
+          console.log(`[OuterLimits] Retrying API request after network failure; attempt ${attempt + 1}; ${error.message}; ${url}`);
+          return wait(baseDelayMs * (attempt + 1)).then(() => attemptFetch(attempt + 1));
+        }
+
+        throw error;
+      });
+  }
+
+  return attemptFetch(0);
+}
 //let fakeCommnetContent =" THIS IS A FAKE COMMENT"; 
 //let fakeCommentUserName = "Experimental Team";
 let parentContainer = document.querySelector('div._1YCqQVO-9r-Up6QPB9H6_4');
@@ -105,10 +195,12 @@ newobserver.observe(document.body, { childList: true, subtree: true }); */
 
 // if users are on new version of reddit , force them go to old version of reddit 
 const redditRegex = /^https:\/\/www\.reddit\.com/;
+let outerLimitRedirectingToOldReddit = false;
 if (redditRegex.test(window.location.href)) {
   // Replace www.reddit.com with old.reddit.com
   const newUrl = window.location.href.replace(redditRegex, 'https://old.reddit.com');
   console.log("Redirecting to new URL: " + newUrl);
+  outerLimitRedirectingToOldReddit = true;
   // Redirect to the new URL
   window.location.replace(newUrl);
 }
@@ -116,17 +208,48 @@ if (redditRegex.test(window.location.href)) {
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.message === "refreshContentScript") {
     console.log("Received message to refresh content script.");
+    sendResponse({ ok: true });
     window.location.reload();
 
     // Your logic to insert/refresh content in the page goes here.
   }
 });
 
-window.onload = function () {
-  //alert(" insert good");
-  runMyCode()
-  // Your code here
-};
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  if (request.message === "run_my_code") {
+    if (outerLimitRedirectingToOldReddit) {
+      sendResponse({ ok: true, skipped: "redirecting_to_old_reddit" });
+      return;
+    }
+
+    console.log("Received message to run content script.");
+    runMyCode();
+    sendResponse({ ok: true });
+  }
+});
+
+let outerLimitHasStarted = false;
+
+function startOuterLimit() {
+  if (outerLimitRedirectingToOldReddit) {
+    return;
+  }
+
+  if (outerLimitHasStarted) {
+    return;
+  }
+
+  outerLimitHasStarted = true;
+  runMyCode();
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", startOuterLimit, { once: true });
+} else {
+  startOuterLimit();
+}
+
+window.addEventListener("load", startOuterLimit, { once: true });
 
 
 
@@ -150,6 +273,12 @@ document.addEventListener('DOMContentLoaded', function () {
 // this function is used to start everything 
 function runMyCode() {
   chrome.runtime.sendMessage({ message: "get_all_setup" }, function (response) {
+    if (chrome.runtime.lastError) {
+      console.error("Unable to get experiment setup:", chrome.runtime.lastError.message);
+      restoreOpacity();
+      return;
+    }
+
     console.log("All button and Active time: " + response.ifstartexp);
 
 
@@ -162,7 +291,7 @@ function runMyCode() {
 
 
     // Handle all button and active time
-    if (response.ifstartexp) {
+    if (response && response.ifstartexp) {
       console.log("ifstartexp ");
       
       if (!new_active_triggered)
@@ -194,57 +323,10 @@ function runMyCode() {
         }
 
         changeRealPostPage();
-        // Fetch a fake post based on the current URL
-        chrome.runtime.sendMessage(
-          { action: 'getGroup' },
-          (response) => {
-            // 1) first check for any runtime errors
-            if (chrome.runtime.lastError) {
-              console.error('Error messaging background:', chrome.runtime.lastError.message);
-              return;
-            }
-
-            // 2) check that response.group exists
-            if (!response || typeof response.group !== 'string') {
-              console.error('No valid group received from background script:', response);
-              return;
-            }
-
-            const group = response.group;
-
-            var fetchUrl =
-              `https://outerlimits.onrender.com/api/getfakepost?` +
-              `fakepost_url=${encodeURIComponent(window.location.href)}` +
-              `&group=${encodeURIComponent(response.group)}`;
-
-            console.log("Fetching URL:", fetchUrl);
-            fetch(fetchUrl)
-              .then(response => {
-                if (!response.ok) {
-                  if (response.status === 404) {
-                    // Action to take if the fake post is not found (404)
-                    console.log("No fake post found for this URL. Taking alternative action...");
-                    // includes post vote and comment vote
-                    monitorUsreVoteOnRealPost();
-                    monitorUserCommentOnRealPost();
-                    reviseUserCommentonRealPost();
-                    return null;
-                  } else {
-                    throw new Error(`https error! status: ${response.status}`);
-                  }
-                }
-                return response.json(); // Parse the JSON from the response if no error
-              })
-              .then(data => {
-                // Process the fake post data if available
-                console.log("Fake post data:", data);
-              })
-              .catch(console.error)
-
-
-          });
 
       }
+    } else {
+      restoreOpacity();
     }
 
 
@@ -280,9 +362,68 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     runMyCode();
     new_active_triggered = true;
     console.log("Received message from the background script for listen the button:", request.message);
+    sendResponse({ ok: true });
 
   }
 });
+
+function normalizeSnapshotText(value) {
+  return value ? String(value).replace(/\s+/g, " ").trim() : "";
+}
+
+function generateOuterLimitId(prefix, targetId) {
+  const randomPart = Math.random().toString(36).slice(2, 10);
+  return `${prefix}-${normalizeVoteId(targetId)}-${Date.now()}-${randomPart}`;
+}
+
+function getThingId(thingElement) {
+  if (!thingElement) {
+    return "";
+  }
+
+  return thingElement.getAttribute("data-fullname") ||
+    thingElement.id ||
+    thingElement.querySelector('input[name="thing_id"]')?.value ||
+    "";
+}
+
+function getThingContext(thingElement) {
+  if (!thingElement) {
+    return "";
+  }
+
+  return normalizeSnapshotText(
+    thingElement.querySelector('.usertext-body.may-blank-within.md-container .md')?.textContent ||
+    thingElement.querySelector('.md')?.textContent ||
+    ""
+  );
+}
+
+function getThingAuthor(thingElement) {
+  if (!thingElement) {
+    return "";
+  }
+
+  return normalizeSnapshotText(
+    thingElement.getAttribute("data-author") ||
+    thingElement.querySelector('a.author')?.textContent ||
+    ""
+  );
+}
+
+function getPostSnapshot() {
+  return {
+    targetPostTitle: normalizeSnapshotText(document.querySelector('a.title')?.textContent || document.title),
+    targetPostContext: normalizeSnapshotText(document.querySelector('.link .usertext-body .md')?.textContent || "")
+  };
+}
+
+function getCommentSnapshot(thingElement) {
+  return {
+    targetCommentContext: getThingContext(thingElement),
+    targetCommentAuthor: getThingAuthor(thingElement)
+  };
+}
 
 function monitorPostVote() {
   var siteTable = document.querySelector('#siteTable');
@@ -359,6 +500,7 @@ function observeNewCommentsAndReplies(commentSection) {
 
             if (parentThing) {
               var replyTo;
+              var replyToMetadata = getCommentSnapshot(parentThing);
               var replyToTextDiv = parentThing.querySelector('.usertext-body.may-blank-within.md-container');
               // Check if the element exists
               if (replyToTextDiv) {
@@ -373,13 +515,14 @@ function observeNewCommentsAndReplies(commentSection) {
                 // Log the text content to the console or use it elsewhere
                 //console.log(commentContent);
               }
+              replyTo = getThingId(parentThing) || replyTo;
               realButtonVote(newNode, "comment", commentContent, window.location.href);
               console.log('This comment is a child comment of another comment', parentThing);
-              reviseORdeleteComment(newNode, "commentlevel", commentContent, replyTo);
+              reviseORdeleteComment(newNode, "commentlevel", commentContent, replyTo, replyToMetadata);
 
             } else {
               realButtonVote(newNode, "comment", commentContent, window.location.href);
-              reviseORdeleteComment(newNode, "postlevel", commentContent)
+              reviseORdeleteComment(newNode, "postlevel", commentContent, null, getPostSnapshot())
               console.log('This comment is not a child comment of another comment');
             }
 
@@ -409,7 +552,7 @@ function monitorUserCommentOnRealPost() {
     if (textarea && textarea.value !== null) {
       var enteredText = textarea.value;
 
-      sendAddUserReplyRealPostMessage(enteredText, window.location.href);
+      sendAddUserReplyRealPostMessage(enteredText, window.location.href, getPostSnapshot());
 
     }
     console.log('Save button clicked!');
@@ -450,7 +593,12 @@ function monitorUserCommentOnRealPost() {
             if (textareaInReplyForm && textareaInReplyForm.value !== null) {
               var enteredTextInReplyForm = textareaInReplyForm.value;
 
-              sendAddUserReplyRealCommentMessage(commentContent, window.location.href, enteredTextInReplyForm);
+              sendAddUserReplyRealCommentMessage(
+                getThingId(child) || commentContent,
+                window.location.href,
+                enteredTextInReplyForm,
+                getCommentSnapshot(child)
+              );
 
             }
             console.log('Save button clicked!');
@@ -506,6 +654,7 @@ function reviseUserCommentonRealPost() {
 
         if (parentThing) {
           var replyTo;
+          var replyToMetadata = getCommentSnapshot(parentThing);
           var replyToTextDiv = parentThing.querySelector('.usertext-body.may-blank-within.md-container');
           // Check if the element exists
           if (replyToTextDiv) {
@@ -522,10 +671,10 @@ function reviseUserCommentonRealPost() {
           }
 
           console.log('This comment is a child comment of another comment', parentThing);
-          reviseORdeleteComment(thingElement, "commentlevel", commentContent, replyTo);
+          reviseORdeleteComment(thingElement, "commentlevel", commentContent, getThingId(parentThing) || replyTo, replyToMetadata);
 
         } else {
-          reviseORdeleteComment(thingElement, "postlevel", commentContent)
+          reviseORdeleteComment(thingElement, "postlevel", commentContent, null, getPostSnapshot())
           console.log('This comment is not a child comment of another comment');
         }
       }
@@ -539,7 +688,7 @@ function reviseUserCommentonRealPost() {
   }
 }
 
-function reviseORdeleteComment(parentDiv, commentType, replyContent, replyTo) {
+function reviseORdeleteComment(parentDiv, commentType, replyContent, replyTo, targetMetadata = {}) {
   // Select the <a> element with the class 'yes'
   var deleteFrom = parentDiv.querySelector('form.toggle.del-button');
   if (deleteFrom) {
@@ -558,11 +707,11 @@ function reviseORdeleteComment(parentDiv, commentType, replyContent, replyTo) {
         // Check commentType and call appropriate function
         if (commentType === "postlevel") {
           console.log("Deleting reply on real post");
-          sendDeleteUserReplyRealPostMessage(window.location.href, replyContent);
+          sendDeleteUserReplyRealPostMessage(window.location.href, replyContent, getThingId(parentDiv));
         }
         else if (commentType === "commentlevel") {
           console.log("Deleting reply on real comment", replyTo, window.location.href, replyContent);
-          sendDeleteUserReplyRealCommentMessage(replyTo, window.location.href, replyContent);
+          sendDeleteUserReplyRealCommentMessage(replyTo, window.location.href, replyContent, getThingId(parentDiv));
         }
 
         // Let the original inline event handler run as well (no preventDefault or stopImmediatePropagation)
@@ -587,13 +736,13 @@ function reviseORdeleteComment(parentDiv, commentType, replyContent, replyTo) {
 
             if (commentType === "postlevel") {
               console.log("Deleting reply on real post");
-              sendDeleteUserReplyRealPostMessage(window.location.href, replyContent);
-              sendAddUserReplyRealPostMessage(enteredTextInReplyForm, window.location.href);
+              sendDeleteUserReplyRealPostMessage(window.location.href, replyContent, getThingId(parentDiv));
+              sendAddUserReplyRealPostMessage(enteredTextInReplyForm, window.location.href, targetMetadata);
             }
             else if (commentType === "commentlevel") {
               console.log("Deleting reply on real comment", replyTo, window.location.href, replyContent);
-              sendDeleteUserReplyRealCommentMessage(replyTo, window.location.href, replyContent);
-              sendAddUserReplyRealCommentMessage(replyTo, window.location.href, enteredTextInReplyForm);
+              sendDeleteUserReplyRealCommentMessage(replyTo, window.location.href, replyContent, getThingId(parentDiv));
+              sendAddUserReplyRealCommentMessage(replyTo, window.location.href, enteredTextInReplyForm, targetMetadata);
             }
 
 
@@ -614,6 +763,8 @@ function reviseORdeleteComment(parentDiv, commentType, replyContent, replyTo) {
 function realButtonVote(parentDiv, voteType, comment, url) {
   var upvoteButton = parentDiv.querySelector('[aria-label="upvote"]');
   var downvoteButton = parentDiv.querySelector('[aria-label="downvote"]');
+  var targetId = voteType === "comment" ? (getThingId(parentDiv) || comment) : url;
+  var voteMetadata = voteType === "comment" ? getCommentSnapshot(parentDiv) : getPostSnapshot();
   if (upvoteButton && downvoteButton) {
     // Upvote button functionality
     upvoteButton.setAttribute('outer-limit-monitored', 'true');
@@ -623,14 +774,14 @@ function realButtonVote(parentDiv, voteType, comment, url) {
 
       if (upvoteButton.classList.contains('upmod')) {
 
-        sendDeleteRealVoteMessage(voteType, comment, url);
+        sendDeleteRealVoteMessage(voteType, targetId, url);
       } else {
         // If downvote was previously clicked, reset it
         if (downvoteButton.classList.contains('downmod')) {
 
-          sendDeleteRealVoteMessage(voteType, comment, url);
+          sendDeleteRealVoteMessage(voteType, targetId, url);
         }
-        sendRealVoteMessage("upvote", voteType, comment, url);
+        sendRealVoteMessage("upvote", voteType, targetId, url, voteMetadata);
       }
     }, true);  // Using capture phase to prevent Reddit's listener
 
@@ -641,15 +792,15 @@ function realButtonVote(parentDiv, voteType, comment, url) {
         // Undo the downvote (reset to unvoted state)
 
         console.log('Downvote undone');
-        sendDeleteRealVoteMessage(voteType, comment, url);
+        sendDeleteRealVoteMessage(voteType, targetId, url);
       } else {
         // If upvote was previously clicked, reset it
         if (upvoteButton.classList.contains('upmod')) {
 
-          sendDeleteRealVoteMessage(voteType, comment, url);
+          sendDeleteRealVoteMessage(voteType, targetId, url);
         }
         console.log('Downvoted');
-        sendRealVoteMessage("downvote", voteType, comment, url);
+        sendRealVoteMessage("downvote", voteType, targetId, url, voteMetadata);
       }
     }, true);
   }
@@ -684,7 +835,10 @@ function insertFakeComments(postElement, fakeComments, fakePostID) {
     });
     insertCommentFormORReplyFakeComment(commentElement, comment.fake_comment_id, fakePostID);
     applyUserVoteOnElement(commentElement, getUserVoteOnFakeComment, comment.fake_comment_id);
-    handleVoteButtons(commentElement, "fakecomment", comment.fake_comment_id, window.location.href);
+    handleVoteButtons(commentElement, "fakecomment", comment.fake_comment_id, window.location.href, {
+      targetCommentContext: normalizeSnapshotText(comment.content),
+      targetCommentAuthor: normalizeSnapshotText(comment.user_name)
+    });
     postElement.appendChild(commentElement);
   
   });
@@ -772,6 +926,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     // handle the message
     end_exp_alert();
     console.log("experiment has ended from content js");
+    sendResponse({ ok: true });
   }
 });
 
@@ -1044,7 +1199,7 @@ function combinedFunction() {
 
           console.log("Comment URL:", commentUrl);
 
-          fetch(fetchUrl)
+          fetchWithRetry(fetchUrl)
             .then(response => {
               if (!response.ok) {
                 throw new Error(`https error! status: ${response.status}`);
@@ -1075,7 +1230,7 @@ function combinedFunction() {
               }
             })
             .catch(error => {
-              console.error("Failed to fetch fake post:", error);
+              console.log("[OuterLimits] Failed to fetch fake post after retries: " + (error && error.message ? error.message : error));
             });
         }
       }
@@ -1148,19 +1303,28 @@ function sendUpdateViewedPostToBackground(post_url) {
 
 // create fakepost in reddit home page 
 function fakepost() {
+  keepPageHidden("fakepost");
+  let fakepostFinished = false;
+  function finishFakepostRender(reason) {
+    if (fakepostFinished) return;
+    fakepostFinished = true;
+    releasePageHidden(reason);
+  }
 
   chrome.runtime.sendMessage(
     { action: 'getGroup' },
     (response) => {
       // 1) first check for any runtime errors
       if (chrome.runtime.lastError) {
-        console.error('Error messaging background:', chrome.runtime.lastError.message);
+        console.log('[OuterLimits] Error messaging background: ' + chrome.runtime.lastError.message);
+        finishFakepostRender("fakepost setup failed");
         return;
       }
 
       // 2) check that response.group exists
       if (!response || typeof response.group !== 'string') {
-        console.error('No valid group received from background script:', response);
+        console.log('[OuterLimits] No valid group received from background script.');
+        finishFakepostRender("fakepost setup failed");
         return;
       }
 
@@ -1172,7 +1336,7 @@ function fakepost() {
 
 
       // Fetch the data
-      fetch(fetchUrl)
+      fetchWithRetry(fetchUrl)
         .then(response => {
           if (!response.ok) {
             throw new Error(`https error! status: ${response.status}`);
@@ -1184,6 +1348,7 @@ function fakepost() {
           if (Array.isArray(data)) {
             if (data.length === 0) {
               console.log("No fake posts found.");
+              finishFakepostRender("fakepost empty");
             } else {
               // Loop through all fake posts in the array
               data.forEach(fakePost => {
@@ -1353,15 +1518,20 @@ function fakepost() {
                 // Optionally, render the fake post details on the page
                 // document.querySelector("#post-details").innerHTML += `<p>${fakepost_title}</p>`;
               });
-                restoreOpacity();
+                finishFakepostRender("fakepost rendered");
             }
           }
             
         })
         .catch(error => {
-          console.error("Failed to fetch fake post:", error);
+          console.log("[OuterLimits] Failed to fetch fake post after retries: " + (error && error.message ? error.message : error));
+          showOuterLimitFallback("Experiment content could not load. Please refresh this page.");
+          finishFakepostRender("fakepost fetch failed");
           // Optionally, handle the error (e.g., show an error message to the user)
-          document.querySelector("#post-status").textContent = "Failed to fetch the fake post.";
+          var postStatus = document.querySelector("#post-status");
+          if (postStatus) {
+            postStatus.textContent = "Failed to fetch the fake post.";
+          }
         });
     });
 
@@ -1613,6 +1783,13 @@ var smq = {
 
 /// this is for reddit post page fake post 
 function changeRealPostPage() {
+  keepPageHidden("changeRealPostPage");
+  let postRenderFinished = false;
+  function finishPostRender(reason) {
+    if (postRenderFinished) return;
+    postRenderFinished = true;
+    releasePageHidden(reason);
+  }
 
   // Get the current page URL
   //var currentURL = window.location.href;
@@ -1621,13 +1798,15 @@ function changeRealPostPage() {
     (response) => {
       // 1) first check for any runtime errors
       if (chrome.runtime.lastError) {
-        console.error('Error messaging background:', chrome.runtime.lastError.message);
+        console.log('[OuterLimits] Error messaging background: ' + chrome.runtime.lastError.message);
+        finishPostRender("post setup failed");
         return;
       }
 
       // 2) check that response.group exists
       if (!response || typeof response.group !== 'string') {
-        console.error('No valid group received from background script:', response);
+        console.log('[OuterLimits] No valid group received from background script.');
+        finishPostRender("post setup failed");
         return;
       }
 
@@ -1638,19 +1817,36 @@ function changeRealPostPage() {
         `&group=${encodeURIComponent(response.group)}`;
       console.log("Fetching URL for post page:", fetchUrl);
       // Modify the fetch request to include the current URL in the API call
-      fetch(fetchUrl)
+      fetchWithRetry(fetchUrl)
         .then(response => {
           if (!response.ok) {
+            if (response.status === 404) {
+              console.log("No fake post found for this URL. Setting up real post monitors.");
+              monitorUsreVoteOnRealPost();
+              monitorUserCommentOnRealPost();
+              reviseUserCommentonRealPost();
+              finishPostRender("real post not mapped");
+              return null;
+            }
             throw new Error(`https error! status: ${response.status}`);
           }
           return response.json(); // Parse the JSON from the response
         })
         .then(data => {
+          if (data === null) {
+            return;
+          }
           // Check if the fake post was found
           if (!Array.isArray(data) || data.length === 0) {
             console.log("This is a real post.");
-            restoreOpacity();
-            document.querySelector("#post-status").textContent = "This is a real post.";
+            monitorUsreVoteOnRealPost();
+            monitorUserCommentOnRealPost();
+            reviseUserCommentonRealPost();
+            finishPostRender("real post empty data");
+            const postStatus = document.querySelector("#post-status");
+            if (postStatus) {
+              postStatus.textContent = "This is a real post.";
+            }
             return;
 
 
@@ -1675,7 +1871,11 @@ function changeRealPostPage() {
               fake_comments
             } = fakePost;
 
-            document.title = fakepost_title;
+            if (window.__outerLimit_releaseTitle) {
+              window.__outerLimit_releaseTitle(fakepost_title);
+            } else {
+              document.title = fakepost_title;
+            }
 
             var commentsCount = 0;
             if (Array.isArray(fake_comments)) {
@@ -1915,12 +2115,14 @@ function changeRealPostPage() {
               console.log('No parent div with class "sitetable linklisting" found');
             }
 
+            finishPostRender("fake post rendered");
 
           }
         })
         .catch(error => {
-          console.error("Failed to fetch fake post:", error);
-          restoreOpacity();
+          console.log("[OuterLimits] Failed to fetch fake post after retries: " + (error && error.message ? error.message : error));
+          showOuterLimitFallback("Experiment content could not load. Please refresh this page.");
+          finishPostRender("fake post fetch failed");
           // Optionally, handle the error (e.g., show an error message to the user)
         });
 
@@ -1935,229 +2137,436 @@ function changeRealPostPage() {
 
 
 
-function getUserVoteOnFakePost(postId) {
+const userVoteState = {
+  userId: null,
+  state: null,
+  loadPromise: null,
+  serverRefreshPromise: null,
+  lastLocalChangeAt: 0
+};
 
-  console.log("called");
+function sendRuntimeMessage(message) {
   return new Promise((resolve, reject) => {
-    // Send a message to the background script to get the user ID
-    chrome.runtime.sendMessage({ message: "need_uid_from_background" }, function (response) {
-      if (!response || !response.value) {
-        console.error("No valid response or userId received from background script.");
-        return reject("No valid response or userId received from background script.");
+    chrome.runtime.sendMessage(message, response => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+      } else {
+        resolve(response);
       }
-
-      const userId = response.value;
-      console.log("Received userId from background script:", userId);
-
-      // Fetch the user's votes on fake posts from the server
-      fetch(`https://outerlimits.onrender.com/api/getUserVotes_onFakePosts?userid=${userId}`)
-        .then(response => {
-          // Check if the response is okay and if it's a JSON response
-          if (!response.ok) {
-            throw new Error(`https error! status: ${response.status}`);
-          }
-          const contentType = response.headers.get("content-type");
-          if (!contentType || !contentType.includes("application/json")) {
-            throw new Error("Response is not JSON");
-          }
-          return response.json();
-        })
-        .then(data => {
-          // Check if the data contains the expected structure
-          if (data && data.userInteractions && data.userInteractions.votes && Array.isArray(data.userInteractions.votes.onFakePosts)) {
-            var userVotesOnFakePosts = data.userInteractions.votes.onFakePosts;
-
-            console.log("User votes on fake posts retrieved successfully:", userVotesOnFakePosts);
-
-            // Process each user vote for a fake post
-            var vote = userVotesOnFakePosts.find(vote => vote.action_fake_post === postId);
-            if (vote) {
-              // If a vote is found, resolve with the vote action
-              if (vote.user_action === "upvote") {
-                resolve("upvote");
-              } else if (vote.user_action === "downvote") {
-                resolve("downvote");
-              }
-            } else {
-              // If no vote was found for the post
-              resolve("novote");
-            }
-          } else {
-            console.log("Unexpected data structure:", data);
-            reject("Unexpected data structure");
-          }
-        })
-        .catch(error => {
-          console.error("Error retrieving user votes on fake posts:", error);
-          reject(error);
-        });
     });
   });
 }
 
-
-function getUserVoteOnFakeComment(commentId) {
-
-  console.log("called for fake comment");
-  return new Promise((resolve, reject) => {
-    // Send a message to the background script to get the user ID
-    chrome.runtime.sendMessage({ message: "need_uid_from_background" }, function (response) {
-      if (!response || !response.value) {
-        console.error("No valid response or userId received from background script.");
-        return reject("No valid response or userId received from background script.");
-      }
-
-      const userId = response.value;
-      console.log("Received userId from background script:", userId);
-
-      // Fetch the user's votes on fake comments from the server
-      fetch(`https://outerlimits.onrender.com/api/getUserVotes_onFakeComments?userid=${userId}`)
-        .then(response => {
-          // Check if the response is okay and if it's a JSON response
-          if (!response.ok) {
-            throw new Error(`https error! status: ${response.status}`);
-          }
-          const contentType = response.headers.get("content-type");
-          if (!contentType || !contentType.includes("application/json")) {
-            throw new Error("Response is not JSON");
-          }
-          return response.json();
-        })
-        .then(data => {
-          // Check if the data contains the expected structure
-          if (data && data.userInteractions && data.userInteractions.votes && Array.isArray(data.userInteractions.votes.onFakeComments)) {
-            const userVotesOnFakeComments = data.userInteractions.votes.onFakeComments;
-
-            console.log("User votes on fake comments retrieved successfully:", userVotesOnFakeComments);
-
-            // Process each user vote for a fake comment
-            const vote = userVotesOnFakeComments.find(vote => vote.action_fake_comment === commentId);
-            if (vote) {
-              // If a vote is found, resolve with the vote action
-              if (vote.user_action === "upvote") {
-                resolve("upvote");
-              } else if (vote.user_action === "downvote") {
-                resolve("downvote");
-              }
-            } else {
-              // If no vote was found for the comment
-              resolve("novote");
-            }
-          } else {
-            console.log("Unexpected data structure:", data);
-            reject("Unexpected data structure");
-          }
-        })
-        .catch(error => {
-          console.error("Error retrieving user votes on fake comments:", error);
-          reject(error);
-        });
-    });
-  });
+function chromeStorageGet(keys) {
+  return new Promise(resolve => chrome.storage.local.get(keys, resolve));
 }
 
-function getUserRepliesOnFakeComment(commentId) {
-  console.log("Called for retrieving user replies on fake comment");
-
-  return new Promise((resolve, reject) => {
-    // Send a message to the background script to get the user ID
-    chrome.runtime.sendMessage({ message: "need_uid_from_background" }, function (response) {
-      if (!response || !response.value) {
-        console.error("No valid response or userId received from background script.");
-        return reject("No valid response or userId received from background script.");
-      }
-
-      const userId = response.value;
-      console.log("Received userId from background script:", userId);
-
-      // Fetch the user's replies on fake comments from the server
-      fetch(`https://outerlimits.onrender.com/api/getUserComments_onFakeComments?userid=${userId}`)
-        .then(response => {
-          // Check if the response is okay and if it's a JSON response
-          if (!response.ok) {
-            throw new Error(`https error! status: ${response.status}`);
-          }
-          const contentType = response.headers.get("content-type");
-          if (!contentType || !contentType.includes("application/json")) {
-            throw new Error("Response is not JSON");
-          }
-          return response.json();
-        })
-        .then(data => {
-          // Check if the data contains the expected structure
-          if (data && data.userInteractions && data.userInteractions.replies && Array.isArray(data.userInteractions.replies.onFakeComments)) {
-            const userRepliesOnFakeComments = data.userInteractions.replies.onFakeComments;
-
-            console.log("User replies on fake comments retrieved successfully:", userRepliesOnFakeComments);
-
-            // Process each user reply for a fake comment
-            const reply = userRepliesOnFakeComments.find(reply => reply.reply_to === commentId);
-            if (reply) {
-              // Resolve with the entire reply object
-              resolve(reply);
-            } else {
-              // If no reply was found for the comment
-              resolve(null);
-            }
-          } else {
-            console.log("Unexpected data structure:", data);
-            reject("Unexpected data structure");
-          }
-        })
-        .catch(error => {
-          console.error("Error retrieving user replies on fake comments:", error);
-          reject(error);
-        });
-    });
-  });
+function chromeStorageSet(values) {
+  return new Promise(resolve => chrome.storage.local.set(values, resolve));
 }
 
-function getUserRepliesOnFakePost(postId) {
-  console.log("Called for retrieving user replies on fake post");
+function normalizeVoteId(value) {
+  return value === undefined || value === null ? "" : String(value);
+}
 
-  return new Promise((resolve, reject) => {
-    // Send a message to the background script to get the user ID
-    chrome.runtime.sendMessage({ message: "need_uid_from_background" }, function (response) {
-      if (!response || !response.value) {
-        console.error("No valid response or userId received from background script.");
-        return reject("No valid response or userId received from background script.");
+function createEmptyVoteState(userId) {
+  return {
+    userId,
+    fakePosts: new Map(),
+    fakeComments: new Map()
+  };
+}
+
+function voteStateFromServer(userId, fakePostVotes, fakeCommentVotes) {
+  const state = createEmptyVoteState(userId);
+
+  fakePostVotes.forEach(vote => {
+    if (vote && vote.action_fake_post !== undefined && vote.action_fake_post !== null && vote.user_action) {
+      state.fakePosts.set(normalizeVoteId(vote.action_fake_post), vote.user_action);
+    }
+  });
+
+  fakeCommentVotes.forEach(vote => {
+    if (vote && vote.action_fake_comment !== undefined && vote.action_fake_comment !== null && vote.user_action) {
+      state.fakeComments.set(normalizeVoteId(vote.action_fake_comment), vote.user_action);
+    }
+  });
+
+  return state;
+}
+
+function serializeVoteState(state) {
+  return {
+    userId: state.userId,
+    fakePosts: Object.fromEntries(state.fakePosts),
+    fakeComments: Object.fromEntries(state.fakeComments),
+    updatedAt: Date.now()
+  };
+}
+
+function deserializeVoteState(cachedState, userId) {
+  if (!cachedState || cachedState.userId !== userId) {
+    return null;
+  }
+
+  return {
+    userId,
+    fakePosts: new Map(Object.entries(cachedState.fakePosts || {})),
+    fakeComments: new Map(Object.entries(cachedState.fakeComments || {}))
+  };
+}
+
+function hasAnyCachedVotes(state) {
+  return state && (state.fakePosts.size > 0 || state.fakeComments.size > 0);
+}
+
+async function getCurrentUserId() {
+  const response = await sendRuntimeMessage({ message: "need_uid_from_background" });
+  if (!response || !response.value) {
+    throw new Error("No valid userId received from background script.");
+  }
+
+  return response.value;
+}
+
+async function fetchJsonFromApi(path, params) {
+  const url = new URL(`${OUTER_LIMIT_API_BASE_URL}/${path}`);
+  Object.keys(params || {}).forEach(key => url.searchParams.set(key, params[key]));
+
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`https error! status: ${response.status}`);
+  }
+
+  const contentType = response.headers.get("content-type");
+  if (!contentType || !contentType.includes("application/json")) {
+    throw new Error("Response is not JSON");
+  }
+
+  return response.json();
+}
+
+function extractVoteList(data, listName) {
+  const list = data && data.userInteractions && data.userInteractions.votes && data.userInteractions.votes[listName];
+  return Array.isArray(list) ? list : [];
+}
+
+async function saveUserVoteState(state) {
+  await chromeStorageSet({ [USER_VOTE_CACHE_KEY]: serializeVoteState(state) });
+}
+
+async function refreshUserVoteStateFromServer(userId) {
+  if (userVoteState.serverRefreshPromise) {
+    return userVoteState.serverRefreshPromise;
+  }
+
+  const requestedAt = Date.now();
+  userVoteState.serverRefreshPromise = Promise.all([
+    fetchJsonFromApi("getUserVotes_onFakePosts", { userid: userId }),
+    fetchJsonFromApi("getUserVotes_onFakeComments", { userid: userId })
+  ])
+    .then(([fakePostData, fakeCommentData]) => {
+      const state = voteStateFromServer(
+        userId,
+        extractVoteList(fakePostData, "onFakePosts"),
+        extractVoteList(fakeCommentData, "onFakeComments")
+      );
+
+      if (userVoteState.lastLocalChangeAt > requestedAt && userVoteState.state) {
+        return userVoteState.state;
       }
 
-      const userId = response.value;
-      console.log("Received userId from background script:", userId);
-
-      // Fetch the user's replies on fake posts from the server
-      fetch(`https://outerlimits.onrender.com/api/getUserComments_onFakePosts?userid=${userId}`)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`https error! status: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then(data => {
-          // Check if the user has replies on fake posts
-          if (data.userInteractions && data.userInteractions.replies && data.userInteractions.replies.onFakePosts) {
-            // Filter replies based on the specific fake postId
-            const replies = data.userInteractions.replies.onFakePosts.filter(reply => reply.reply_fake_post === postId);
-
-            if (replies.length > 0) {
-              console.log('User reply to fake post:', replies);
-              resolve(replies); // Return the array of replies
-            } else {
-              console.log('No replies found for this fake post.');
-              resolve(null); // No replies found for the specified postId
-            }
-          } else {
-            console.log('No replies found for this user.');
-            resolve(null); // No replies found
-          }
-        })
-        .catch(error => {
-          console.error('Error retrieving user reply:', error);
-          reject(error);
-        });
+      userVoteState.state = state;
+      saveUserVoteState(state);
+      return state;
+    })
+    .catch(error => {
+      console.error("Error refreshing user votes:", error);
+      if (userVoteState.state) {
+        return userVoteState.state;
+      }
+      userVoteState.state = createEmptyVoteState(userId);
+      return userVoteState.state;
+    })
+    .finally(() => {
+      userVoteState.serverRefreshPromise = null;
     });
+
+  return userVoteState.serverRefreshPromise;
+}
+
+async function getUserVoteState() {
+  if (userVoteState.state) {
+    return userVoteState.state;
+  }
+
+  if (userVoteState.loadPromise) {
+    return userVoteState.loadPromise;
+  }
+
+  userVoteState.loadPromise = (async () => {
+    const userId = await getCurrentUserId();
+    userVoteState.userId = userId;
+
+    const stored = await chromeStorageGet([USER_VOTE_CACHE_KEY]);
+    const cachedState = deserializeVoteState(stored[USER_VOTE_CACHE_KEY], userId);
+
+    if (hasAnyCachedVotes(cachedState)) {
+      userVoteState.state = cachedState;
+      refreshUserVoteStateFromServer(userId);
+      return cachedState;
+    }
+
+    return refreshUserVoteStateFromServer(userId);
+  })().catch(error => {
+    userVoteState.loadPromise = null;
+    throw error;
   });
+
+  return userVoteState.loadPromise;
+}
+
+async function getUserVoteOnFakePost(postId) {
+  const state = await getUserVoteState();
+  return state.fakePosts.get(normalizeVoteId(postId)) || "novote";
+}
+
+async function getUserVoteOnFakeComment(commentId) {
+  const state = await getUserVoteState();
+  return state.fakeComments.get(normalizeVoteId(commentId)) || "novote";
+}
+
+function updateCachedFakeVote(voteType, targetId, userAction) {
+  userVoteState.lastLocalChangeAt = Date.now();
+  getUserVoteState()
+    .then(state => {
+      const targetMap = voteType === "fakepost" ? state.fakePosts : state.fakeComments;
+      targetMap.set(normalizeVoteId(targetId), userAction);
+      saveUserVoteState(state);
+    })
+    .catch(error => console.error("Unable to update cached vote:", error));
+}
+
+function removeCachedFakeVote(voteType, targetId) {
+  userVoteState.lastLocalChangeAt = Date.now();
+  getUserVoteState()
+    .then(state => {
+      const targetMap = voteType === "fakepost" ? state.fakePosts : state.fakeComments;
+      targetMap.delete(normalizeVoteId(targetId));
+      saveUserVoteState(state);
+    })
+    .catch(error => console.error("Unable to remove cached vote:", error));
+}
+
+const userReplyState = {
+  userId: null,
+  state: null,
+  loadPromise: null,
+  serverRefreshPromise: null,
+  lastLocalChangeAt: 0
+};
+
+function createEmptyReplyState(userId) {
+  return {
+    userId,
+    fakePosts: new Map(),
+    fakeComments: new Map()
+  };
+}
+
+function addReplyToMap(map, id, reply) {
+  const normalizedId = normalizeVoteId(id);
+  const replies = map.get(normalizedId) || [];
+  replies.push(reply);
+  map.set(normalizedId, replies);
+}
+
+function replyStateFromServer(userId, fakePostReplies, fakeCommentReplies) {
+  const state = createEmptyReplyState(userId);
+
+  fakePostReplies.forEach(reply => {
+    if (reply && reply.reply_fake_post !== undefined && reply.reply_fake_post !== null) {
+      addReplyToMap(state.fakePosts, reply.reply_fake_post, reply);
+    }
+  });
+
+  fakeCommentReplies.forEach(reply => {
+    if (reply && reply.reply_to !== undefined && reply.reply_to !== null) {
+      addReplyToMap(state.fakeComments, reply.reply_to, reply);
+    }
+  });
+
+  return state;
+}
+
+function serializeReplyState(state) {
+  return {
+    userId: state.userId,
+    fakePosts: Object.fromEntries(state.fakePosts),
+    fakeComments: Object.fromEntries(state.fakeComments),
+    updatedAt: Date.now()
+  };
+}
+
+function deserializeReplyState(cachedState, userId) {
+  if (!cachedState || cachedState.userId !== userId) {
+    return null;
+  }
+
+  return {
+    userId,
+    fakePosts: new Map(Object.entries(cachedState.fakePosts || {})),
+    fakeComments: new Map(Object.entries(cachedState.fakeComments || {}))
+  };
+}
+
+function hasAnyCachedReplies(state) {
+  return state && (state.fakePosts.size > 0 || state.fakeComments.size > 0);
+}
+
+function extractReplyList(data, listName) {
+  const list = data && data.userInteractions && data.userInteractions.replies && data.userInteractions.replies[listName];
+  return Array.isArray(list) ? list : [];
+}
+
+async function saveUserReplyState(state) {
+  await chromeStorageSet({ [USER_REPLY_CACHE_KEY]: serializeReplyState(state) });
+}
+
+async function refreshUserReplyStateFromServer(userId) {
+  if (userReplyState.serverRefreshPromise) {
+    return userReplyState.serverRefreshPromise;
+  }
+
+  const requestedAt = Date.now();
+  userReplyState.serverRefreshPromise = Promise.all([
+    fetchJsonFromApi("getUserComments_onFakePosts", { userid: userId }),
+    fetchJsonFromApi("getUserComments_onFakeComments", { userid: userId })
+  ])
+    .then(([fakePostData, fakeCommentData]) => {
+      const state = replyStateFromServer(
+        userId,
+        extractReplyList(fakePostData, "onFakePosts"),
+        extractReplyList(fakeCommentData, "onFakeComments")
+      );
+
+      if (userReplyState.lastLocalChangeAt > requestedAt && userReplyState.state) {
+        return userReplyState.state;
+      }
+
+      userReplyState.state = state;
+      saveUserReplyState(state);
+      return state;
+    })
+    .catch(error => {
+      console.error("Error refreshing user replies:", error);
+      if (userReplyState.state) {
+        return userReplyState.state;
+      }
+      userReplyState.state = createEmptyReplyState(userId);
+      return userReplyState.state;
+    })
+    .finally(() => {
+      userReplyState.serverRefreshPromise = null;
+    });
+
+  return userReplyState.serverRefreshPromise;
+}
+
+async function getUserReplyState() {
+  if (userReplyState.state) {
+    return userReplyState.state;
+  }
+
+  if (userReplyState.loadPromise) {
+    return userReplyState.loadPromise;
+  }
+
+  userReplyState.loadPromise = (async () => {
+    const userId = await getCurrentUserId();
+    userReplyState.userId = userId;
+
+    const stored = await chromeStorageGet([USER_REPLY_CACHE_KEY]);
+    const cachedState = deserializeReplyState(stored[USER_REPLY_CACHE_KEY], userId);
+
+    if (hasAnyCachedReplies(cachedState)) {
+      userReplyState.state = cachedState;
+      refreshUserReplyStateFromServer(userId);
+      return cachedState;
+    }
+
+    return refreshUserReplyStateFromServer(userId);
+  })().catch(error => {
+    userReplyState.loadPromise = null;
+    throw error;
+  });
+
+  return userReplyState.loadPromise;
+}
+
+async function getUserRepliesOnFakeComment(commentId) {
+  const state = await getUserReplyState();
+  const replies = state.fakeComments.get(normalizeVoteId(commentId)) || [];
+  return replies[0] || null;
+}
+
+async function getUserRepliesOnFakePost(postId) {
+  const state = await getUserReplyState();
+  const replies = state.fakePosts.get(normalizeVoteId(postId)) || [];
+  return replies.length > 0 ? replies : null;
+}
+
+function updateCachedFakeCommentReply(commentId, fakePostId, replyContent) {
+  userReplyState.lastLocalChangeAt = Date.now();
+  getUserReplyState()
+    .then(state => {
+      state.fakeComments.set(normalizeVoteId(commentId), [{
+        reply_to: commentId,
+        reply_fake_post: fakePostId,
+        reply_content: replyContent
+      }]);
+      saveUserReplyState(state);
+    })
+    .catch(error => console.error("Unable to update cached fake comment reply:", error));
+}
+
+function removeCachedFakeCommentReply(commentId) {
+  userReplyState.lastLocalChangeAt = Date.now();
+  getUserReplyState()
+    .then(state => {
+      state.fakeComments.delete(normalizeVoteId(commentId));
+      saveUserReplyState(state);
+    })
+    .catch(error => console.error("Unable to remove cached fake comment reply:", error));
+}
+
+function updateCachedFakePostReply(fakePostId, replyContent) {
+  userReplyState.lastLocalChangeAt = Date.now();
+  getUserReplyState()
+    .then(state => {
+      addReplyToMap(state.fakePosts, fakePostId, {
+        reply_fake_post: fakePostId,
+        reply_content: replyContent
+      });
+      saveUserReplyState(state);
+    })
+    .catch(error => console.error("Unable to update cached fake post reply:", error));
+}
+
+function removeCachedFakePostReply(fakePostId, replyContent) {
+  userReplyState.lastLocalChangeAt = Date.now();
+  getUserReplyState()
+    .then(state => {
+      const replies = state.fakePosts.get(normalizeVoteId(fakePostId)) || [];
+      const nextReplies = replies.filter(reply => reply.reply_content !== replyContent);
+      if (nextReplies.length > 0) {
+        state.fakePosts.set(normalizeVoteId(fakePostId), nextReplies);
+      } else {
+        state.fakePosts.delete(normalizeVoteId(fakePostId));
+      }
+      saveUserReplyState(state);
+    })
+    .catch(error => console.error("Unable to remove cached fake post reply:", error));
 }
 
 
@@ -2183,12 +2592,13 @@ window.addEventListener('beforeunload', function (event) {
 
 
 /// fake post delete and update 
-function sendVoteFakePostMessage(useraction, fakePostId) {
+function sendVoteFakePostMessage(useraction, fakePostId, metadata = {}) {
   chrome.runtime.sendMessage({
     message: "updateUserVoteFakePost",  // This is the message type the background script will handle
     data: {
       useraction: useraction,            // The user's vote action (e.g., 1 for upvote, 0 for downvote)
-      fakePostId: fakePostId             // The ID of the fake post being voted on
+      fakePostId: fakePostId,            // The ID of the fake post being voted on
+      ...metadata
     }
   }, function (response) {
     if (response && response.message === "updateUserVoteFakePost") {
@@ -2199,13 +2609,15 @@ function sendVoteFakePostMessage(useraction, fakePostId) {
   });
 }
 
-function sendDeleteUserReplyFakeCommentMessage(replyTo, replyFakePost, replyContent) {
+function sendDeleteUserReplyFakeCommentMessage(replyTo, replyFakePost, replyContent, replyId) {
+  removeCachedFakeCommentReply(replyTo);
   chrome.runtime.sendMessage({
     message: "deleteUserReplyFakeComment",  // The message type for removing a reply on a fake comment
     data: {
       replyTo: replyTo,               // The ID of the fake comment being replied to
       replyFakePost: replyFakePost,   // The fake post containing the comment
-      replyContent: replyContent      // The content of the reply
+      replyContent: replyContent,     // The content of the reply
+      replyId: replyId
     }
   }, function (response) {
     if (response && response.message === "deleteUserReplyFakeComment") {
@@ -2232,14 +2644,15 @@ function sendDeleteVoteFakePostMessage(fakePostId) {
 }
 
 // fake comments action delete and update 
-function sendVoteFakeCommentMessage(useraction, fakeCommentId, fakePostId) {
+function sendVoteFakeCommentMessage(useraction, fakeCommentId, fakePostId, metadata = {}) {
   // Send a message to the background script with the necessary data to update the vote on a fake comment
   chrome.runtime.sendMessage({
     message: "updateUserVoteFakeComment",  // This is the message type the background script will handle
     data: {
       useraction: useraction,              // The user's vote action (e.g., 1 for upvote, 0 for downvote)
       action_fake_comment: fakeCommentId,  // The ID of the fake comment being voted on
-      action_fake_post: fakePostId         // The ID of the fake post the comment belongs to
+      action_fake_post: fakePostId,        // The ID of the fake post the comment belongs to
+      ...metadata
     }
   }, function (response) {
     // Check the response from the background script
@@ -2345,56 +2758,55 @@ function removeAllCommentsFromSpecificPost(containerElement) {
   }
 }
 
-function applyUserVoteOnElement(parentDiv, voteFunction, postOrCommentId) {
+function setVoteButtonState(parentDiv, voteState) {
   var upvoteButton = parentDiv.querySelector('[aria-label="upvote"]');
   var downvoteButton = parentDiv.querySelector('[aria-label="downvote"]');
   var midcolDiv = parentDiv.querySelector('.midcol');
   var entryDiv = parentDiv.querySelector('.entry');
 
+  if (!upvoteButton || !downvoteButton || !midcolDiv) {
+    return false;
+  }
+
+  upvoteButton.classList.remove('up', 'upmod');
+  downvoteButton.classList.remove('down', 'downmod');
+  midcolDiv.classList.remove('likes', 'dislikes', 'unvoted');
+
+  if (entryDiv) {
+    entryDiv.classList.remove('likes', 'dislikes', 'unvoted');
+  }
+
+  if (voteState === "upvote") {
+    upvoteButton.classList.add('upmod');
+    downvoteButton.classList.add('down');
+    midcolDiv.classList.add('likes');
+    if (entryDiv) {
+      entryDiv.classList.add('likes');
+    }
+  } else if (voteState === "downvote") {
+    upvoteButton.classList.add('up');
+    downvoteButton.classList.add('downmod');
+    midcolDiv.classList.add('dislikes');
+    if (entryDiv) {
+      entryDiv.classList.add('dislikes');
+    }
+  } else {
+    upvoteButton.classList.add('up');
+    downvoteButton.classList.add('down');
+    midcolDiv.classList.add('unvoted');
+    if (entryDiv) {
+      entryDiv.classList.add('unvoted');
+    }
+  }
+
+  return true;
+}
+
+function applyUserVoteOnElement(parentDiv, voteFunction, postOrCommentId) {
   voteFunction(postOrCommentId)
     .then(result => {
-      if (result === "upvote") {
-        console.log("User has upvoted the post/comment.");
-        upvoteButton.classList.remove('up');
-        upvoteButton.classList.add('upmod');
-        midcolDiv.classList.remove('unvoted');
-        midcolDiv.classList.add('likes');
-        if (entryDiv) {
-          entryDiv.classList.remove('unvoted');
-          entryDiv.classList.add('likes');
-        }
-        // Add logic for upvote
-      } else if (result === "downvote") {
-        console.log("User has downvoted the post/comment.");
-        downvoteButton.classList.remove('down');
-        downvoteButton.classList.add('downmod');
-        midcolDiv.classList.remove('unvoted');
-        midcolDiv.classList.add('dislikes');
-        if (entryDiv) {
-          entryDiv.classList.remove('unvoted');
-          entryDiv.classList.add('dislikes');
-        }
-        // Add logic for downvote
-      } else if (result === "novote") {
-        console.log("User has not voted on the post/comment.");
-
-        midcolDiv.classList.remove('dislikes');
-        midcolDiv.classList.remove('likes');
-        midcolDiv.classList.add('unvoted');
-
-        downvoteButton.classList.remove('downmod');
-        downvoteButton.classList.add('down');
-
-        upvoteButton.classList.remove('upmod');
-        upvoteButton.classList.add('up');
-
-        entryDiv.classList.remove('likes');
-        entryDiv.classList.remove('dislikes');
-        entryDiv.classList.add('unvoted');
-
-
-
-        // Add logic for no vote
+      if (!setVoteButtonState(parentDiv, result)) {
+        console.log('Required vote elements not found');
       }
     })
     .catch(error => {
@@ -2403,11 +2815,9 @@ function applyUserVoteOnElement(parentDiv, voteFunction, postOrCommentId) {
     });
 }
 
-function handleVoteButtons(parentDiv, voteType, fakeCommentId, url) {
+function handleVoteButtons(parentDiv, voteType, fakeCommentId, url, metadata = {}) {
   var upvoteButton = parentDiv.querySelector('[aria-label="upvote"]');
   var downvoteButton = parentDiv.querySelector('[aria-label="downvote"]');
-  var midcolDiv = parentDiv.querySelector('.midcol');
-  var entryDiv = parentDiv.querySelector('.entry');
   // Check if the elements are found
   if (upvoteButton && downvoteButton) {
     // Upvote button functionality
@@ -2422,42 +2832,20 @@ function handleVoteButtons(parentDiv, voteType, fakeCommentId, url) {
 
       if (upvoteButton.classList.contains('upmod')) {
         // Undo the upvote (reset to unvoted state)
-        upvoteButton.classList.remove('upmod');
-        upvoteButton.classList.add('up');
-        midcolDiv.classList.remove('likes');
-        midcolDiv.classList.add('unvoted');
+        setVoteButtonState(parentDiv, "novote");
         console.log('Upvote undone');
         console.log("update vote botton div: ", upvoteButton);
-        if (entryDiv) {
-          entryDiv.classList.remove('likes');
-          entryDiv.classList.add('unvoted');
-        }
         sendDeleteVoteMessage(voteType, fakeCommentId, url);
       } else {
         // If downvote was previously clicked, reset it
         if (downvoteButton.classList.contains('downmod')) {
-          downvoteButton.classList.remove('downmod');
-          downvoteButton.classList.add('down');
-          midcolDiv.classList.remove('dislikes');
-          midcolDiv.classList.add('unvoted');
-          if (entryDiv) {
-            entryDiv.classList.remove('dislikes');
-            entryDiv.classList.add('unvoted');
-          }
           sendDeleteVoteMessage(voteType, fakeCommentId, url);
         }
 
         // Apply the upvote changes
-        upvoteButton.classList.remove('up');
-        upvoteButton.classList.add('upmod');
-        midcolDiv.classList.remove('unvoted');
-        midcolDiv.classList.add('likes');
-        if (entryDiv) {
-          entryDiv.classList.remove('unvoted');
-          entryDiv.classList.add('likes');
-        }
+        setVoteButtonState(parentDiv, "upvote");
         console.log('Upvoted');
-        sendVoteMessage("upvote", voteType, fakeCommentId, url);
+        sendVoteMessage("upvote", voteType, fakeCommentId, url, metadata);
       }
     }, true);  // Using capture phase to prevent Reddit's listener
 
@@ -2469,41 +2857,19 @@ function handleVoteButtons(parentDiv, voteType, fakeCommentId, url) {
 
       if (downvoteButton.classList.contains('downmod')) {
         // Undo the downvote (reset to unvoted state)
-        downvoteButton.classList.remove('downmod');
-        downvoteButton.classList.add('down');
-        midcolDiv.classList.remove('dislikes');
-        midcolDiv.classList.add('unvoted');
-        if (entryDiv) {
-          entryDiv.classList.remove('dislikes');
-          entryDiv.classList.add('unvoted');
-        }
+        setVoteButtonState(parentDiv, "novote");
         console.log('Downvote undone');
         sendDeleteVoteMessage(voteType, fakeCommentId, url);
       } else {
         // If upvote was previously clicked, reset it
         if (upvoteButton.classList.contains('upmod')) {
-          upvoteButton.classList.remove('upmod');
-          upvoteButton.classList.add('up');
-          midcolDiv.classList.remove('likes');
-          midcolDiv.classList.add('unvoted');
-          if (entryDiv) {
-            entryDiv.classList.remove('likes');
-            entryDiv.classList.add('unvoted');
-          }
           sendDeleteVoteMessage(voteType, fakeCommentId, url);
         }
 
         // Apply the downvote changes
-        downvoteButton.classList.remove('down');
-        downvoteButton.classList.add('downmod');
-        midcolDiv.classList.remove('unvoted');
-        midcolDiv.classList.add('dislikes');
-        if (entryDiv) {
-          entryDiv.classList.remove('unvoted');
-          entryDiv.classList.add('dislikes');
-        }
+        setVoteButtonState(parentDiv, "downvote");
         console.log('Downvoted');
-        sendVoteMessage("downvote", voteType, fakeCommentId, url);
+        sendVoteMessage("downvote", voteType, fakeCommentId, url, metadata);
       }
     }, true);  // Using capture phase to prevent Reddit's listener
   } else {
@@ -2512,13 +2878,15 @@ function handleVoteButtons(parentDiv, voteType, fakeCommentId, url) {
 }
 
 // Function to send vote // this function is used to deal with different vote , fake post levele and fake comments level 
-function sendVoteMessage(voteAction, voteType, targetId, url) {
+function sendVoteMessage(voteAction, voteType, targetId, url, metadata = {}) {
   if (voteType === 'fakepost') {
 
+    updateCachedFakeVote("fakepost", url, voteAction);
     // Add logic to send vote for fake post
-    sendVoteFakePostMessage(voteAction, url);
+    sendVoteFakePostMessage(voteAction, url, metadata);
   } else if (voteType === 'fakecomment') {
-    sendVoteFakeCommentMessage(voteAction, targetId, url);
+    updateCachedFakeVote("fakecomment", targetId, voteAction);
+    sendVoteFakeCommentMessage(voteAction, targetId, url, metadata);
     // Add logic to send vote for comment
   }
 }
@@ -2526,9 +2894,11 @@ function sendVoteMessage(voteAction, voteType, targetId, url) {
 // Function to delete vote
 function sendDeleteVoteMessage(voteType, targetId, url) {
   if (voteType === 'fakepost') {
+    removeCachedFakeVote("fakepost", url);
     sendDeleteVoteFakePostMessage(url);
     // Add logic to delete vote for fake post
   } else if (voteType === 'fakecomment') {
+    removeCachedFakeVote("fakecomment", targetId);
     sendDeleteVoteFakeCommentMessage(targetId, url);
     // Add logic to delete vote for comment
   }
@@ -2536,13 +2906,13 @@ function sendDeleteVoteMessage(voteType, targetId, url) {
 
 
 // Function to send real  vote // this function is used to deal with different vote , fake post levele and fake comments level 
-function sendRealVoteMessage(voteAction, voteType, targetId, url) {
+function sendRealVoteMessage(voteAction, voteType, targetId, url, metadata = {}) {
   if (voteType === 'post') {
 
     // Add logic to send vote for fake post
-    sendVoteRealPostMessage(url, voteAction);
+    sendVoteRealPostMessage(url, voteAction, metadata);
   } else if (voteType === 'comment') {
-    sendVoteRealCommentMessage(targetId, url, voteAction);
+    sendVoteRealCommentMessage(targetId, url, voteAction, metadata);
     // Add logic to send vote for comment
   }
 }
@@ -2557,12 +2927,13 @@ function sendDeleteRealVoteMessage(voteType, targetId, url) {
     // Add logic to delete vote for comment
   }
 }
-function sendVoteRealPostMessage(postId, userAction) {
+function sendVoteRealPostMessage(postId, userAction, metadata = {}) {
   chrome.runtime.sendMessage(
     {
       message: "addUserVoteToPost",
       postId: postId,
-      userAction: userAction // e.g., "upvote" or "downvote"
+      userAction: userAction, // e.g., "upvote" or "downvote"
+      ...metadata
     },
     function (response) {
       if (response.success) {
@@ -2573,13 +2944,14 @@ function sendVoteRealPostMessage(postId, userAction) {
     }
   );
 }
-function sendVoteRealCommentMessage(commentId, postId, userAction) {
+function sendVoteRealCommentMessage(commentId, postId, userAction, metadata = {}) {
   chrome.runtime.sendMessage(
     {
       message: "addUserVoteToComment",
       commentId: commentId,
       postId: postId,
-      userAction: userAction // e.g., "upvote" or "downvote"
+      userAction: userAction, // e.g., "upvote" or "downvote"
+      ...metadata
     },
     function (response) {
       if (response.success) {
@@ -2680,7 +3052,7 @@ function insertCommentFormORReplyFakeComment(parentDiv, fakeCommentID, fakePostI
                     var commentFormElement = childDiv.querySelector('form');
                     if (commentFormElement) {
                       commentFormElement.remove();
-                      sendUserReplyFakeComment(fakeCommentID, enteredText, fakePostId);
+                      sendUserReplyFakeComment(fakeCommentID, enteredText, fakePostId, getCommentSnapshot(parentDiv));
                       // Select the element containing the username
                       var userElement = document.querySelector('span.user a');
 
@@ -2732,12 +3104,16 @@ function insertCommentFormORReplyFakeComment(parentDiv, fakeCommentID, fakePostI
 
 
 }
-function sendUserReplyFakeComment(commentId, commentContent, fakePostId) {
+function sendUserReplyFakeComment(commentId, commentContent, fakePostId, metadata = {}) {
+  updateCachedFakeCommentReply(commentId, fakePostId, commentContent);
   chrome.runtime.sendMessage({
     message: "insertUserReplyFakeComments",  // Message type
     commentId: commentId,                    // The ID of the comment being replied to
     commentContent: commentContent,          // The content of the user's reply
     fakePostId: fakePostId,                  // The ID of the fake post
+    replyId: metadata.replyId || generateOuterLimitId("fake-comment-reply", commentId),
+    targetCommentContext: metadata.targetCommentContext,
+    targetCommentAuthor: metadata.targetCommentAuthor
   }, function (response) {
     if (response && response.success) {
       console.log("User reply inserted successfully.");
@@ -2853,7 +3229,7 @@ function insertUserReplyFakeComments(childDiv, username, content, fakeCommentId,
       //console.log(" test out the contet ere: ", content);
       sendDeleteUserReplyFakeCommentMessage(fakeCommentId, fakePostId, content);
       // add new comments acoording to new text 
-      sendUserReplyFakeComment(fakeCommentId, enteredText, fakePostId);
+      sendUserReplyFakeComment(fakeCommentId, enteredText, fakePostId, getCommentSnapshot(childDiv.closest('.thing') || childDiv));
 
     }
 
@@ -2897,7 +3273,7 @@ function monitorUserReplyToFakePost(fakePostId) {
           insertUserReplyFakePost(postElement, username, enteredText, fakePostId);
 
           // Send the user reply to the backend for further processing
-          sendInsertUserReplyToFakePostMessage(fakePostId, enteredText);
+          sendInsertUserReplyToFakePostMessage(fakePostId, enteredText, getPostSnapshot());
           textarea.value = "";
           return;
         }
@@ -2949,7 +3325,7 @@ function insertUserReplyFakePost(childDiv, username, content, fakePostId, oldCom
       // remove the old user reply to fake post comment ; 
 
       sendRemoveUserReplyFromFakePostMessage(fakePostId, content);
-      sendInsertUserReplyToFakePostMessage(fakePostId, enteredText);
+      sendInsertUserReplyToFakePostMessage(fakePostId, enteredText, getPostSnapshot());
       insertUserReplyFakePost(childDiv, username, enteredText, fakePostId, insertedElement);
 
 
@@ -2960,13 +3336,17 @@ function insertUserReplyFakePost(childDiv, username, content, fakePostId, oldCom
 
 }
 
-function sendInsertUserReplyToFakePostMessage(fakePostId, replyContent) {
+function sendInsertUserReplyToFakePostMessage(fakePostId, replyContent, metadata = {}) {
 
+  updateCachedFakePostReply(fakePostId, replyContent);
   // Get the user ID (assuming userpid is available in your context)
   chrome.runtime.sendMessage({
     message: "insertUserReplyToFakePost",  // Message type for inserting user reply
     fakePostId: fakePostId,                // Fake post ID
-    replyContent: replyContent             // The user's reply content
+    replyContent: replyContent,            // The user's reply content
+    replyId: metadata.replyId || generateOuterLimitId("fake-post-reply", fakePostId),
+    targetPostTitle: metadata.targetPostTitle,
+    targetPostContext: metadata.targetPostContext
   }, function (response) {
     if (response && response.success) {
       console.log("User reply inserted successfully.");
@@ -2976,12 +3356,14 @@ function sendInsertUserReplyToFakePostMessage(fakePostId, replyContent) {
   });
 }
 
-function sendRemoveUserReplyFromFakePostMessage(fakePostId, replyContent) {
+function sendRemoveUserReplyFromFakePostMessage(fakePostId, replyContent, replyId) {
+  removeCachedFakePostReply(fakePostId, replyContent);
   // Get the user ID (assuming userpid is available in your context)
   chrome.runtime.sendMessage({
     message: "removeUserReplyFromFakePost",  // Message type for removing user reply
     fakePostId: fakePostId,                  // Fake post ID
-    replyContent: replyContent               // The reply content to remove
+    replyContent: replyContent,              // The reply content to remove
+    replyId: replyId
   }, function (response) {
     if (response && response.success) {
       console.log("User reply removed successfully.");
@@ -3056,13 +3438,14 @@ function insertCachedHTMLandMonitorExpandoButton(parentDiv) {
 }
 
 
-function sendDeleteUserReplyRealCommentMessage(replyTo, replyPost, replyContent) {
+function sendDeleteUserReplyRealCommentMessage(replyTo, replyPost, replyContent, replyId) {
   var message = {
     message: "deleteUserReplyRealComment",
     data: {
       replyTo: replyTo,             // The real comment ID being replied to
       replyPost: replyPost,         // The post ID where the real comment is
-      replyContent: replyContent    // The content of the reply to be deleted
+      replyContent: replyContent,   // The content of the reply to be deleted
+      replyId: replyId
     }
   };
 
@@ -3072,13 +3455,16 @@ function sendDeleteUserReplyRealCommentMessage(replyTo, replyPost, replyContent)
     }
   });
 }
-function sendAddUserReplyRealCommentMessage(replyTo, replyPost, replyContent) {
+function sendAddUserReplyRealCommentMessage(replyTo, replyPost, replyContent, metadata = {}) {
   var message = {
     message: "addUserReplyRealComment",
     data: {
       replyContent: replyContent,   // The content of the user's reply
       replyTo: replyTo,             // The real comment ID being replied to
-      replyPost: replyPost          // The post ID where the real comment is
+      replyPost: replyPost,         // The post ID where the real comment is
+      replyId: metadata.replyId || generateOuterLimitId("real-comment-reply", replyTo),
+      targetCommentContext: metadata.targetCommentContext,
+      targetCommentAuthor: metadata.targetCommentAuthor
     }
   };
 
@@ -3092,12 +3478,15 @@ function sendAddUserReplyRealCommentMessage(replyTo, replyPost, replyContent) {
 // messageHandlers.js
 
 // Function to send a message to add a user reply to a real post
-function sendAddUserReplyRealPostMessage(replyContent, replyPost) {
+function sendAddUserReplyRealPostMessage(replyContent, replyPost, metadata = {}) {
   const message = {
     message: "addUserReplyRealPost",
     data: {
       replyContent: replyContent,   // The content of the user's reply
-      replyPost: replyPost          // The post ID where the real post is
+      replyPost: replyPost,         // The post ID where the real post is
+      replyId: metadata.replyId || generateOuterLimitId("real-post-reply", replyPost),
+      targetPostTitle: metadata.targetPostTitle,
+      targetPostContext: metadata.targetPostContext
     }
   };
 
@@ -3109,12 +3498,13 @@ function sendAddUserReplyRealPostMessage(replyContent, replyPost) {
 }
 
 // Function to send a message to delete a user reply on a real post
-function sendDeleteUserReplyRealPostMessage(replyPost, replyContent) {
+function sendDeleteUserReplyRealPostMessage(replyPost, replyContent, replyId) {
   const message = {
     message: "deleteUserReplyRealPost",
     data: {
       replyPost: replyPost,         // The post ID where the real post is
-      replyContent: replyContent    // The content of the reply to delete
+      replyContent: replyContent,   // The content of the reply to delete
+      replyId: replyId
     }
   };
 
@@ -3171,9 +3561,24 @@ imageMutationObserver.observe(targetNode, {
 document.querySelectorAll('img').forEach(applyClickListenerToImages);
 
 
-function restoreOpacity() {
-  document.documentElement.style.opacity = '1';
+function restoreOpacity(force = false) {
+  if (!force && outerLimitVisibilityLocks > 0) {
+    console.log(`[OuterLimits] restoreOpacity blocked because page is hidden. Locks: ${outerLimitVisibilityLocks}`);
+    return;
+  }
 
-  
+  document.documentElement.style.setProperty('opacity', '1', 'important');
+  document.documentElement.style.setProperty('visibility', 'visible', 'important');
+  if (document.body) {
+    document.body.style.setProperty('opacity', '1', 'important');
+    document.body.style.setProperty('visibility', 'visible', 'important');
+  }
+  const tag = document.getElementById('__outer_limit_hide__');
+  if (tag) tag.remove();
+
+  if (window.__outerLimit_titleState && window.__outerLimit_titleState.locked) {
+    window.__outerLimit_releaseTitle();
+  }
+
   console.log('[OuterLimits] restoreOpacity() called, current opacity = 1' );
 }

@@ -13,6 +13,79 @@ let survey;
 let endDate;
 const groupschoice = ['mlen','mley','mhen','mhey'];
 
+function isRedditTabUrl(url) {
+  try {
+    const parsedUrl = new URL(url);
+    return parsedUrl.hostname === "old.reddit.com" || parsedUrl.hostname === "www.reddit.com";
+  } catch (error) {
+    return false;
+  }
+}
+
+function isExpectedTabMessageError(message) {
+  return message && (
+    message.includes("Could not establish connection") ||
+    message.includes("Receiving end does not exist") ||
+    message.includes("The message port closed before a response was received")
+  );
+}
+
+function sendMessageToTab(tabId, message, onResponse) {
+  chrome.tabs.sendMessage(tabId, message, function (response) {
+    if (chrome.runtime.lastError) {
+      const errorMessage = chrome.runtime.lastError.message;
+      if (!isExpectedTabMessageError(errorMessage)) {
+        console.error(errorMessage);
+      }
+      return;
+    }
+
+    if (onResponse) {
+      onResponse(response);
+    }
+  });
+}
+
+function sendMessageToActiveRedditTab(message, onResponse) {
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    if (!tabs || tabs.length === 0) {
+      console.log("No active tabs found");
+      return;
+    }
+
+    const activeTab = tabs[0];
+    if (!isRedditTabUrl(activeTab.url)) {
+      console.log("Active tab is not a supported Reddit page:", activeTab.url);
+      return;
+    }
+
+    sendMessageToTab(activeTab.id, message, onResponse);
+  });
+}
+
+function chooseFallbackGroup() {
+  return groupschoice[Math.floor(Math.random() * groupschoice.length)];
+}
+
+function reloadActiveTab() {
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    if (tabs && tabs[0] && isRedditTabUrl(tabs[0].url)) {
+      chrome.tabs.reload(tabs[0].id);
+    }
+  });
+}
+
+function storeIdentity(uid, userGroup, callback) {
+  userpid = uid;
+  group = userGroup;
+  chrome.storage.local.set({ userpid: uid, group: userGroup }, function () {
+    console.log("user identity stored successfully.", { uid, group: userGroup });
+    if (callback) {
+      callback();
+    }
+  });
+}
+
 /**
  * chrome.storage API to store, retrieve, and track changes to user data.
  */
@@ -112,17 +185,10 @@ chrome.storage.local.get(
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
   if (changeInfo.url) {
     console.log("The tab URL has changed");
-    if (changeInfo.url.includes("reddit.com")) {
+    if (isRedditTabUrl(changeInfo.url)) {
       if (changeInfo.url.includes("/r/") || changeInfo.url.includes("/comments/")) {
         console.log("The URL is a post and we want to call content js ");
-        chrome.tabs.sendMessage(tabId, { message: "run_my_code" }, function (response) {
-          if (chrome.runtime.lastError) {
-            console.error(chrome.runtime.lastError.message);
-            // Handle the error or perform other actions
-          } else {
-            // Process the response or perform other actions
-          }
-        });
+        sendMessageToTab(tabId, { message: "run_my_code" });
       }
       else {
         console.log("The URL is the Reddit home page");
@@ -142,46 +208,51 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
  */
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (message.message === "send_userid_from_timerjs" && message.userId) {
-    // Do something with the user ID
-    userpid = message.userId.trim();
+    const uid = message.userId.trim();
+    const fallbackGroup = chooseFallbackGroup();
 
-    // store the userpid on local so it does not disappear later
-    chrome.storage.local.set({ userpid: userpid }, function () {
-      console.log('userpid stored successfully.');
+    chrome.storage.local.set({ userpid: uid }, function () {
+      console.log("userpid stored successfully.");
     });
 
+    insertdata(uid, fallbackGroup)
+      .then(function (data) {
+        const resolvedGroup = data && data.usergroup ? data.usergroup : fallbackGroup;
+        storeIdentity(uid, resolvedGroup, function () {
+          setExp(function () {
+            reloadActiveTab();
+            sendResponse({ success: true, user_id: uid, user_group: resolvedGroup });
+          });
+        });
+      })
+      .catch(function (error) {
+        console.error("Failed to sync user group with database. Using fallback group.", error);
+        storeIdentity(uid, fallbackGroup, function () {
+          setExp(function () {
+            reloadActiveTab();
+            sendResponse({ success: false, user_id: uid, user_group: fallbackGroup });
+          });
+        });
+      });
 
-   
-    group = groupschoice[Math.floor(Math.random() * groupschoice.length)];
-    // store the group condition on local so it does not disappear later
-    chrome.storage.local.set({ group: group }, function () {
-      console.log('group stored successfully.');
-    });
-
-    function forceRefreshTab(tabId) {
-
-      chrome.tabs.reload(tabId);
-    }
-
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      if (tabs && tabs[0]) {
-        //document.documentElement.style.visibility = 'hidden';
-        forceRefreshTab(tabs[0].id);
-      }
-    });
-
-    insertdata(userpid.trim(), group.trim());
-  
-    console.log(`Background Received user ID from timer js: ${message.userId}`);
+    console.log(`Background Received user ID from timer js: ${uid}`);
+    return true;
   }
 });
 
 //give all setup to content js when the experiment already started and user opened a new tab
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.message === "get_all_setup") {
-    sendResponse({
-      ifstartexp: ifstartexp
+    chrome.storage.local.get(['ifstartexp'], function (result) {
+      if (result.ifstartexp !== undefined) {
+        ifstartexp = result.ifstartexp;
+      }
+
+      sendResponse({
+        ifstartexp: ifstartexp
+      });
     });
+    return true;
   }
 });
 
@@ -190,36 +261,23 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
  * Initializes an experiment by setting start and end times, storing them in chrome.storage.
  * Sends a message to the content script of the active tab to kick off the experiment.
  */
-function setExp() {
+function setExp(callback) {
   startDate = new Date();
-  chrome.storage.local.set({ startDate: startDate.toString() }, function () {
-    console.log('startDate stored successfully.');
-  });
   //add 5 seconds
   endDate = new Date(startDate.getTime() + 60000);
   ifstartexp = true;
 
-  chrome.storage.local.set({ ifstartexp: ifstartexp }, function () {
-    console.log('ifstartexp stored successfully.');
-  });
-
-  chrome.storage.local.set({ endDate: endDate.getTime() }, function () { });
-
-  // start the experiment(listening the upvote and downvote buttons)
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    if (tabs.length === 0) {
-      console.error("No active tabs found");
-      return;
+  chrome.storage.local.set({
+    startDate: startDate.toString(),
+    ifstartexp: ifstartexp,
+    endDate: endDate.getTime()
+  }, function () {
+    console.log('experiment state stored successfully.');
+    // start the experiment(listening the upvote and downvote buttons)
+    sendMessageToActiveRedditTab({ message: "start experiment" });
+    if (callback) {
+      callback();
     }
-    // Send a message to the content script
-    chrome.tabs.sendMessage(tabs[0].id, { message: "start experiment" }, function (response) {
-      if (chrome.runtime.lastError) {
-        console.error(chrome.runtime.lastError.message);
-        // Handle the error or perform other actions
-      } else {
-        // Process the response or perform other actions
-      }
-    });
   });
 }
 
@@ -238,23 +296,7 @@ function checkTime() {
       console.log('endexp stored successfully.');
     });
     console.log("exp ended from background");
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      if (tabs.length === 0) {
-        console.error("No active tabs found");
-        return;
-      }
-
-      // Send a message to the content script
-      chrome.tabs.sendMessage(tabs[0].id, { message: "exp_ended" }, function (response) {
-        if (chrome.runtime.lastError) {
-          console.error(chrome.runtime.lastError.message);
-          // Handle the error or perform other actions
-        } else {
-          // Process the response or perform other actions
-        }
-      });
-
-    });
+    sendMessageToActiveRedditTab({ message: "exp_ended" });
 
     // Set the badge text
     chrome.action.setBadgeText({ text: 'Click' });
@@ -355,9 +397,21 @@ function openDB() {
 // Listen for messages from the content script and send back userid 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'getGroup') {
-    // reply immediately with the current `group`
-    sendResponse({ group });
-    // no `return true` needed here because sendResponse is sync
+    chrome.storage.local.get(['group'], function (result) {
+      if (result.group) {
+        group = result.group;
+        sendResponse({ group: result.group });
+        return;
+      }
+
+      if (group) {
+        sendResponse({ group });
+        return;
+      }
+
+      sendResponse({});
+    });
+    return true;
   }
 });
 // Listen for messages from the content script for insert data into database 
@@ -385,13 +439,13 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   else if (request.message === "updateUserVoteFakeComment") {
     console.log("Received data for fake comment from content script: ", request.data);
     // Call function to update vote on fake comment
-    updateUserVoteOnFakeComment(userpid, request.data.useraction, request.data.action_fake_comment, request.data.action_fake_post);
+    updateUserVoteOnFakeComment(userpid, request.data.useraction, request.data.action_fake_comment, request.data.action_fake_post, request.data);
     sendResponse({ message: "updateUserVoteFakeComment" });
   }
   else if (request.message === "updateUserVoteFakePost") {
     console.log("Received data for fake post from content script: ", request.data);
     // Call function to update vote on fake post
-    updateUserVoteOnFakePost(userpid, request.data.useraction, request.data.fakePostId);
+    updateUserVoteOnFakePost(userpid, request.data.useraction, request.data.fakePostId, request.data);
     sendResponse({ message: "updateUserVoteFakePost" });
   }
   else if (request.message === "deleteUserVoteFakeComment") {
@@ -410,7 +464,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     console.log("Received data to insert user reply into fake comments:", request);
 
     // Process the variables received from the content script
-    insertUserReplyFakeComments(userpid, request.commentId, request.commentContent, request.fakePostId);
+    insertUserReplyFakeComments(userpid, request.commentId, request.commentContent, request.fakePostId, request);
 
     // Send a response back to the content script confirming success
     sendResponse({ success: true });
@@ -423,7 +477,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       userpid,                             // User ID
       request.data.replyTo,                // Fake comment ID being replied to
       request.data.replyFakePost,          // The post that contains the fake comment
-      request.data.replyContent            // The reply content
+      request.data.replyContent,           // The reply content
+      request.data.replyId
     );
 
     sendResponse({ message: "deleteUserReplyFakeComment" });
@@ -432,7 +487,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     console.log("Received data to insert user reply into fake post:", request);
 
     // Call the function to send the user's reply to the fake post
-    sendUserReplyToFakePost(userpid, request.fakePostId, request.replyContent);
+    sendUserReplyToFakePost(userpid, request.fakePostId, request.replyContent, request);
 
     // Send a response back to the content script confirming success
     sendResponse({ success: true });
@@ -441,7 +496,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     console.log("Received request to remove user reply from fake posts:", request);
 
     // Process the variables received from the content script
-    removeUserReplyFromFakePost(userpid, request.fakePostId, request.replyContent);
+    removeUserReplyFromFakePost(userpid, request.fakePostId, request.replyContent, request.replyId);
 
     // Send a response back to the content script confirming success
     sendResponse({ success: true });
@@ -457,7 +512,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     console.log("Received request to add user vote to real post:", request);
   
     // Process the variables received from the content script
-    updateUserVoteOnPost(userpid,  request.userAction, request.postId);
+    updateUserVoteOnPost(userpid,  request.userAction, request.postId, request);
   
     // Send a response back to the content script confirming success
     sendResponse({ success: true });
@@ -473,7 +528,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     console.log("Received request to add user vote to real comment:", request);
   
     // Process the variables received from the content script
-    updateUserVoteOnComment(userpid, request.userAction,request.commentId,request.postId);
+    updateUserVoteOnComment(userpid, request.userAction,request.commentId,request.postId, request);
   
     // Send a response back to the content script confirming success
     sendResponse({ success: true });
@@ -486,7 +541,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       userpid,                             // User ID
       request.data.replyTo.trim(),                // Real comment ID being replied to
       request.data.replyPost,              // The post that contains the real comment
-      request.data.replyContent.trim()            // The reply content
+      request.data.replyContent.trim(),           // The reply content
+      request.data.replyId
     );
   
     sendResponse({ message: "deleteUserReplyRealComment" });
@@ -499,7 +555,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       userpid,                             // User ID
       request.data.replyContent.trim(),           // The content of the reply
       request.data.replyTo.trim(),                // Real comment ID being replied to
-      request.data.replyPost               // The post that contains the real comment
+      request.data.replyPost,              // The post that contains the real comment
+      request.data
     );
   
     sendResponse({ message: "addUserReplyRealComment" });
@@ -511,7 +568,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     updateUserReplyOnPost(
       userpid,                             // User ID
       request.data.replyContent.trim(),           // The content of the reply
-      request.data.replyPost               // The post ID
+      request.data.replyPost,              // The post ID
+      request.data
     );
   
     sendResponse({ message: "addUserReplyRealPost" });
@@ -523,7 +581,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     deleteUserReplyOnPost(
       userpid,                             // User ID
       request.data.replyPost,              // The post ID
-      request.data.replyContent.trim()            // The reply content to delete
+      request.data.replyContent.trim(),           // The reply content to delete
+      request.data.replyId
     );
   
     sendResponse({ message: "deleteUserReplyRealPost" });
@@ -539,7 +598,11 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
  */
 function insertdata(uid,group) {
   //var insert_date=  new Date();
-  fetch("https://outerlimits.onrender.com/api/insert", {
+  if (!uid || !group) {
+    return Promise.reject(new Error(`Cannot insert user data without userid and group: ${JSON.stringify({ uid, group })}`));
+  }
+
+  return fetch("https://outerlimits.onrender.com/api/insert", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -568,18 +631,21 @@ function insertdata(uid,group) {
       viewed_posts: []               // List of viewed posts
     })
   })
-    .then(response => {
+    .then(async response => {
       if (response.ok) {
         return response.json();
       } else {
-        throw new Error("Failed to insert data");
+        const responseText = await response.text();
+        throw new Error(`Failed to insert data: ${response.status} ${response.statusText} ${responseText}`);
       }
     })
     .then(data => {
       console.log("Data inserted successfully:", data);
+      return data;
     })
     .catch(error => {
       console.error(error);
+      throw error;
     });
 }
 
@@ -760,7 +826,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
  * @param {boolean} like - Indicates if the user liked the fake comment or not.
  */
 
-function insertUserReplyFakeComments(uid, comment_id, comment_content, fake_post_id) {
+function insertUserReplyFakeComments(uid, comment_id, comment_content, fake_post_id, metadata = {}) {
   var insert_date = new Date();
   fetch("https://outerlimits.onrender.com/api/updateUserReply_onFakeComments", {
     method: "POST",
@@ -770,10 +836,13 @@ function insertUserReplyFakeComments(uid, comment_id, comment_content, fake_post
     body: JSON.stringify({
       userid: uid,
       user_reply_onFakeComments: [{
+        reply_id: metadata.replyId,
         reply_to: comment_id,  // The fake comment being replied to
         reply_content: comment_content,  // The user's reply content
         reply_fake_post: fake_post_id,  // The fake post ID
-        action_date: insert_date  // Capture the current timestamp
+        action_date: insert_date,  // Capture the current timestamp
+        target_comment_context: metadata.targetCommentContext,
+        target_comment_author: metadata.targetCommentAuthor
       }]
     })
   })
@@ -886,7 +955,7 @@ function insertUserVotePosts(uid, action, post) {
  * @param {string} fakeContent - The content which the user is placing a fake vote on.
  */
 
-function updateUserVoteOnFakePost(userid, useraction, fakePostId) {
+function updateUserVoteOnFakePost(userid, useraction, fakePostId, metadata = {}) {
   var insert_date = new Date();
 
   fetch("https://outerlimits.onrender.com/api/updateUserVote_onFakePosts", {
@@ -899,7 +968,9 @@ function updateUserVoteOnFakePost(userid, useraction, fakePostId) {
       user_vote_onFakePosts: [{
         action_date: insert_date,
         user_action: useraction,
-        action_fake_post: fakePostId
+        action_fake_post: fakePostId,
+        target_post_title: metadata.targetPostTitle,
+        target_post_context: metadata.targetPostContext
       }]
     })
   })
@@ -918,7 +989,7 @@ function updateUserVoteOnFakePost(userid, useraction, fakePostId) {
     });
 }
 
-function updateUserVoteOnFakeComment(userid, useraction, fakeCommentId, action_fake_post) {
+function updateUserVoteOnFakeComment(userid, useraction, fakeCommentId, action_fake_post, metadata = {}) {
   var insert_date = new Date();
 
   fetch("https://outerlimits.onrender.com/api/updateUserVote_onFakeComments", {
@@ -932,7 +1003,9 @@ function updateUserVoteOnFakeComment(userid, useraction, fakeCommentId, action_f
         action_date: insert_date,
         user_action: useraction,
         action_fake_comment: fakeCommentId,
-        action_fake_post: action_fake_post
+        action_fake_post: action_fake_post,
+        target_comment_context: metadata.targetCommentContext,
+        target_comment_author: metadata.targetCommentAuthor
       }]
     })
   })
@@ -960,7 +1033,7 @@ function updateUserVoteOnFakeComment(userid, useraction, fakeCommentId, action_f
  * @param {string} userid - The unique identifier of the user.
  * @param {string} fakeContent - The fake content which the user is removing a vote on.
  */
-function deleteUserReplyOnFakeComment(userid, replyTo, replyFakePost, replyContent) {
+function deleteUserReplyOnFakeComment(userid, replyTo, replyFakePost, replyContent, replyId) {
   fetch("https://outerlimits.onrender.com/api/removeUserReply_onFakeComments", {
     method: "POST",
     headers: {
@@ -968,6 +1041,7 @@ function deleteUserReplyOnFakeComment(userid, replyTo, replyFakePost, replyConte
     },
     body: JSON.stringify({
       userid: userid,
+      reply_id: replyId,
       reply_to: replyTo,                // Fake comment the user replied to
       reply_fake_post: replyFakePost,    // The fake post containing the comment
       reply_content: replyContent        // The content of the reply
@@ -1041,7 +1115,7 @@ function deleteUserVoteOnFakeComment(userid, fakeCommentId, action_fake_post) {
 }
 
 // Helper function to send the reply to the backend
-function sendUserReplyToFakePost(userId, fakePostId, replyContent) {
+function sendUserReplyToFakePost(userId, fakePostId, replyContent, metadata = {}) {
   var insert_date = new Date();
   fetch('https://outerlimits.onrender.com/api/updateUserReply_onFakePosts', {
     method: 'POST',
@@ -1051,9 +1125,12 @@ function sendUserReplyToFakePost(userId, fakePostId, replyContent) {
     body: JSON.stringify({
       userid: userId,  // Note the correct spelling of `userid` to match the API's expectation
       user_reply_onFakePosts: [{
+        reply_id: metadata.replyId,
         action_date: insert_date,  // Set the current date as the action date
         reply_content: replyContent,            // The reply content
-        reply_fake_post: fakePostId             // The fake post ID
+        reply_fake_post: fakePostId,            // The fake post ID
+        target_post_title: metadata.targetPostTitle,
+        target_post_context: metadata.targetPostContext
       }],
     }),
   })
@@ -1115,7 +1192,7 @@ function insertUserReplyComments(uid, content, comment, post) {
 }
 
 
-function removeUserReplyFromFakePost(userId, fakePostId, replyContent) {
+function removeUserReplyFromFakePost(userId, fakePostId, replyContent, replyId) {
   fetch('https://outerlimits.onrender.com/api/removeUserReply_onFakePosts', {
     method: 'POST',
     headers: {
@@ -1123,6 +1200,7 @@ function removeUserReplyFromFakePost(userId, fakePostId, replyContent) {
     },
     body: JSON.stringify({
       userid: userId,
+      reply_id: replyId,
       reply_content: replyContent,
       reply_fake_post: fakePostId,
       
@@ -1269,7 +1347,7 @@ function updateUserViewedPost(userid, post_url) {
     });
 }
 
-function updateUserVoteOnPost(userid, useraction, postId) {
+function updateUserVoteOnPost(userid, useraction, postId, metadata = {}) {
   var insert_date = new Date();
 
   fetch("https://outerlimits.onrender.com/api/updateUserVote_onPosts", {
@@ -1282,7 +1360,9 @@ function updateUserVoteOnPost(userid, useraction, postId) {
       user_vote_onPosts: [{
         action_date: insert_date,
         user_action: useraction,
-        action_post: postId
+        action_post: postId,
+        target_post_title: metadata.targetPostTitle,
+        target_post_context: metadata.targetPostContext
       }]
     })
   })
@@ -1326,7 +1406,7 @@ function deleteUserVoteOnPost(userid, postId) {
     });
 }
 
-function updateUserVoteOnComment(userid, useraction, commentId, postId) {
+function updateUserVoteOnComment(userid, useraction, commentId, postId, metadata = {}) {
   var insert_date = new Date();
 
   fetch("https://outerlimits.onrender.com/api/updateUserVote_onComments", {
@@ -1340,7 +1420,9 @@ function updateUserVoteOnComment(userid, useraction, commentId, postId) {
         action_date: insert_date,
         user_action: useraction,
         action_comment: commentId,
-        action_post: postId
+        action_post: postId,
+        target_comment_context: metadata.targetCommentContext,
+        target_comment_author: metadata.targetCommentAuthor
       }]
     })
   })
@@ -1387,7 +1469,7 @@ function deleteUserVoteOnComment(userid, commentId, postId) {
 }
 
 
-function deleteUserReplyOnComment(userid,  commentId, postId,replyContent) {
+function deleteUserReplyOnComment(userid,  commentId, postId,replyContent, replyId) {
   fetch("https://outerlimits.onrender.com/api/removeUserReply_onComments", {
     method: "POST",
     headers: {
@@ -1395,6 +1477,7 @@ function deleteUserReplyOnComment(userid,  commentId, postId,replyContent) {
     },
     body: JSON.stringify({
       userid: userid,
+      reply_id: replyId,
       reply_content: replyContent,   // The reply content to be deleted
       reply_to: commentId,           // The comment ID to which the reply belongs
       reply_post: postId             // The post ID to which the comment belongs
@@ -1414,7 +1497,7 @@ function deleteUserReplyOnComment(userid,  commentId, postId,replyContent) {
       console.error(error);
     });
 }
-function updateUserReplyOnComment(userid, replyContent, commentId, postId) {
+function updateUserReplyOnComment(userid, replyContent, commentId, postId, metadata = {}) {
   var action_date = new Date(); // Capture the current date and time
 
   fetch("https://outerlimits.onrender.com/api/updateUserReply_onComments", {
@@ -1425,10 +1508,13 @@ function updateUserReplyOnComment(userid, replyContent, commentId, postId) {
     body: JSON.stringify({
       userid: userid,
       user_reply_onComments: [{
+        reply_id: metadata.replyId,
         action_date: action_date,      // Timestamp of the reply action
         reply_to: commentId,           // The comment ID being replied to
         reply_content: replyContent,   // The content of the user's reply
-        reply_post: postId             // The post ID to which the comment belongs
+        reply_post: postId,            // The post ID to which the comment belongs
+        target_comment_context: metadata.targetCommentContext,
+        target_comment_author: metadata.targetCommentAuthor
       }]
     })
   })
@@ -1550,22 +1636,34 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
  */
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.message === "everything_for_timer") {
-    // Get the user ID from storage or other sources
-    const user_id = userpid; // Replace with appropriate code to get user_id
+    chrome.storage.local.get(['userpid', 'survey', 'endexp', 'group'], function (result) {
+      const user_id = result.userpid || userpid;
+      const survey_value = result.survey !== undefined ? result.survey : survey;
+      const end_exp = result.endexp !== undefined ? result.endexp : endexp;
+      const user_group = result.group || group;
 
-    // Get the survey value
-    const survey_value = survey; // Replace with appropriate code to get survey value
+      if (user_id) {
+        userpid = user_id;
+      }
+      if (user_group) {
+        group = user_group;
+      }
+      if (survey_value !== undefined) {
+        survey = survey_value;
+      }
+      if (end_exp !== undefined) {
+        endexp = end_exp;
+      }
 
-    // Get the end_exp value
-    const end_exp = endexp; // Replace with appropriate code to get end_exp value
-    const user_group = group;
-    console.log("Sending response with user_id:", user_id, "survey:", survey_value, "end_exp:", end_exp);
-    sendResponse({ user_id: user_id, survey: survey_value, end_exp: end_exp , user_group: user_group});
+      console.log("Sending response with user_id:", user_id, "survey:", survey_value, "end_exp:", end_exp);
+      sendResponse({ user_id: user_id, survey: survey_value, end_exp: end_exp, user_group: user_group });
+    });
+    return true;
   }
 });
 
 
-function insertQuestiondata(q1selected, q2selected, uid) {
+function insertQuestionSelectionPair(q1selected, q2selected, uid) {
   fetch("https://outerlimits.onrender.com/api/midpopup_select", {
     method: "POST",
     headers: {
@@ -1603,7 +1701,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     const q1selected = message.data.q1selected;
     const q2selected = message.data.q2selected;
     console.log("Received values:", q1selected, q2selected);
-    insertQuestiondata(q1selected, q2selected, userpid);
+    insertQuestionSelectionPair(q1selected, q2selected, userpid);
     // Rest of your code...
   }
 });
@@ -1744,15 +1842,18 @@ chrome.runtime.onMessage.addListener(function (request, sender) {
         },
         // send keyword and options to content
         function (tabs) {
-          chrome.tabs.sendMessage(tabs[0].id, {
+          if (!tabs || tabs.length === 0 || !isRedditTabUrl(tabs[0].url)) {
+            console.log("No supported Reddit tab found for options message.");
+            return;
+          }
+
+          sendMessageToTab(tabs[0].id, {
             'message': 'backgroundReturnOptions',
             'optionValue': options,
             'contentMap': contentMapObject
-          },
-            function (response) {
-              console.log('receive from options content reponse: ', response);
-            }
-          );
+          }, function (response) {
+            console.log('receive from options content reponse: ', response);
+          });
         }
       );
     } catch (error) {
@@ -1762,7 +1863,7 @@ chrome.runtime.onMessage.addListener(function (request, sender) {
 });
 
 
-function insertQuestiondata(surveyObj, uid) {
+function insertSurveySelectionData(surveyObj, uid) {
   fetch("https://outerlimits.onrender.com/api/midpopup_select", {
     method: "POST",
     headers: {
@@ -1794,7 +1895,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   console.log("Message received in background.js:", message);
   if (message.message === "send_question_data_from_timerjs") {
     console.log("Received values:", message.data);
-    insertQuestiondata(message.data, userpid);
+    insertSurveySelectionData(message.data, userpid);
   }
 });
 
@@ -1838,15 +1939,8 @@ chrome.webNavigation.onHistoryStateUpdated.addListener(function (details) {
   //console.log('URL changed without a full page refresh:', details.url);
   // Your logic for handling the URL change
   const urlObj = new URL(details.url);
-  if (urlObj.hostname.endsWith('reddit.com')) {
-    chrome.tabs.sendMessage(details.tabId, { message: "refreshContentScript" }, function (response) {
-      if (chrome.runtime.lastError) {
-        console.error(chrome.runtime.lastError.message);
-        // Handle the error or perform other actions
-      } else {
-        // Process the response or perform other actions
-      }
-    });
+  if (isRedditTabUrl(urlObj.href)) {
+    sendMessageToTab(details.tabId, { message: "refreshContentScript" });
   }
 });
 
@@ -1862,7 +1956,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 
 // content.js
 
-function updateUserReplyOnPost(userid, replyContent, replyPost) {
+function updateUserReplyOnPost(userid, replyContent, replyPost, metadata = {}) {
   fetch("https://outerlimits.onrender.com/api/updateUserReply_onPosts", {
     method: "POST",
     headers: {
@@ -1871,9 +1965,12 @@ function updateUserReplyOnPost(userid, replyContent, replyPost) {
     body: JSON.stringify({
       userid: userid,
       user_reply_onPosts: [{
+        reply_id: metadata.replyId,
         action_date: new Date(),     // Record the current date for the reply
         reply_content: replyContent, // Content of the reply
-        reply_post: replyPost        // The post where the reply is being added
+        reply_post: replyPost,       // The post where the reply is being added
+        target_post_title: metadata.targetPostTitle,
+        target_post_context: metadata.targetPostContext
       }]
     })
   })
@@ -1892,7 +1989,7 @@ function updateUserReplyOnPost(userid, replyContent, replyPost) {
   });
 }
 
-function deleteUserReplyOnPost(userid, replyPost, replyContent) {
+function deleteUserReplyOnPost(userid, replyPost, replyContent, replyId) {
   fetch("https://outerlimits.onrender.com/api/removeUserReply_onPosts", {
     method: "POST",
     headers: {
@@ -1900,6 +1997,7 @@ function deleteUserReplyOnPost(userid, replyPost, replyContent) {
     },
     body: JSON.stringify({
       userid: userid,
+      reply_id: replyId,
       reply_content: replyContent,
       reply_post: replyPost,         // The post where the reply is being removed
   

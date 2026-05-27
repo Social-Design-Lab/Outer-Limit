@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Outer Limit Project ",
-  "version": "2.0",
+  "version": "4.0",
   "description": "This is a chrome extension that a",
   "icons": {
     "48" : "icons/reddit.png",
@@ -16,12 +16,7 @@
     "service_worker": "background.js"
   },
   "permissions": [
-    "declarativeNetRequest",
     "tabs",
-    "alarms",
-    "notifications",
-    "activeTab",
-    "identity",
     "storage",
     "scripting",
     "webNavigation"
@@ -32,15 +27,21 @@
   "content_scripts": [
     {
       "matches": [
-        "https://old.reddit.com/*"
+        "http://reddit.com/*",
+        "https://reddit.com/*",
+        "http://*.reddit.com/*",
+        "https://*.reddit.com/*"
       ],
-      "js": ["content_first.js"],    
+      "css": ["styles/hide.css"],
+      "js": ["content_first.js"],
       "run_at": "document_start"
     },
     {
       "matches": [
-        "https://old.reddit.com/*",
-        "https://www.reddit.com/*"
+        "http://reddit.com/*",
+        "https://reddit.com/*",
+        "http://*.reddit.com/*",
+        "https://*.reddit.com/*"
       ],
       "js": [
         "content.js"
