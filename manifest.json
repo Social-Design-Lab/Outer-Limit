@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Outer Limit Project ",
-  "version": "4.0",
+  "version": "4.1",
   "description": "This is a chrome extension that a",
   "icons": {
     "48" : "icons/reddit.png",

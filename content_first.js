@@ -10,6 +10,23 @@ function __outerLimitHidePage() {
   }
 }
 
+function __outerLimitShowPage() {
+  document.documentElement.style.setProperty('opacity', '1', 'important');
+  document.documentElement.style.setProperty('visibility', 'visible', 'important');
+
+  if (document.body) {
+    document.body.style.setProperty('opacity', '1', 'important');
+    document.body.style.setProperty('visibility', 'visible', 'important');
+  }
+
+  const tag = document.getElementById('__outer_limit_hide__');
+  if (tag) tag.remove();
+}
+
+function __outerLimitIsRedditAuthPage() {
+  return /^\/(login|register|account\/login|account\/register)\b/.test(window.location.pathname);
+}
+
 __outerLimitHidePage();
 window.__outerLimitHidePage = __outerLimitHidePage;
 
@@ -22,6 +39,10 @@ try {
   document.documentElement.appendChild(hideStyle);
 } catch (e) {
   // ignore — documentElement may not be ready in extreme cases
+}
+
+if (__outerLimitIsRedditAuthPage()) {
+  __outerLimitShowPage();
 }
 
 // Hide the outgoing document before Chrome starts navigation. This prevents the

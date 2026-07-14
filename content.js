@@ -26,6 +26,7 @@ const dislikebuttonColorClass = "_3emIxnIscWEPB7o5LgU_rn";
 const OUTER_LIMIT_API_BASE_URL = "https://outerlimits.onrender.com/api";
 const USER_VOTE_CACHE_KEY = "outerLimitUserVoteCache";
 const USER_REPLY_CACHE_KEY = "outerLimitUserReplyCache";
+const REDDIT_LOGIN_VERIFIED_KEY = "outerLimitRedditLoginVerified";
 const OUTER_LIMIT_RETRYABLE_STATUSES = new Set([408, 429, 500, 502, 503, 504]);
 let outerLimitVisibilityLocks = 0;
 
@@ -76,6 +77,98 @@ function showOuterLimitFallback(message) {
     renderFallback();
   } else {
     document.addEventListener("DOMContentLoaded", renderFallback, { once: true });
+  }
+}
+
+function getLoggedInRedditUsername() {
+  const userLink = document.querySelector('span.user a[href*="/user/"], span.user a[href*="/u/"]');
+  const username = userLink && userLink.textContent ? userLink.textContent.trim() : "";
+
+  if (!username || username.toLowerCase() === "login" || username.toLowerCase() === "register") {
+    return "";
+  }
+
+  return username;
+}
+
+function isRedditLoggedIn() {
+  return Boolean(
+    sessionStorage.getItem(REDDIT_LOGIN_VERIFIED_KEY) === "true" ||
+    getLoggedInRedditUsername() ||
+    document.body?.classList.contains("loggedin") ||
+    document.documentElement?.classList.contains("loggedin") ||
+    document.querySelector('form.logout, a[href*="/logout"], input[name="uh"], a.logout, .logout')
+  );
+}
+
+function isRedditAuthPage() {
+  return /^\/(login|register|account\/login|account\/register)\b/.test(window.location.pathname);
+}
+
+function getCanonicalRedditUrl(url = window.location.href) {
+  try {
+    const parsedUrl = new URL(url, window.location.href);
+    if (parsedUrl.hostname === "www.reddit.com" || parsedUrl.hostname === "old.reddit.com") {
+      parsedUrl.protocol = "https:";
+      parsedUrl.hostname = "old.reddit.com";
+      parsedUrl.search = "";
+      parsedUrl.hash = "";
+    }
+
+    return parsedUrl.toString();
+  } catch (error) {
+    console.log("[OuterLimits] Could not canonicalize Reddit URL: " + error.message);
+    return url;
+  }
+}
+
+function getRedditLoginUrl() {
+  const destinationUrl = getCanonicalRedditUrl(window.location.href);
+  return `https://old.reddit.com/login/?dest=${encodeURIComponent(destinationUrl)}`;
+}
+
+function redirectToRedditLogin() {
+  window.location.replace(getRedditLoginUrl());
+}
+
+function getLoginDestinationUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const destination = params.get("dest");
+
+  if (!destination) {
+    return "";
+  }
+
+  try {
+    const destinationUrl = new URL(destination, window.location.href);
+    if (destinationUrl.hostname === "old.reddit.com" || destinationUrl.hostname === "www.reddit.com") {
+      destinationUrl.hostname = "old.reddit.com";
+      return destinationUrl.toString();
+    }
+  } catch (error) {
+    console.log("[OuterLimits] Could not parse Reddit login destination: " + error.message);
+  }
+
+  return "";
+}
+
+function continueFromRedditLoginIfPossible() {
+  const destinationUrl = getLoginDestinationUrl();
+  if (!destinationUrl) {
+    restoreOpacity(true);
+    return;
+  }
+
+  const pageText = document.body ? document.body.textContent.toLowerCase() : "";
+  const alreadyLoggedIn = pageText.includes("already logged in") || pageText.includes("welcome back");
+
+  restoreOpacity(true);
+
+  if (alreadyLoggedIn || isRedditLoggedIn()) {
+    sessionStorage.setItem(REDDIT_LOGIN_VERIFIED_KEY, "true");
+    setTimeout(function () {
+      window.location.replace(destinationUrl);
+    }, 500);
   }
 }
 
@@ -293,6 +386,22 @@ function runMyCode() {
     // Handle all button and active time
     if (response && response.ifstartexp) {
       console.log("ifstartexp ");
+
+      if (isRedditAuthPage()) {
+        continueFromRedditLoginIfPossible();
+        return;
+      }
+
+      if (!isRedditLoggedIn()) {
+        console.log("[OuterLimits] Reddit user is not logged in. Redirecting to Reddit login.");
+        redirectToRedditLogin();
+        return;
+      }
+
+      const canonicalUrl = getCanonicalRedditUrl();
+      if (canonicalUrl !== window.location.href) {
+        window.history.replaceState(null, document.title, canonicalUrl);
+      }
       
       if (!new_active_triggered)
         user_active_time();
@@ -1811,9 +1920,10 @@ function changeRealPostPage() {
       }
 
       const group = response.group;
+      const currentPostUrl = getCanonicalRedditUrl();
       var fetchUrl =
         `https://outerlimits.onrender.com/api/getfakepost?` +
-        `fakepost_url=${encodeURIComponent(window.location.href)}` +
+        `fakepost_url=${encodeURIComponent(currentPostUrl)}` +
         `&group=${encodeURIComponent(response.group)}`;
       console.log("Fetching URL for post page:", fetchUrl);
       // Modify the fetch request to include the current URL in the API call
@@ -2039,9 +2149,9 @@ function changeRealPostPage() {
               }
 
               // Select the upvote, downvote, and score elements then stop it from default action 
-              applyUserVoteOnElement(parentDiv, getUserVoteOnFakePost, window.location.href);
+              applyUserVoteOnElement(parentDiv, getUserVoteOnFakePost, currentPostUrl);
               // Check if the elements are found
-              handleVoteButtons(parentDiv, "fakepost", "", window.location.href);
+              handleVoteButtons(parentDiv, "fakepost", "", currentPostUrl);
               // change number of comments 
               // Select the <a> element that contains the number of comments
               var commentsElement = parentDiv.querySelector('a.bylink.comments.may-blank');
